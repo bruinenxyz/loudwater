@@ -1,0 +1,26 @@
+---
+title: Add Clerk to your deployment
+description: Add Clerk's authentication & user management to your Loudwater deployment
+---
+
+This guide will take you through the steps necessary to add [Clerk](https://clerk.com/) to your Loudwater deployment.
+
+## Before you begin
+
+[Sign up](https://dashboard.clerk.com/sign-up) for Clerk and generate a Secret Key, Publishable Key and Organization Id.
+
+## 1. Update the `backend/.env` file
+
+- `USE_AUTH`: Change the value to "true"
+- `CLERK_SECRET_KEY`: Add your Secret Key.
+
+## 2. Update the `frontend/.env` file
+
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: Add your Publishable Key.
+- `NEXT_PUBLIC_ORGANIZATION_ID`: Add your Organization Id.
+
+## 3. Restart Loudwater services
+
+You will need to restart your Loudwater services for the environment variable changes to take effect.
+
+Run `docker compose restart` in the Loudwater root directory.

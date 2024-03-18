@@ -1,4 +1,43 @@
 ---
 title: Getting started
-description: Setting up your loudwater instance
+description: Connect to your PostgreSQL database in minutes
 ---
+
+This guide will take you through the steps necessary to get up and running with Loudwater.
+
+## Before you begin
+
+To use Loudwater you need the following installed in your system: [Git](https://git-scm.com/downloads) and Docker ([Windows](https://docs.docker.com/desktop/install/windows-install/), [MacOS](https://docs.docker.com/desktop/install/mac-install/), or [Linux](https://docs.docker.com/desktop/install/linux-install/)).
+
+## 1. Get the code
+
+Run the following command in your CLI to pull the Loudwater code:
+
+```
+git clone https://github.com/bruinenxyz/loudwater.git
+```
+
+## 2. Copy the default env variables
+
+Run the following commands in the Loudwater root directory to copy the default environment variables:
+
+```
+cp ./backend/.env.example ./backend/.env
+cp ./frontend/.env.example ./frontend/.env
+```
+
+## 3. Configure custom env variables
+
+Update the `backend/.env` file:
+
+- `CREDENTIAL_SECRET`: The secret used to encrypt postgres connection credentials. Replace the default value with your own secret. (Recommended)
+- `DATABASE_URL`: The connection URL for the postgres DB used by Loudwater. (Optional)
+- `SENTRY_DSN`: A [Sentry](https://sentry.io/welcome/) Data Source Name (DSN). Provide a DSN string if you would like to use Sentry to track the performance of your Loudwater deployment. (Optional)
+
+## 4. Build & run
+
+Run the following command to build the Docker images and run your local deployment of Loudwater:
+
+```
+docker compose -f docker-compose.yml up --build -d
+```

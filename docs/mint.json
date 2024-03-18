@@ -19,10 +19,8 @@
   ],
   "navigation": [
     {
-      "group": "Getting started",
-      "pages": [
-        "getting-started"
-      ]
+      "group": "Guides",
+      "pages": ["getting-started"]
     }
   ],
   "topbarCtaButton": {
