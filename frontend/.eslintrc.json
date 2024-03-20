@@ -1,0 +1,12 @@
+{
+  "extends": ["next", "prettier"],
+  "settings": {
+    "next": {
+      "rootDir": "/"
+    }
+  },
+  "plugins": ["prettier"],
+  "rules": {
+    "prettier/prettier": ["error", {}, { "usePrettierrc": true }]
+  }
+}

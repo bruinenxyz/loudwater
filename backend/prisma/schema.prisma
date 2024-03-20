@@ -1,0 +1,78 @@
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider      = "prisma-client-js"
+    binaryTargets = ["native", "debian-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
+}
+
+model database {
+    id                String    @id @default(dbgenerated("CONCAT('dbse_', ksuid())")) @db.VarChar(32)
+    name              String
+    external_name     String
+    connection_url    String
+    encryption_vector String
+    schema            String
+    organization_id   String
+    require_ssl       Boolean
+    tables            table[]
+    queries           query[]
+    created_at        DateTime  @default(now())
+    updated_at        DateTime  @updatedAt
+    deleted_at        DateTime?
+}
+
+enum VisibilityType {
+    normal
+    hidden
+}
+
+model table {
+    id              String         @id @default(dbgenerated("CONCAT('tble_', ksuid())")) @db.VarChar(32)
+    name            String
+    external_name   String
+    description     String?
+    icon            String
+    color           String
+    configuration   Json           @default("{}")
+    visibility      VisibilityType
+    properties      Json           @default("{}")
+    permissions     Json           @default("{}")
+    database_id     String
+    database        database       @relation(fields: [database_id], references: [id])
+    organization_id String
+    created_at      DateTime       @default(now())
+    updated_at      DateTime       @updatedAt
+    deleted_at      DateTime?
+}
+
+enum QueryType {
+    sql
+    pipeline
+}
+
+enum ScopeType {
+    organization
+    private
+}
+
+model query {
+    id              String    @id @default(dbgenerated("CONCAT('quer_', ksuid())")) @db.VarChar(32)
+    type            QueryType
+    name            String
+    description     String?
+    sql             String?
+    pipeline        Json?
+    scope           ScopeType @default(private)
+    permissions     Json      @default("{}")
+    favorited_by    String[]
+    organization_id String
+    creator_id      String
+    database_id     String
+    database        database  @relation(fields: [database_id], references: [id])
+    created_at      DateTime  @default(now())
+    updated_at      DateTime  @updatedAt
+    deleted_at      DateTime?
+}

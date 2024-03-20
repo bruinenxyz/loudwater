@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  bruinen-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app
+    env_file:
+      - .env
+    depends_on:
+      - postgres
