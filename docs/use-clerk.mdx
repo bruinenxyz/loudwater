@@ -7,20 +7,18 @@ This guide will take you through the steps necessary to add [Clerk](https://cler
 
 ## Before you begin
 
-[Sign up](https://dashboard.clerk.com/sign-up) for Clerk and generate a Secret Key, Publishable Key and Organization Id.
+Ensure you have followed steps 1-3 in our [getting started guide](/getting-started) to prepare your local Loudwater deployment.
+
+[Sign up](https://dashboard.clerk.com/sign-up) for Clerk and generate a Secret Key & Publishable Key.
 
 ## 1. Update the `backend/.env` file
 
 - `USE_AUTH`: Change the value to "true"
-- `CLERK_SECRET_KEY`: Add your Secret Key.
+- `CLERK_SECRET_KEY`: Add your Clerk Secret Key.
+- `ORGANIZATION_ID`: Delete the default organization ID.
 
 ## 2. Update the `frontend/.env` file
 
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: Add your Publishable Key.
-- `NEXT_PUBLIC_ORGANIZATION_ID`: Add your Organization Id.
-
-## 3. Restart Loudwater services
-
-You will need to restart your Loudwater services for the environment variable changes to take effect.
-
-Run `docker compose restart` in the Loudwater root directory.
+- `NEXT_PUBLIC_USE_AUTH`: Change the value to "true"
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: Add your Clerk Publishable Key.
+- `NEXT_PUBLIC_ORGANIZATION_ID`: Delete the default organization ID.

@@ -39,9 +39,10 @@ export const configurationFactory = () => {
 
     httpTimeoutInMilliseconds: 100000,
     httpMaxRedirect: 5,
-    useAuth: process.env.USE_AUTH === "true",
 
+    useAuth: process.env.USE_AUTH === "true",
     credentialSecret: process.env.CREDENTIAL_SECRET || "RfUjXn2r5u8x/A?D",
+    orgId: process.env.ORGANIZATION_ID || "default",
 
     clerkSecretKey: process.env.CLERK_SECRET_KEY,
 

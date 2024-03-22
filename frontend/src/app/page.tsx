@@ -14,24 +14,21 @@ export default function Home() {
         <div className="flex flex-col space-y-3">
           <Image src={icon} alt="Bruinen Icon" width={72} height={72} />
           <h1 className="bp5-heading"> Welcome to Bruinen.</h1>
-          <h5 className="bp5-heading">The data platform for everyone</h5>
+          <h5 className="bp5-heading">The best way to use your Postgres.</h5>
           <div>
-            Bruinen helps you organize data into logical groups called
-            &quot;objects&quot;, each object has a blueprint which can be
-            configured to your needs. These objects can come from anywhere, from
-            a database, a file, or even a web API.
-          </div>
-          <div>
-            Objects can be viewed, edited, queried and related to each other to
-            create a rich model of your business or project.
+            We want to make it as simple as possible for you to make use of data
+            in postgres databases. Postgres is an amazing database, one we use
+            every day. Our goal is to open up even more capabilities by
+            providing an easy-to-use GUI for developers and non-technical folks
+            alike.
           </div>
           <h2 className="bp5-heading"> Learn more</h2>
           <div className="grid grid-cols-2 gap-2 pb-4">
             <Card className="flex flex-col">
               <h5 className="bp5-heading">Getting Started</h5>
               <div>
-                Learn how to get started with Bruinen and start building your
-                first object.
+                Learn how to get started with Bruinen and connect your first
+                database.
               </div>
               <div className="mt-auto">
                 <AnchorButton
@@ -42,6 +39,23 @@ export default function Home() {
                   className="mt-2"
                 >
                   Getting Started
+                </AnchorButton>
+              </div>
+            </Card>
+            <Card className="flex flex-col">
+              <h5 className="bp5-heading">Writing Queries</h5>
+              <div>
+                Learn how to query your databases using Bruinen's SQL editor.
+              </div>
+              <div className="mt-auto">
+                <AnchorButton
+                  icon="arrow-right"
+                  fill
+                  className="mt-2"
+                  target="_blank"
+                  href="https://docs.bruinen.co"
+                >
+                  Writing Queries
                 </AnchorButton>
               </div>
             </Card>

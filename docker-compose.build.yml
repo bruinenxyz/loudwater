@@ -1,15 +1,24 @@
 version: "3"
 services:
   bruinen-backend:
-    image: bruinenco/loudwater:backend_v1
+    platform: linux/amd64
+    build:
+      context: ./backend/
+      dockerfile: prod.Dockerfile
     ports:
       - "3000:3000"
     env_file:
       - ./backend/.env
     depends_on:
       - postgres
+    # For localhost connection
+    # Edit /etc/hosts and add 127.0.0.1	kubernetes.docker.internal
+    # extra_hosts:
+    #   - "kubernetes.docker.internal:host-gateway"
   bruinen-frontend:
-    image: bruinenco/loudwater:frontend_v1
+    build:
+      context: ./frontend/
+      dockerfile: prod.Dockerfile
     ports:
       - "8000:3000"
     env_file:
@@ -27,6 +36,5 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
 volumes:
   postgres_data:
