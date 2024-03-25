@@ -9,6 +9,7 @@ import {
   useResults,
   useTablePk,
   useUpdateCell,
+  useTableEnums,
 } from "@/data/use-tables";
 import { useState } from "react";
 import * as _ from "lodash";
@@ -40,16 +41,26 @@ export default function ObjectViewPage(props: ObjectViewPageProps) {
     data: results,
     isLoading: isLoadingResults,
     error: resultsError,
+    mutate: mutateResults,
   } = useResults(resultsConfig, table?.id);
 
-  const { data: tablePk } = useTablePk(table?.id);
+  const {
+    data: tablePk,
+    isLoading: isLoadingPk,
+    error: pkError,
+  } = useTablePk(table?.id);
+  const {
+    data: tableEnums,
+    isLoading: isLoadingEnums,
+    error: enumsError,
+  } = useTableEnums(table?.id);
 
   // use the useUpdateCell hook
   const {
     trigger: updateCell,
     error: updateCellError,
     isMutating,
-  } = useUpdateCell(table?.id);
+  } = useUpdateCell(table?.id, mutateResults);
 
   const clipboard = useClipboard();
 
@@ -84,11 +95,22 @@ export default function ObjectViewPage(props: ObjectViewPageProps) {
     }
   };
 
-  if (isLoadingTable && !table) {
+  if (
+    (isLoadingTable && !table) ||
+    (isLoadingEnums && !tableEnums) ||
+    (isLoadingPk && !tablePk)
+  ) {
     return <Loading />;
   }
 
-  if (tableError || !table) {
+  if (
+    tableError ||
+    !table ||
+    enumsError ||
+    !tableEnums ||
+    pkError ||
+    !tablePk
+  ) {
     return (
       <ErrorDisplay
         title="An unexpected error occurred"
@@ -109,6 +131,7 @@ export default function ObjectViewPage(props: ObjectViewPageProps) {
         resultsError={resultsError}
         resultsConfig={resultsConfig}
         setResultsConfig={setResultsConfig}
+        tableEnums={tableEnums}
       />
     </div>
   );

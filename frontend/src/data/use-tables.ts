@@ -110,7 +110,7 @@ export const useTablePk = (id?: string) => {
   return { data, error, isLoading, isValidating };
 };
 
-export const useUpdateCell = (tableId?: string) => {
+export const useUpdateCell = (tableId?: string, onSuccess?: () => void) => {
   const { mutate } = useSWRConfig();
   const { data, error, trigger, isMutating } = useSWRMutation(
     `/tables/${tableId}/row`,
@@ -131,6 +131,19 @@ export const useUpdateCell = (tableId?: string) => {
       // mutate(`/tables/${tableId}/results`, updateCellResponse, false);
       return updateCellResponse;
     },
+    {
+      onSuccess: onSuccess,
+    },
   );
   return { data, error, trigger, isMutating };
+};
+
+// TODO update type of what is returned
+export const useTableEnums = (id?: string) => {
+  const { data, error, isLoading, isValidating } = useSWR<any>(
+    id ? `/tables/${id}/enums` : null,
+    backendGet,
+  );
+
+  return { data, error, isLoading, isValidating };
 };

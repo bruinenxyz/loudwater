@@ -320,6 +320,37 @@ export class TablesService {
     return pk;
   }
 
+  async getTableEnums(id: string): Promise<Record<string, string[]>> {
+    const table = await this.findOne(id);
+    assert(table, "Table not found");
+
+    const enums = await this.postgresAdapterService.run({
+      databaseId: table.database_id,
+      sql: `SELECT a.attname AS column_name, 
+      e.enumlabel AS enum_value 
+      FROM pg_attribute a 
+      JOIN pg_type t ON a.atttypid = t.oid 
+      JOIN pg_enum e ON a.atttypid = e.enumtypid 
+      WHERE a.attrelid = '${table.external_name}'::regclass
+      AND a.atttypid IN (
+        SELECT oid 
+        FROM pg_type 
+        WHERE typtype = 'e' 
+      );`,
+    });
+
+    const parsedEnums: Record<string, string[]> = {};
+    _.forEach(enums.rows, (row) => {
+      if (!parsedEnums[row.column_name]) {
+        parsedEnums[row.column_name] = [row.enum_value];
+      } else {
+        parsedEnums[row.column_name].push(row.enum_value);
+      }
+    });
+
+    return parsedEnums;
+  }
+
   async deleteTable(id: string): Promise<HydratedTable> {
     const orgId = this.httpRequestContextService.checkAndGetOrgId();
 

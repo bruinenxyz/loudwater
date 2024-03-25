@@ -12,19 +12,20 @@ import {
   CellRenderer,
   Column,
   ColumnHeaderCell,
-  EditableCell2,
   Table2,
   TableLoadingOption,
   TruncatedFormat,
   TruncatedPopoverMode,
 } from "@blueprintjs/table";
-import { Divider, InputGroup, Menu, MenuItem, Text } from "@blueprintjs/core";
+import { InputGroup, Menu, MenuItem, Text } from "@blueprintjs/core";
 import Loading from "@/app/loading";
 import { ErrorDisplay } from "../error-display";
 import TableFilterComponent from "./filters/table-filter-component";
 import { convertToColumns } from "@/utils/convert-to-columns";
+import EditableInnerCell from "./editable-cell";
 import React, { useEffect, useState } from "react";
 import * as _ from "lodash";
+
 interface Props {
   table?: HydratedTable;
   results:
@@ -36,7 +37,11 @@ interface Props {
   isLoadingResults: boolean;
   resultsError: any;
   isEditable?: boolean;
-  onEditConfirm?: (value: string, rowIndex: number, columnName: string) => void;
+  onEditConfirm?: (
+    value: string | number | boolean | null,
+    rowIndex: number,
+    columnName: string,
+  ) => void;
   resultsConfig?: {
     filters?: FilterStep;
     order?: OrderStep;
@@ -47,6 +52,8 @@ interface Props {
     order?: OrderStep;
     take?: TakeStep;
   }) => void;
+  // TODO update type
+  tableEnums: any;
 }
 
 const Table: React.FC<Props> = (props) => {
@@ -59,6 +66,7 @@ const Table: React.FC<Props> = (props) => {
     setResultsConfig,
     isEditable,
     onEditConfirm,
+    tableEnums,
   } = props;
   const [tableData, setTableData] = useState<any>();
   const [limit, setLimit] = useState<string>("100");
@@ -142,24 +150,21 @@ const Table: React.FC<Props> = (props) => {
 
   const genericCellRenderer = (key: string) => {
     const cellRenderer: CellRenderer = (rowIndex: number) => {
+      // TODO add is_nullable functionality
       if (isEditable) {
+        const columnType = table?.external_columns[key]?.type || "";
+        const cellData = tableData?.columns[key][rowIndex];
         return (
-          <EditableCell2
-            truncated={true}
-            wrapText={true}
-            rowIndex={rowIndex}
-            value={tableData.columns[key][rowIndex]}
-            onConfirm={(value) =>
-              onEditConfirm ? onEditConfirm(value, rowIndex, key) : null
-            }
-          >
-            <TruncatedFormat
-              detectTruncation={true}
-              showPopover={TruncatedPopoverMode.WHEN_TRUNCATED}
-            >
-              {tableData.columns[key][rowIndex]}
-            </TruncatedFormat>
-          </EditableCell2>
+          <Cell>
+            <EditableInnerCell
+              columnType={columnType}
+              columnEnumValues={tableEnums[key] || []}
+              cellData={cellData}
+              onConfirm={(value) => {
+                onEditConfirm ? onEditConfirm(value, rowIndex, key) : null;
+              }}
+            ></EditableInnerCell>
+          </Cell>
         );
       }
       return (
@@ -238,6 +243,7 @@ const Table: React.FC<Props> = (props) => {
         numRows={tableData.rowCount || 0}
         enableGhostCells
         cellRendererDependencies={[tableData]}
+        enableFocusedCell={true}
         // loadingOptions={[TableLoadingOption.CELLS]}
       >
         {_.keys(tableData.columns).map((key) => (
