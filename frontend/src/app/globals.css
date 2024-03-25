@@ -1,0 +1,63 @@
+@import "normalize.css";
+@import "@blueprintjs/core/lib/css/blueprint.css";
+@import "@blueprintjs/icons/lib/css/blueprint-icons.css";
+@import "@blueprintjs/select/lib/css/blueprint-select.css";
+@import "@blueprintjs/table/lib/css/table.css";
+@import "~@blueprintjs/datetime2/lib/css/blueprint-datetime2.css";
+@import "~@blueprintjs/datetime/lib/css/blueprint-datetime.css";
+@import "~@blueprintjs/select/lib/css/blueprint-select.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.light-container {
+  background-color: #f5f8fa; /* $pt-light-app-background-color */
+}
+
+.dark-container {
+  background-color: #30404d; /* $pt-dark-app-background-color */
+}
+
+*:focus {
+  outline: none;
+}
+
+.bp5-dark:focus {
+  outline: none;
+}
+
+a {
+  color: inherit; /* blue colors for links too */
+  text-decoration: none; /* no underline */
+}
+
+/* Hack until we fix the blueprint component */
+.bp5-control-card .bp5-control.bp5-control.bp5-control {
+  align-items: center;
+  outline: none;
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 20px;
+  width: 100%;
+}
+
+input:focus {
+  outline: none;
+}
+
+.bp5-dark .bp5-control input:focus ~ .bp5-control-indicator {
+  outline: none;
+}
+
+.bp5-control input:focus ~ .bp5-control-indicator {
+  outline: none;
+}
+
+.bp5-section-header-left,
+.bp5-section-header-right {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

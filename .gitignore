@@ -1,1 +1,11 @@
-.DS_store
+**.DS_Store
+.DS_Store
+
+**/node_modules
+**.venv/**
+
+**/dist
+**/.next
+**/.env
+
+.env

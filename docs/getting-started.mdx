@@ -11,33 +11,55 @@ To use Loudwater you need the following installed in your system: [Git](https://
 
 ## 1. Get the code
 
-Run the following command in your CLI to pull the Loudwater code:
+Run the following command in your CLI to clone the Loudwater repository:
 
 ```
 git clone https://github.com/bruinenxyz/loudwater.git
 ```
 
-## 2. Copy the default env variables
+## 2. Copy default env variables
 
-Run the following commands in the Loudwater root directory to copy the default environment variables:
+Enter the Loudwater root directory:
+
+```
+cd loudwater
+```
+
+Run the following commands to copy the default environment variables:
 
 ```
 cp ./backend/.env.example ./backend/.env
 cp ./frontend/.env.example ./frontend/.env
 ```
 
-## 3. Configure custom env variables
+## 3. Build & run
 
-Update the `backend/.env` file:
+There are two ways to "build" your Loudwater deployment. You can either use our pre-built Docker images or build locally on your machine.
 
-- `CREDENTIAL_SECRET`: The secret used to encrypt postgres connection credentials. Replace the default value with your own secret. (Recommended)
-- `DATABASE_URL`: The connection URL for the postgres DB used by Loudwater. (Optional)
-- `SENTRY_DSN`: A [Sentry](https://sentry.io/welcome/) Data Source Name (DSN). Provide a DSN string if you would like to use Sentry to track the performance of your Loudwater deployment. (Optional)
+### Use pre-built Docker images
 
-## 4. Build & run
-
-Run the following command to build the Docker images and run your local deployment of Loudwater:
+Run the following command in the Loudwater root directory to pull the required images from our [Loudwater Docker Hub repository](https://hub.docker.com/repository/docker/bruinenco/loudwater/tags) and run your local deployment of Loudwater:
 
 ```
-docker compose -f docker-compose.yml up --build -d
+docker compose up -d
 ```
+
+### Build locally
+
+Run the following command in the Loudwater root directory to build and run your local deployment of Loudwater:
+
+```
+docker compose -f docker-compose.build.yml up --build -d
+```
+
+## 4. Start using Loudwater
+
+Once your Docker containers are up and running, visit http://localhost:8000 in your browser to start using Loudwater.
+
+### Connect your first database
+
+To connect your first database, hover over the "Select a database" dropdown in the navigation bar and select the "Add database" option.
+
+Name your database, provide the Postges connection URL, and optionally specify the database schema before clicking "Connect Database".
+
+Your database should now be available in the "Select a database" dropdown menu.

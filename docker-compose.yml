@@ -1,0 +1,32 @@
+version: "3"
+services:
+  bruinen-backend:
+    image: bruinenco/loudwater:backend_v1
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - postgres
+  bruinen-frontend:
+    image: bruinenco/loudwater:frontend_v1
+    ports:
+      - "8000:3000"
+    env_file:
+      - ./frontend/.env
+  postgres:
+    image: postgres:15
+    container_name: backend-db
+    restart: always
+    env_file:
+      - ./backend/.env
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
