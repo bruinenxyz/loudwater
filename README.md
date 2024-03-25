@@ -1,6 +1,6 @@
 # loudwater
 
-A interactive GUI for managing, querying, and sharing any postgres database
+An interactive GUI for managing, querying, and sharing any postgres database
 
 ## Getting started
 
