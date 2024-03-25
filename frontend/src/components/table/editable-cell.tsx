@@ -39,6 +39,10 @@ const EditableInnerCell: React.FC<Props> = (props) => {
     }
   }, [selectedValue, columnType, cellData, onConfirm]);
 
+  useEffect(() => {
+    setSelectedValue(cellData);
+  }, [cellData]);
+
   const hotkeys: HotkeyProps[] = [
     {
       combo: "enter",
@@ -291,13 +295,13 @@ const EditableInnerCell: React.FC<Props> = (props) => {
           >
             <div
               className={
-                selectedValue !== null
+                cellData !== null
                   ? "w-full h-full"
                   : "w-full h-full bp5-text-disabled"
               }
               onDoubleClick={() => setEditingCell(true)}
             >
-              {selectedValue !== null ? _.toString(selectedValue) : "NULL"}
+              {cellData !== null ? _.toString(cellData) : "NULL"}
             </div>
           </Popover>
         </div>

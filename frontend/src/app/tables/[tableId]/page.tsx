@@ -41,7 +41,6 @@ export default function ObjectViewPage(props: ObjectViewPageProps) {
     data: results,
     isLoading: isLoadingResults,
     error: resultsError,
-    mutate: mutateResults,
   } = useResults(resultsConfig, table?.id);
 
   const {
@@ -60,7 +59,7 @@ export default function ObjectViewPage(props: ObjectViewPageProps) {
     trigger: updateCell,
     error: updateCellError,
     isMutating,
-  } = useUpdateCell(table?.id, mutateResults);
+  } = useUpdateCell(resultsConfig, table?.id);
 
   const clipboard = useClipboard();
 

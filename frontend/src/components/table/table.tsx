@@ -79,7 +79,7 @@ const Table: React.FC<Props> = (props) => {
         columns: convertToColumns(results.rows),
       });
     }
-  }, [results]);
+  }, [results, setTableData]);
 
   useEffect(() => {
     if (resultsConfig && setResultsConfig) {
@@ -242,7 +242,7 @@ const Table: React.FC<Props> = (props) => {
       <Table2
         numRows={tableData.rowCount || 0}
         enableGhostCells
-        cellRendererDependencies={[tableData]}
+        cellRendererDependencies={[tableData, results]}
         enableFocusedCell={true}
         // loadingOptions={[TableLoadingOption.CELLS]}
       >

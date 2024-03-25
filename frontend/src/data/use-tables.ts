@@ -110,10 +110,30 @@ export const useTablePk = (id?: string) => {
   return { data, error, isLoading, isValidating };
 };
 
-export const useUpdateCell = (tableId?: string, onSuccess?: () => void) => {
+export const useUpdateCell = (
+  config: {
+    filters?: FilterStep;
+    order?: OrderStep;
+    take?: TakeStep;
+  },
+  tableId?: string,
+) => {
   const { mutate } = useSWRConfig();
+  const filters = config.filters ? JSON.stringify(config.filters) : undefined;
+  const order = config.order ? JSON.stringify(config.order) : undefined;
+  const take = config.take ? JSON.stringify(config.take) : undefined;
+  let queryParams = "";
+  if (filters !== undefined) {
+    queryParams += `?filters=${filters}`;
+  }
+  if (order !== undefined) {
+    queryParams += `${filters ? "&" : "?"}order=${order}`;
+  }
+  if (take !== undefined) {
+    queryParams += `${filters || order ? "&" : "?"}take=${take}`;
+  }
   const { data, error, trigger, isMutating } = useSWRMutation(
-    `/tables/${tableId}/row`,
+    tableId ? `/tables/${tableId}/row` : null,
     async (
       url: string,
       {
@@ -128,11 +148,18 @@ export const useUpdateCell = (tableId?: string, onSuccess?: () => void) => {
         value: arg.value,
         pk_column: arg.pkColumn,
       });
-      // mutate(`/tables/${tableId}/results`, updateCellResponse, false);
+      mutate(`/tables/${tableId}/results${queryParams}`, updateCellResponse, {
+        populateCache: (result: any, currentData: any) => {
+          const rowIndex = _.findIndex(
+            currentData.rows,
+            (row: any) => row[arg.pkColumn] === arg.rowId,
+          );
+          if (rowIndex !== -1) {
+            currentData.rows[rowIndex][arg.column] = arg.value;
+          }
+        },
+      });
       return updateCellResponse;
-    },
-    {
-      onSuccess: onSuccess,
     },
   );
   return { data, error, trigger, isMutating };
