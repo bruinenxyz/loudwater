@@ -54,6 +54,13 @@ export class TablesController {
     return this.tablesService.getTablePk(id);
   }
 
+  @Get("/:id/enums")
+  @ApiOkResponse()
+  @UseGuards(OrgGuard("table"))
+  async getTableEnums(@Param("id") id: string) {
+    return this.tablesService.getTableEnums(id);
+  }
+
   @Get("/:id")
   @ZodSerializerDto(HydratedTableSchema)
   @ApiOkResponse({ type: GetTableResponseDto })

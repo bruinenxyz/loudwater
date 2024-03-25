@@ -12,6 +12,8 @@ interface CreateDatabaseQueryDto {
 
 const mapColumnType = (type: string): string => {
   switch (type) {
+    case "USER-DEFINED":
+      return "enum";
     case "integer":
       return "number";
     case "double precision":
