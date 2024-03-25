@@ -1,4 +1,5 @@
 # loudwater
+
 A interactive GUI for managing, querying, and sharing any postgres database
 
 ## Getting started
@@ -38,7 +39,7 @@ There are two ways to "build" your Loudwater deployment. You can either use our 
 
 #### Use pre-built Docker images
 
-Run the following command in the Loudwater root directory to pull the required images from our [Loudwater Docker Hub repository](https://hub.docker.com/repository/docker/bruinenco/loudwater/tags) and run your local deployment of Loudwater:
+Run the following command in the Loudwater root directory to pull the required images from our Loudwater Docker Hub repositories([frontend](https://hub.docker.com/repository/docker/bruinenco/loudwater-frontend/general) & [backend](https://hub.docker.com/repository/docker/bruinenco/loudwater-backend/general)) and run your local deployment of Loudwater:
 
 ```
 docker compose up -d
@@ -63,4 +64,3 @@ To connect your first database, hover over the "Select a database" dropdown in t
 Name your database, provide the Postges connection URL, and optionally specify the database schema before clicking "Connect Database".
 
 Your database should now be available in the "Select a database" dropdown menu.
-

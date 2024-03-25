@@ -1,7 +1,7 @@
 version: "3"
 services:
   bruinen-backend:
-    image: bruinenco/loudwater:backend_v1
+    image: bruinenco/loudwater-backend:latest
     ports:
       - "3000:3000"
     env_file:
@@ -9,7 +9,7 @@ services:
     depends_on:
       - postgres
   bruinen-frontend:
-    image: bruinenco/loudwater:frontend_v1
+    image: bruinenco/loudwater-frontend:latest
     ports:
       - "8000:3000"
     env_file:
