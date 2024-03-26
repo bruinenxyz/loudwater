@@ -1,0 +1,50 @@
+---
+title: Using Loudwater
+description: What Loudwater can do
+---
+
+In this guide, we'll go over how to view, query, and update data in your postgres using Loudwater.
+
+## Connecting a database
+
+To connect with a database, select 'select database > new database'.
+
+| Property     | Description                                                      |
+| ------------ | ---------------------------------------------------------------- |
+| Name         | A friendly name for the database                                 |
+| Postgres URL | The fully qualified connection string for your postgres instance |
+| Schema       | The database schema to use, default: public                      |
+
+## Tables
+
+Once you've connected a database to your Loudwater, you will see a list of the tables in your database in the lefthand bar.
+
+These tables give you a simple, spreadsheet-like way to interact with your database.
+
+### Filtering
+
+You can build complex filter using the filter box at the top of the table page. These filters will be applied in the SQL query run on your database.
+
+### Sorting
+
+To sort a column in ascending or descending order, right-click on the column or select the carrat dropdown on the column you would like to sort.
+
+This will apply to all the data in that table, not just the rows that have been loaded, so it may take a moment to update.
+
+## Updating values
+
+Just like with a spreadsheet, you can select one of the cells in the table, if you double-click, you will be able to update that value in your database.
+
+Note: Updates will only be applied if the connected database has write permissions, additionally, any other restrictions on the column will be enforced by the database.
+
+## Editing table appearance
+
+You can set a number of fields to make your table visually stand out. Click the 'edit' button on the table page and you can set a color and icon for the table.
+
+You can also set the table name and description by clicking on them on the main table page.
+
+## Querying
+
+In the query section, you can create SQL queries against the database.
+
+Note: 'UPDATE' queries WILL work if you have write permission, so use caution, we will be adding permissions soon so hang tight!
