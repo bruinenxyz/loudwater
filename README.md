@@ -1,6 +1,8 @@
 # loudwater
 
-An interactive GUI for managing, querying, and sharing any postgres database
+An interactive GUI for managing, querying, and sharing any postgres database. 
+
+Find user docs [here](https://docs.loudwater.co/using-loudwater)
 
 <img width="1440" alt="Screenshot 2024-03-26 at 8 28 42 AM" src="https://github.com/bruinenxyz/loudwater/assets/19849533/223cd3c1-422d-442e-bf76-ef78e80edc59">
 
