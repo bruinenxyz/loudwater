@@ -73,30 +73,39 @@ import { AuthMiddleware } from "./shared/middlewares/auth.middleware";
       useClass: PermissionsGuard,
     },
     { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
+
     {
       provide: APP_INTERCEPTOR,
-      useValue: new RavenInterceptor({
-        transformers: [
-          (scope: Scope, context: ExecutionContext) => {
-            const request = context.switchToHttp().getRequest();
-            const traceId = _.split(
-              request.headers["sentry-trace"] || "",
-              "-",
-            )[0];
-            scope.setPropagationContext({
-              traceId: traceId,
-              spanId: scope.getPropagationContext()?.spanId,
-            });
-            scope.setUser({
-              id: request.auth?.userId,
-              orgId: request.auth?.orgId,
-              orgSlug: request.auth?.orgSlug,
-              orgRole: request.auth?.orgRole,
-              email: request.auth?.claims.primary_email_address,
-            });
-          },
-        ],
-      }),
+      useFactory: () => {
+        if (process.env.SENTRY_DSN) {
+          return new RavenInterceptor({
+            transformers: [
+              (scope: Scope, context: ExecutionContext) => {
+                const request = context.switchToHttp().getRequest();
+                const traceId = _.split(
+                  request.headers["sentry-trace"] || "",
+                  "-",
+                )[0];
+                scope.setPropagationContext({
+                  traceId: traceId,
+                  spanId: scope.getPropagationContext()?.spanId,
+                });
+                if (process.env.USE_AUTH === "true") {
+                  scope.setUser({
+                    id: request.auth?.userId,
+                    orgId: request.auth?.orgId,
+                    orgSlug: request.auth?.orgSlug,
+                    orgRole: request.auth?.orgRole,
+                    email: request.auth?.claims.primary_email_address,
+                  });
+                }
+              },
+            ],
+          });
+        } else {
+          return null;
+        }
+      },
     },
     TrackingService,
   ],

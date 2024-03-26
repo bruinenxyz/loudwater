@@ -16,7 +16,7 @@ export class TrackingService {
     };
 
     const nodeEnv = this.configService.getOrThrow("nodeEnv");
-    const segmentWriteKey = this.configService.getOrThrow("segmentWriteKey");
+    const segmentWriteKey = this.configService.get("segmentWriteKey");
 
     if (nodeEnv === "development") {
       console.log("Tracking Event: ", eventObject);
