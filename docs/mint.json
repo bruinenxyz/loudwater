@@ -14,19 +14,19 @@
   "topbarLinks": [
     {
       "name": "Website",
-      "url": "https://bruinen.co"
+      "url": "https://github.com/bruinenxyz/loudwater"
     }
   ],
   "navigation": [
     {
       "group": "Guides",
-      "pages": ["getting-started"]
+      "pages": ["getting-started", "using-loudwater"]
+    },
+    {
+      "group": "Who we are",
+      "pages": ["what-is-loudwater"]
     }
   ],
-  "topbarCtaButton": {
-    "name": "Dashboard",
-    "url": "https://app.bruinen.co"
-  },
   "footerSocials": {
     "twitter": "https://twitter.com/bruinenhq",
     "github": "https://github.com/bruinenxyz",
