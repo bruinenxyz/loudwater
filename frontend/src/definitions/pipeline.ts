@@ -19,13 +19,6 @@ export type FilterLogicalOperators = z.infer<
   typeof FilterLogicalOperatorsEnumSchema
 >;
 
-export enum PipelineScopeEnum {
-  PRIVATE = "private",
-  ORGANIZATION = "organization",
-}
-export const PipelineScopeEnumSchema = z.nativeEnum(PipelineScopeEnum);
-export type PipelineScope = z.infer<typeof PipelineScopeEnumSchema>;
-
 export enum OperatorsEnum {
   equal = "==",
   notEqual = "!=",
@@ -60,7 +53,6 @@ export enum StepIdentifierEnum {
   Filter = "filter",
   Order = "order",
   Take = "take",
-  Display = "display",
 }
 export const StepIdentifierEnumSchema = z.nativeEnum(StepIdentifierEnum);
 export type StepIdentifier = z.infer<typeof StepIdentifierEnumSchema>;
@@ -69,14 +61,14 @@ export type StepIdentifier = z.infer<typeof StepIdentifierEnumSchema>;
 // Select Step
 export const SelectStepSchema = z.object({
   type: z.literal(StepIdentifierEnum.Select),
-  select: z.array(z.string()).nonempty(),
+  select: z.array(z.object({ name: z.string(), table: z.string() })).nonempty(),
 });
 export type SelectStep = z.infer<typeof SelectStepSchema>;
 
 // Aggregate Step
 export const AggregateStepSchema = z.object({
   type: z.literal(StepIdentifierEnum.Aggregate),
-  group: z.array(z.string()),
+  group: z.array(z.object({ name: z.string(), table: z.string() })),
   operation: AggregationOperationsEnumSchema,
   property: z.string(),
   as: z.string(),
@@ -236,52 +228,11 @@ export const StepSchema = z.discriminatedUnion("type", [
 ]);
 export type Step = z.infer<typeof StepSchema>;
 
-// PIPELINE:
-export const PipelinePermissionsSchema = z.object({
-  read: z.array(z.string()),
-  update: z.array(z.string()),
-  delete: z.array(z.string()),
-});
-export type PipelinePermissions = z.infer<typeof PipelinePermissionsSchema>;
-
 export const PipelineSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().nullable().optional(),
-  scope: PipelineScopeEnumSchema,
-  favorited_by: z.array(z.string()),
-  permissions: PipelinePermissionsSchema,
-  from: z.string().nonempty(),
+  from: z.string(),
   steps: z.array(StepSchema),
-  creator_id: z.string(),
-  organization_id: z.string(),
-  created_at: z.coerce.date().optional(),
 });
 export type Pipeline = z.infer<typeof PipelineSchema>;
-
-export const PartialPipelineSchema = z.object({
-  from: z.string().nonempty(),
-  steps: z.array(StepSchema),
-});
-export type PartialPipeline = z.infer<typeof PartialPipelineSchema>;
-
-export const CreatePipelineSchema = PipelineSchema.omit({
-  id: true,
-  scope: true,
-  favorited_by: true,
-  permissions: true,
-  creator_id: true,
-  organization_id: true,
-});
-export type CreatePipeline = z.infer<typeof CreatePipelineSchema>;
-
-export const UpdatePipelineSchema = PipelineSchema.partial().omit({
-  id: true,
-  scope: true,
-  favorited_by: true,
-  permissions: true,
-});
-export type UpdatePipeline = z.infer<typeof UpdatePipelineSchema>;
 
 // SCHEMA INFERENCE:
 export const InferredSchemaPropertySchema = z.object({
