@@ -37,9 +37,10 @@ export default function EditTable({
   const colorField = useField<string>(table.color ?? "gray");
 
   async function handleUpdateTable() {
-    let configurationUpdate = {};
+    let configurationUpdate = { ...table.configuration };
     if (primaryKeyField.value) {
       configurationUpdate = {
+        ...configurationUpdate,
         primary_key: primaryKeyField.value,
       };
     }

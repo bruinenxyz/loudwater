@@ -4,6 +4,8 @@ import { z } from "zod";
 export const TableConfigurationSchema = z.object({
   primary_key: z.string().optional(),
   title_property: z.string().optional(),
+  hidden_columns: z.array(z.string()).optional(),
+  ordered_columns: z.array(z.string()).optional()
 });
 export type TableConfiguration = z.infer<typeof TableConfigurationSchema>;
 
