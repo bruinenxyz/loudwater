@@ -25,7 +25,8 @@ import { convertToColumns } from "@/utils/convert-to-columns";
 import EditableInnerCell from "./editable-cell";
 import React, { useEffect, useState } from "react";
 import * as _ from "lodash";
-
+import { HeaderCellRenderer } from "@blueprintjs/table/lib/esm/headers/header";
+import { useUpdateTable } from "@/data/use-tables";
 interface Props {
   table?: HydratedTable;
   results:
@@ -71,6 +72,11 @@ const Table: React.FC<Props> = (props) => {
   const [tableData, setTableData] = useState<any>();
   const [limit, setLimit] = useState<string>("100");
   const [offset, setOffset] = useState<string>("0");
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>(
+    table?.configuration?.hidden_columns || [],
+  );
+
+  const { trigger: updateTable } = useUpdateTable();
 
   useEffect(() => {
     if (results) {
@@ -96,9 +102,9 @@ const Table: React.FC<Props> = (props) => {
     }
   }, [limit, offset]);
 
-  function orderTableData(direction: "asc" | "desc", index?: number) {
-    if (index !== undefined && results && resultsConfig && setResultsConfig) {
-      const columnName = Object.keys(tableData.columns)[index];
+  function orderTableData(direction: "asc" | "desc", key?: string) {
+    if (key !== undefined && results && resultsConfig && setResultsConfig) {
+      const columnName = key;
       const order: OrderStep = OrderStepSchema.parse({
         type: StepIdentifierEnum.Order,
         order: [{ property: columnName, direction }],
@@ -118,34 +124,92 @@ const Table: React.FC<Props> = (props) => {
     }
   }
 
-  function renderMenu(index?: number) {
-    return (
-      <Menu>
-        <MenuItem
-          icon="sort-asc"
-          onClick={() => orderTableData("asc", index)}
-          text="Order Asc"
-        />
-        <MenuItem
-          icon="sort-desc"
-          onClick={() => orderTableData("desc", index)}
-          text="Order Desc"
-        />
-      </Menu>
-    );
+  async function hideColumn(key: string) {
+    if (key == undefined) return;
+
+    await updateTable({
+      id: table!.id,
+      update: {
+        configuration: {
+          ...table!.configuration,
+          hidden_columns: [...hiddenColumns, key],
+        },
+      },
+    });
+
+    setHiddenColumns([...hiddenColumns, key]);
   }
 
-  const headerCellRenderer = (index: number) => {
-    const name = Object.keys(tableData.columns)[index];
-    return (
-      <ColumnHeaderCell
-        name={name}
-        index={index}
-        menuRenderer={
-          resultsConfig && setResultsConfig ? renderMenu : undefined
-        }
-      />
-    );
+  async function unhideColumn(key: string) {
+    if (key == undefined) return;
+
+    await updateTable({
+      id: table!.id,
+      update: {
+        configuration: {
+          ...table!.configuration,
+          hidden_columns: hiddenColumns.filter((column) => column != key),
+        },
+      },
+    });
+
+    setHiddenColumns(hiddenColumns.filter((column) => column != key));
+  }
+
+  function renderMenu(key: string) {
+    const menuRenderer = (index?: number) => {
+      return (
+        <Menu>
+          <MenuItem
+            icon="sort-asc"
+            onClick={() => orderTableData("asc", key)}
+            text="Order Asc"
+          />
+          <MenuItem
+            icon="sort-desc"
+            onClick={() => orderTableData("desc", key)}
+            text="Order Desc"
+          />
+          {_.keys(tableData.columns).length - hiddenColumns.length > 1 && (
+            <MenuItem
+              icon="eye-off"
+              onClick={() => hideColumn(key)}
+              text="Hide"
+            />
+          )}
+          {hiddenColumns.length > 0 && (
+            <MenuItem icon="eye-open" text="Unhide">
+              <Menu>
+                {hiddenColumns.map((column) => (
+                  <MenuItem
+                    key={column}
+                    text={column}
+                    onClick={() => unhideColumn(column)}
+                  />
+                ))}
+              </Menu>
+            </MenuItem>
+          )}
+        </Menu>
+      );
+    };
+    return menuRenderer;
+  }
+
+  const genericHeaderCellRenderer = (key: string) => {
+    const headerCellRenderer: HeaderCellRenderer = (index: number) => {
+      return (
+        <ColumnHeaderCell
+          name={key}
+          index={index}
+          menuRenderer={
+            resultsConfig && setResultsConfig ? renderMenu(key) : undefined
+          }
+        />
+      );
+    };
+
+    return headerCellRenderer;
   };
 
   const genericCellRenderer = (key: string) => {
@@ -246,14 +310,16 @@ const Table: React.FC<Props> = (props) => {
         enableFocusedCell={true}
         // loadingOptions={[TableLoadingOption.CELLS]}
       >
-        {_.keys(tableData.columns).map((key) => (
-          <Column
-            key={key}
-            name={key}
-            cellRenderer={genericCellRenderer(key)}
-            columnHeaderCellRenderer={headerCellRenderer}
-          />
-        ))}
+        {_.keys(tableData.columns)
+          .filter((key) => !_.includes(hiddenColumns, key))
+          .map((key) => (
+            <Column
+              key={key}
+              name={key}
+              cellRenderer={genericCellRenderer(key)}
+              columnHeaderCellRenderer={genericHeaderCellRenderer(key)}
+            />
+          ))}
       </Table2>
     </>
   );
