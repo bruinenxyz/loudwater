@@ -75,15 +75,23 @@ const Table: React.FC<Props> = (props) => {
   const [hiddenColumns, setHiddenColumns] = useState<string[]>(
     table?.configuration?.hidden_columns || [],
   );
+  const [orderedColumns, setOrderedColumns] = useState<string[]>([]);
 
   const { trigger: updateTable } = useUpdateTable();
 
   useEffect(() => {
     if (results) {
+      const columns = convertToColumns(results.rows);
       setTableData({
         rowCount: results.rowCount,
-        columns: convertToColumns(results.rows),
+        columns: columns,
       });
+
+      if (!table?.configuration.ordered_columns) {
+        setOrderedColumns(_.keys(columns));
+      } else {
+        setOrderedColumns(table.configuration.ordered_columns);
+      }
     }
   }, [results, setTableData]);
 
@@ -122,6 +130,31 @@ const Table: React.FC<Props> = (props) => {
         columns: convertToColumns(sortedData),
       });
     }
+  }
+
+  async function orderColumn(
+    oldIndex: number,
+    newIndex: number,
+    length: number,
+  ) {
+    const newOrderedColumns = orderedColumns.slice();
+    newOrderedColumns.splice(
+      newIndex,
+      0,
+      newOrderedColumns.splice(oldIndex, 1)[0],
+    );
+
+    setOrderedColumns(newOrderedColumns);
+
+    await updateTable({
+      id: table!.id,
+      update: {
+        configuration: {
+          ...table!.configuration,
+          ordered_columns: newOrderedColumns,
+        },
+      },
+    });
   }
 
   async function hideColumn(key: string) {
@@ -306,11 +339,14 @@ const Table: React.FC<Props> = (props) => {
       <Table2
         numRows={tableData.rowCount || 0}
         enableGhostCells
-        cellRendererDependencies={[tableData, results]}
+        cellRendererDependencies={[tableData, orderedColumns]}
+        enableColumnReordering
+        enableColumnResizing
+        onColumnsReordered={orderColumn}
         enableFocusedCell={true}
         // loadingOptions={[TableLoadingOption.CELLS]}
       >
-        {_.keys(tableData.columns)
+        {orderedColumns
           .filter((key) => !_.includes(hiddenColumns, key))
           .map((key) => (
             <Column
