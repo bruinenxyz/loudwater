@@ -40,7 +40,7 @@ cp ./frontend/.env.example ./frontend/.env
 
 ### 3. Build & run
 
-There are two ways to "build" your Loudwater deployment. You can either use our pre-built Docker images or build locally on your machine.
+There are two ways to "build" your Loudwater deployment. You can use our pre-built Docker images or build locally on your machine.
 
 #### Use pre-built Docker images
 
@@ -68,4 +68,4 @@ To connect your first database, hover over the "Select a database" dropdown in t
 
 Name your database, provide the Postges connection URL, and optionally specify the database schema before clicking "Connect Database".
 
-Your database should now be available in the "Select a database" dropdown menu.
+Your database should be available in the "Select a database" dropdown menu.
