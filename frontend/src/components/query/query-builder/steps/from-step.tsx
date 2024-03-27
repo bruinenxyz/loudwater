@@ -16,22 +16,27 @@ import { ItemRenderer, Select } from "@blueprintjs/select";
 import Loading from "@/app/loading";
 import { ErrorDisplay } from "@/components/error-display";
 import SquareIcon, { SquareIconSize } from "@/components/icon/square-icon";
+import { NewStepSelection } from "../query-builder";
 import { useTables } from "@/data/use-tables";
 import { useSelectedDatabase } from "@/stores";
 import { useEffect, useState } from "react";
-import { render } from "react-dom";
 
 interface FromStepProps {
   pipeline: Pipeline;
   setPipeline: (value: Pipeline) => void;
+  editStepIndex: number | null;
+  setEditStepIndex: (value: number | null) => void;
+  newStepType: NewStepSelection | null;
 }
 
 export default function FromStepComponent({
   pipeline,
   setPipeline,
+  editStepIndex,
+  setEditStepIndex,
+  newStepType,
 }: FromStepProps) {
   const [selectedDatabase, setSelectedDatabase] = useSelectedDatabase();
-  const [isEditing, setIsEditing] = useState<boolean>(!pipeline.from);
   const [confirmationToggle, setConfirmationToggle] = useState<boolean>(false);
   const [selected, setSelected] = useState<HydratedTable | null>(null);
   const {
@@ -84,10 +89,10 @@ export default function FromStepComponent({
       return <ErrorDisplay description={tablesError?.message} />;
     } else {
       const fromTable = tables.find((table) => table.id === pipeline.from);
-      if (isEditing || !fromTable) {
+      if (editStepIndex === -1 || !fromTable) {
         return (
           <div className="flex flex-row items-center">
-            <Text className="mr-3 text-xl">From</Text>
+            <Text className="mr-3 text-xl">From:</Text>
             <Select<HydratedTable>
               items={tables!}
               itemRenderer={renderTable}
@@ -171,7 +176,7 @@ export default function FromStepComponent({
                   from: selected!.id,
                   steps: [],
                 });
-                setIsEditing(false);
+                setEditStepIndex(null);
                 setConfirmationToggle(false);
               }}
             />
@@ -188,7 +193,7 @@ export default function FromStepComponent({
         title={renderContent()}
         rightElement={
           <div className="flex flex-row">
-            {isEditing ? (
+            {editStepIndex === -1 ? (
               <Button
                 alignText="left"
                 disabled={!selected}
@@ -201,15 +206,16 @@ export default function FromStepComponent({
                     setConfirmationToggle(true);
                   } else {
                     setPipeline({ from: selected!.id, steps: [] });
-                    setIsEditing(false);
+                    setEditStepIndex(null);
                   }
                 }}
               />
             ) : (
               <Button
                 alignText="left"
+                disabled={editStepIndex !== null || newStepType !== null}
                 text="Edit step"
-                onClick={() => setIsEditing(true)}
+                onClick={() => setEditStepIndex(-1)}
               />
             )}
           </div>

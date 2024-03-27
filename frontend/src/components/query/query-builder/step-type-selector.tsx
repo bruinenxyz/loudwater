@@ -8,9 +8,11 @@ import * as _ from "lodash";
 export default function StepTypeSelector({
   index,
   setNewStepType,
+  disabled,
 }: {
   index: number;
   setNewStepType: (newStepObj: NewStepSelection) => void;
+  disabled: boolean;
 }) {
   const renderStepType: ItemRenderer<string> = (
     stepIdentifier: string,
@@ -46,6 +48,7 @@ export default function StepTypeSelector({
         className="justify-center text-md w-[110px]"
         text="Add step"
         rightIcon="double-caret-vertical"
+        disabled={disabled}
       />
     </Select>
   );
