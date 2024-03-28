@@ -36,6 +36,7 @@ model table {
     description     String?
     icon            String
     color           String
+    schema          String         @default("")
     configuration   Json           @default("{}")
     visibility      VisibilityType
     properties      Json           @default("{}")

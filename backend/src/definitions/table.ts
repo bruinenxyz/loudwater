@@ -16,6 +16,7 @@ export const TableSchema = z.object({
   description: z.string().optional().nullable(),
   icon: z.string(),
   color: z.string(),
+  schema: z.string(),
   configuration: TableConfigurationSchema,
   visibility: z.enum(["normal", "hidden"]),
   properties: z.any(),

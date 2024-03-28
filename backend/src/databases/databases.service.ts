@@ -1,15 +1,18 @@
 import { PrismaService } from "@/prisma/prisma.service";
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException, forwardRef } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { HttpRequestContextService } from "@/shared/http-request-context/http-request-context.service";
 import { CreateDatabase, Database, UpdateDatabase } from "@/definitions";
 import { AES } from "crypto-js";
 import * as CryptoJS from "crypto-js";
 import * as assert from "assert";
+import { PostgresAdapterService } from "@/postgres-adapter/postgres-adapter.service";
 
 @Injectable()
 export class DatabasesService {
   constructor(
+    @Inject(forwardRef(() => PostgresAdapterService))
+    private postgresAdapterService: PostgresAdapterService,
     private prismaService: PrismaService,
     private readonly configService: ConfigService,
     private readonly httpRequestContextService: HttpRequestContextService,
@@ -111,9 +114,34 @@ export class DatabasesService {
       },
     });
 
+    // Get current schemas and assign default schema for database
+    const schemas = await this.findAllSchemas(database.id);
+
+    if (schemas.length > 0) {
+      const defaultSchema = schemas.includes("public") ? "public" : schemas[0];
+      await this.updateDatabase(database.id, {
+        schema: defaultSchema,
+      });
+    }
+
     assert(database, "Database creation error");
 
     return database;
+  }
+
+  async findAllSchemas(databaseId: string): Promise<string[]> {
+    const database = await this.findOne(databaseId);
+
+    if (!database) {
+      throw new NotFoundException("Database not found");
+    }
+
+    const schemas =
+      await this.postgresAdapterService.getAllDatabaseSchema(databaseId);
+
+    const systemSchemas = ["information_schema", "pg_catalog", "pg_toast"];
+
+    return schemas.filter((schema) => !systemSchemas.includes(schema));
   }
 
   async updateDatabase(
