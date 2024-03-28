@@ -49,7 +49,7 @@ export class PostgresAdapterService {
   private connectionPool: Map<string, Pool> = new Map();
   constructor(
     @Inject(forwardRef(() => DatabasesService))
-    private readonly databaseService: DatabasesService
+    private readonly databaseService: DatabasesService,
   ) {}
 
   async getClientForDatabase(databaseId: string) {
