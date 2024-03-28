@@ -33,7 +33,7 @@ import { UserQueriesModule } from "./user-queries/user-queries.module";
 import * as _ from "lodash";
 import { PostgresAdapterModule } from "./postgres-adapter/postgres-adapter.module";
 import { AuthMiddleware } from "./shared/middlewares/auth.middleware";
-import { RelationsModule } from './relations/relations.module';
+import { RelationsModule } from "./relations/relations.module";
 
 @Module({
   imports: [

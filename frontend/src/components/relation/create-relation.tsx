@@ -47,7 +47,7 @@ export default function CreateRelation({
   const [joinColumn2, setJoinColumn2] = useState<InferredSchemaColumn | null>(
     null,
   );
-  const { trigger, isMutating } = useCreateRelation();
+  const { trigger, isMutating } = useCreateRelation(selectedDatabase.id);
   const {
     data: tables,
     isLoading: isLoadingTables,

@@ -141,8 +141,8 @@ export default function NavigationBar({
               }}
             />
             {relations?.map((relation) => {
-              const table1 = _.find(tables, { id: relation.table_1_id });
-              const table2 = _.find(tables, { id: relation.table_2_id });
+              const table1 = _.find(tables, { id: relation.table_1 });
+              const table2 = _.find(tables, { id: relation.table_2 });
               return table1 && table2 ? (
                 <MenuItem
                   key={relation.id}

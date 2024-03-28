@@ -5,7 +5,7 @@ export const TableConfigurationSchema = z.object({
   primary_key: z.string().optional(),
   title_property: z.string().optional(),
   hidden_columns: z.array(z.string()).optional(),
-  ordered_columns: z.array(z.string()).optional()
+  ordered_columns: z.array(z.string()).optional(),
 });
 export type TableConfiguration = z.infer<typeof TableConfigurationSchema>;
 
@@ -60,3 +60,11 @@ export const UpdateTableSchema = TableSchema.omit({
   deleted_at: true,
 }).partial();
 export type UpdateTable = z.infer<typeof UpdateTableSchema>;
+
+export const UpdateTableRowSchema = z.object({
+  row_id: z.union([z.string(), z.number()]),
+  column_name: z.string(),
+  value: z.any(),
+  pk_column: z.string(),
+});
+export type UpdateTableRow = z.infer<typeof UpdateTableRowSchema>;

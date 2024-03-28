@@ -34,20 +34,22 @@ export const useRelation = (id?: string) => {
   return { data, error, isLoading, isValidating, mutate };
 };
 
-export const useCreateRelation = () => {
+export const useCreateRelation = (databaseId: string) => {
   const { mutate } = useSWRConfig();
   const { data, error, trigger, isMutating } = useSWRMutation(
     "/relations",
-    async (
-      url: string,
-      { arg }: { arg: CreateRelation },
-    ): Promise<Relation> => {
-      const createdRelation = await backendCreate("/relations", arg);
-      mutate(`/relations/db/${arg.database_id}`, createdRelation, {
-        populateCache: (result: Relation, currentData: Relation[]) => {
-          currentData.push(result);
+    async (url: string, { arg }: { arg: CreateRelation }) => {
+      const createdRelation = await backendCreate(url, arg);
+
+      mutate(`/relations/db/${databaseId}`, createdRelation, {
+        populateCache: (
+          result: Relation,
+          currentData: Relation[] | undefined,
+        ) => {
+          return [...(currentData || []), result];
         },
       });
+
       return createdRelation;
     },
   );

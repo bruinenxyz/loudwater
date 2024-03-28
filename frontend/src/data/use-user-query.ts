@@ -38,8 +38,11 @@ export const useCreateUserQuery = () => {
       });
 
       mutate(`/user-queries`, createUserQueryResponse, {
-        populateCache: (result: UserQuery, currentData: UserQuery[]) => {
-          currentData ? currentData.push(result) : [result];
+        populateCache: (
+          result: UserQuery,
+          currentData: UserQuery[] | undefined,
+        ) => {
+          return [...(currentData || []), result];
         },
       });
       return createUserQueryResponse;
