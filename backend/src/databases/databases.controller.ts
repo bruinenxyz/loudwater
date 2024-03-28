@@ -71,4 +71,10 @@ export class DatabasesController {
   deleteDatabase(@Param("id") id: string): Promise<CleanDatabase> {
     return this.databasesService.deleteDatabase(id);
   }
+
+  @Get("/:id/schemas")
+  @UseGuards(OrgGuard("database"))
+  findAllSchemas(@Param("id") id: string): Promise<string[]> {
+    return this.databasesService.findAllSchemas(id);
+  }
 }

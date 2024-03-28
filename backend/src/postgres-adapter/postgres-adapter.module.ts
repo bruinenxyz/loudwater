@@ -1,9 +1,9 @@
-import { Module } from "@nestjs/common";
+import { Module, forwardRef } from "@nestjs/common";
 import { PostgresAdapterService } from "./postgres-adapter.service";
 import { DatabasesModule } from "@/databases/databases.module";
 
 @Module({
-  imports: [DatabasesModule],
+  imports: [forwardRef(() => DatabasesModule)],
   providers: [PostgresAdapterService],
   exports: [PostgresAdapterService],
 })

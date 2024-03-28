@@ -84,6 +84,7 @@ export const useUpdateTable = () => {
           mergeByKey(currentData, result);
         },
       });
+      mutate(`/tables/db/${updateTableResponse.database_id}`);
 
       return updateTableResponse;
     },

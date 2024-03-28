@@ -1,5 +1,5 @@
 import { DatabasesService } from "@/databases/databases.service";
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable, forwardRef } from "@nestjs/common";
 import { Pool } from "pg";
 import { ExternalColumn } from "@/definitions/postgres-adapter";
 import * as assert from "assert";
@@ -47,7 +47,10 @@ const columnMapping = (column: any): ExternalColumn => {
 @Injectable()
 export class PostgresAdapterService {
   private connectionPool: Map<string, Pool> = new Map();
-  constructor(private readonly databaseService: DatabasesService) {}
+  constructor(
+    @Inject(forwardRef(() => DatabasesService))
+    private readonly databaseService: DatabasesService
+  ) {}
 
   async getClientForDatabase(databaseId: string) {
     let connectionString =
@@ -113,6 +116,29 @@ export class PostgresAdapterService {
         tables[column.table_name][column.column_name] = columnMapping(column);
       }
       return tables;
+    } catch (e) {
+      console.log(e);
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
+
+  async getAllDatabaseSchema(databaseId: string): Promise<string[]> {
+    const database = await this.databaseService.findOne(databaseId);
+    const client = await this.getClientForDatabase(databaseId);
+    assert(database, "Database not found");
+
+    try {
+      const result = await client.query(
+        `select schema_name
+        from information_schema.schemata`,
+      );
+      const columns = result.rows;
+
+      const schemas = columns.map((column) => column.schema_name);
+
+      return schemas;
     } catch (e) {
       console.log(e);
       throw e;
