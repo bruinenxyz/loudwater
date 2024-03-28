@@ -16,6 +16,7 @@ import StepTypeSelector from "./step-type-selector";
 interface QueryBuilderProps {
   pipeline: Pipeline;
   setPipeline: (value: Pipeline) => void;
+  className?: string;
 }
 
 export type NewStepSelection = {
@@ -26,6 +27,7 @@ export type NewStepSelection = {
 export default function QueryBuilder({
   pipeline,
   setPipeline,
+  className,
 }: QueryBuilderProps) {
   const [newStepType, setNewStepType] = useState<NewStepSelection | null>(null);
   const [editStepIndex, setEditStepIndex] = useState<number | null>(
@@ -87,7 +89,7 @@ export default function QueryBuilder({
   }
 
   return (
-    <Section className="overflow-y-auto h-[400px] flex flex-col p-3 gap-y-2">
+    <Section className={className}>
       <FromStepComponent
         pipeline={pipeline}
         setPipeline={setPipeline}

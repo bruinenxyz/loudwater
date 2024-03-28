@@ -123,7 +123,11 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
       {tab === QueryTabEnum.SQL ? (
         <QueryEditor value={sqlQuery} onChange={setSqlQuery} />
       ) : (
-        <QueryBuilder pipeline={pipeline} setPipeline={setPipeline} />
+        <QueryBuilder
+          className="overflow-y-auto h-[400px] flex flex-col p-3 gap-y-2"
+          pipeline={pipeline}
+          setPipeline={setPipeline}
+        />
       )}
       <div className="flex flex-row items-center">
         <Button
@@ -149,7 +153,11 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
         resultsError={undefined}
       />
       <Drawer isOpen={drawerToggle} onClose={() => setDrawerToggle(false)}>
-        <QueryBuilder pipeline={pipeline} setPipeline={setPipeline} />
+        <QueryBuilder
+          className="flex flex-col h-full p-3 overflow-y-auto gap-y-2"
+          pipeline={pipeline}
+          setPipeline={setPipeline}
+        />
       </Drawer>
     </div>
   );
