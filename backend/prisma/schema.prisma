@@ -9,7 +9,7 @@ generator client {
 }
 
 model database {
-    id                String    @id @default(dbgenerated("CONCAT('dbse_', ksuid())")) @db.VarChar(32)
+    id                String     @id @default(dbgenerated("CONCAT('dbse_', ksuid())")) @db.VarChar(32)
     name              String
     external_name     String
     connection_url    String
@@ -19,8 +19,9 @@ model database {
     require_ssl       Boolean
     tables            table[]
     queries           query[]
-    created_at        DateTime  @default(now())
-    updated_at        DateTime  @updatedAt
+    relations         relation[]
+    created_at        DateTime   @default(now())
+    updated_at        DateTime   @updatedAt
     deleted_at        DateTime?
 }
 
@@ -75,5 +76,29 @@ model query {
     database        database  @relation(fields: [database_id], references: [id])
     created_at      DateTime  @default(now())
     updated_at      DateTime  @updatedAt
+    deleted_at      DateTime?
+}
+
+enum RelationType {
+    one_to_one
+    one_to_many
+    many_to_many
+}
+
+model relation {
+    id              String       @id @default(dbgenerated("CONCAT('rltn_', ksuid())")) @db.VarChar(32)
+    organization_id String
+    database_id     String
+    database        database     @relation(fields: [database_id], references: [id])
+    type            RelationType
+    table_1         String
+    table_2         String
+    column_1        String
+    column_2        String
+    join_table      String?
+    join_column_1   String?
+    join_column_2   String?
+    created_at      DateTime     @default(now())
+    updated_at      DateTime     @updatedAt
     deleted_at      DateTime?
 }

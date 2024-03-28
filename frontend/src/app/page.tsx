@@ -45,7 +45,8 @@ export default function Home() {
             <Card className="flex flex-col">
               <h5 className="bp5-heading">Writing Queries</h5>
               <div>
-                Learn how to query your databases using Bruinen's SQL editor.
+                Learn how to query your databases using Bruinen&apos;s SQL
+                editor.
               </div>
               <div className="mt-auto">
                 <AnchorButton
