@@ -6,6 +6,7 @@ import {
   backendUpdate,
 } from "./client";
 import useSWRMutation from "swr/mutation";
+import { CreateRelation, Relation, UpdateRelation } from "@/definitions";
 import * as _ from "lodash";
 
 export function useRelations(databaseId?: string) {
@@ -41,7 +42,13 @@ export const useCreateRelation = () => {
       url: string,
       { arg }: { arg: CreateRelation },
     ): Promise<Relation> => {
-      return await backendCreate("/relations", arg);
+      const createdRelation = await backendCreate("/relations", arg);
+      mutate(`/relations/db/${arg.database_id}`, createdRelation, {
+        populateCache: (result: Relation, currentData: Relation[]) => {
+          currentData.push(result);
+        },
+      });
+      return createdRelation;
     },
   );
   return { data, error, trigger, isMutating };
