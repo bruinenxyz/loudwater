@@ -4,6 +4,7 @@ import {
   RelationTypeEnum,
   InferredSchemaColumn,
   HydratedTable,
+  RelationType,
 } from "@/definitions";
 import {
   Button,
@@ -35,7 +36,7 @@ export default function CreateRelation({
   setIsOpen,
 }: CreateRelationProps) {
   const [selectedDatabase] = useSelectedDatabase();
-  const [relationType, setRelationType] = useState<string | null>(null);
+  const [relationType, setRelationType] = useState<RelationType | null>(null);
   const [table1, setTable1] = useState<HydratedTable | null>(null);
   const [table2, setTable2] = useState<HydratedTable | null>(null);
   const [column1, setColumn1] = useState<InferredSchemaColumn | null>(null);
@@ -69,7 +70,7 @@ export default function CreateRelation({
 
   function canCreateRelation() {
     if (
-      relationType === "many_to_many" &&
+      relationType === RelationTypeEnum.ManyToMany &&
       (!joinTable || !joinColumn1 || !joinColumn2)
     ) {
       return false;
@@ -117,7 +118,7 @@ export default function CreateRelation({
     />
   );
 
-  function selectRelationType(relType: string) {
+  function selectRelationType(relType: RelationType) {
     if (relType === relationType) {
       setRelationType(null);
       resetBaseFields();
@@ -194,7 +195,7 @@ export default function CreateRelation({
   }
 
   function renderManyToManyFields() {
-    if (relationType === "many_to_many") {
+    if (relationType === RelationTypeEnum.ManyToMany) {
       const joinTableColumns = joinTable
         ? _.map(_.values(joinTable.external_columns), (column) => {
             return { ...column, table: joinTable.id };
@@ -255,7 +256,7 @@ export default function CreateRelation({
             <div className="flex flex-col gap-2">
               <div className="flex flex-row items-center justify-between">
                 <Text>Relation type</Text>
-                <Select<string>
+                <Select<RelationType>
                   items={_.values(RelationTypeEnum)}
                   itemRenderer={renderRelationTypeItem}
                   onItemSelect={selectRelationType}
