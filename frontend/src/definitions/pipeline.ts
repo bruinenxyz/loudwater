@@ -1,4 +1,50 @@
 import { z } from "zod";
+import { ExternalColumnSchema } from ".";
+
+// SCHEMA INFERENCE:
+export const InferredSchemaColumnSchema = ExternalColumnSchema.extend({
+  table: z.string(),
+});
+export type InferredSchemaColumn = z.infer<typeof InferredSchemaColumnSchema>;
+
+// A relation used in a pipeline. Includes the API path to the relation from the base object defintiion and the object definition ID of the related object defintion
+export const InferredSchemaRelationSchema = z.object({
+  api_path: z.string(),
+  object_definition_id: z.string(),
+  relation_name: z.string(),
+});
+export type InferredSchemaRelation = z.infer<
+  typeof InferredSchemaRelationSchema
+>;
+
+// Includes a list of inferred pipeline output properties and the relations used in the pipeline
+export const InferredSchemaSchema = z.object({
+  relations: z.array(InferredSchemaRelationSchema),
+  properties: z.array(InferredSchemaColumnSchema),
+});
+export type InferredSchema = z.infer<typeof InferredSchemaSchema>;
+
+export const InferSchemaOutputSuccessSchema = z.object({
+  success: z.literal(true),
+  data: InferredSchemaSchema,
+});
+export type InferSchemaOutputSuccess = z.infer<
+  typeof InferSchemaOutputSuccessSchema
+>;
+
+export const InferSchemaOutputErrorSchema = z.object({
+  success: z.literal(false),
+  error: z.any(),
+});
+export type InferSchemaOutputError = z.infer<
+  typeof InferSchemaOutputErrorSchema
+>;
+
+export const InferSchemaOutputSchema = z.discriminatedUnion("success", [
+  InferSchemaOutputSuccessSchema,
+  InferSchemaOutputErrorSchema,
+]);
+export type InferSchemaOutput = z.infer<typeof InferSchemaOutputSchema>;
 
 export enum ObjectPropertyTypeEnum {
   string = "string",
@@ -61,14 +107,14 @@ export type StepIdentifier = z.infer<typeof StepIdentifierEnumSchema>;
 // Select Step
 export const SelectStepSchema = z.object({
   type: z.literal(StepIdentifierEnum.Select),
-  select: z.array(z.object({ name: z.string(), table: z.string() })).nonempty(),
+  select: z.array(InferredSchemaColumnSchema).nonempty(),
 });
 export type SelectStep = z.infer<typeof SelectStepSchema>;
 
 // Aggregate Step
 export const AggregateStepSchema = z.object({
   type: z.literal(StepIdentifierEnum.Aggregate),
-  group: z.array(z.object({ name: z.string(), table: z.string() })),
+  group: z.array(InferredSchemaColumnSchema),
   operation: AggregationOperationsEnumSchema,
   property: z.string(),
   as: z.string(),
@@ -233,59 +279,6 @@ export const PipelineSchema = z.object({
   steps: z.array(StepSchema),
 });
 export type Pipeline = z.infer<typeof PipelineSchema>;
-
-// SCHEMA INFERENCE:
-export const InferredSchemaPropertySchema = z.object({
-  api_name: z.string(),
-  api_path: z.string(),
-  type: ObjectPropertyTypeEnumSchema,
-  name: z.string(),
-  description: z.string(),
-  object_definition_id: z.string().optional(),
-  relation_name: z.string().optional(), // Name of the relation used to bring the property into the pipeline, only present if the property exists on a relation
-});
-export type InferredSchemaProperty = z.infer<
-  typeof InferredSchemaPropertySchema
->;
-
-// A relation used in a pipeline. Includes the API path to the relation from the base object defintiion and the object definition ID of the related object defintion
-export const InferredSchemaRelationSchema = z.object({
-  api_path: z.string(),
-  object_definition_id: z.string(),
-  relation_name: z.string(),
-});
-export type InferredSchemaRelation = z.infer<
-  typeof InferredSchemaRelationSchema
->;
-
-// Includes a list of inferred pipeline output properties and the relations used in the pipeline
-export const InferredSchemaSchema = z.object({
-  relations: z.array(InferredSchemaRelationSchema),
-  properties: z.array(InferredSchemaPropertySchema),
-});
-export type InferredSchema = z.infer<typeof InferredSchemaSchema>;
-
-export const InferSchemaOutputSuccessSchema = z.object({
-  success: z.literal(true),
-  data: InferredSchemaSchema,
-});
-export type InferSchemaOutputSuccess = z.infer<
-  typeof InferSchemaOutputSuccessSchema
->;
-
-export const InferSchemaOutputErrorSchema = z.object({
-  success: z.literal(false),
-  error: z.any(),
-});
-export type InferSchemaOutputError = z.infer<
-  typeof InferSchemaOutputErrorSchema
->;
-
-export const InferSchemaOutputSchema = z.discriminatedUnion("success", [
-  InferSchemaOutputSuccessSchema,
-  InferSchemaOutputErrorSchema,
-]);
-export type InferSchemaOutput = z.infer<typeof InferSchemaOutputSchema>;
 
 // STEP VALIDATION:
 export const StepValidationOutputSuccessSchema = z.object({

@@ -80,7 +80,7 @@ export const useUpdateUserQuery = (queryId: string) => {
 
 export const usePipelineSchema = (pipeline: Pipeline) => {
   const [selectedDatabase] = useSelectedDatabase();
-  const { data: tables } = useTables(selectedDatabase.id);
+  const { data: tables, isLoading, error } = useTables(selectedDatabase.id);
 
   const baseTable = _.find(tables, (table) => table.id === pipeline.from);
 
@@ -138,6 +138,8 @@ export const usePipelineSchema = (pipeline: Pipeline) => {
       }
     }
 
-    return resultSchema;
+    return { data: resultSchema, isLoading, error: null };
   }
+
+  return { data: null, isLoading, error: error || "Base table not found" };
 };
