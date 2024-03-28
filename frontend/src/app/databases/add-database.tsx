@@ -39,9 +39,12 @@ export default function AddDatabase({
   const nameField = useField<string>("");
   const urlField = useField<string>("");
   const [requireSsl, setRequireSsl] = useState<boolean>(true);
+
+  // This is conditionally called, but it will never be called if the condition is false, and is set pre-build
   const hasPermissionConnectDatabase =
     process.env.NEXT_PUBLIC_USE_AUTH === "true"
-      ? useUserPermission(SOURCE_EDIT_PERMISSION)
+      ? /* eslint-disable-next-line */
+        useUserPermission(SOURCE_EDIT_PERMISSION)
       : true;
 
   async function submitDatabase() {

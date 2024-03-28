@@ -37,7 +37,7 @@ export default function RootLayout({
     }
   };
 
-  const useRouteGuard = () => {
+  const routeGuard = () => {
     if (useClerk && clerkPubKey) {
       return <PrivateRouteGuard>{children}</PrivateRouteGuard>;
     } else {
@@ -61,7 +61,7 @@ export default function RootLayout({
     if (noLayoutPaths.some((p) => path.match(p))) {
       return (
         <body className={getBodyClassName()}>
-          <div className="flex h-screen max-h-screen">{useRouteGuard()}</div>
+          <div className="flex h-screen max-h-screen">{routeGuard()}</div>
         </body>
       );
     }
@@ -81,7 +81,7 @@ export default function RootLayout({
                 "w-[calc(100%-200px)] sm:left-[200px] h-[calc(100%-60px)] sm:h-full absolute"
               }
             >
-              {useRouteGuard()}
+              {routeGuard()}
             </div>
           </div>
         </body>
