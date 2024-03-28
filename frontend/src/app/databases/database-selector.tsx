@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { H6, Menu, MenuDivider, MenuItem, Text } from "@blueprintjs/core";
 import { useSelectedDatabase } from "@/stores";
-import { useDatabaseSchemas, useDatabases, useUpdateDatabase } from "@/data/use-database";
+import {
+  useDatabaseSchemas,
+  useDatabases,
+  useUpdateDatabase,
+} from "@/data/use-database";
 import AddDatabase from "@/app/databases/add-database";
 import { useRouter } from "next/navigation";
 const DatabaseSelector = ({ selectedDatabase, setSelectedDatabase }: any) => {
