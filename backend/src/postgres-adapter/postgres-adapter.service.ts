@@ -49,7 +49,7 @@ export class PostgresAdapterService {
   private connectionPool: Map<string, Pool> = new Map();
   constructor(
     @Inject(forwardRef(() => DatabasesService))
-    private readonly databaseService: DatabasesService
+    private readonly databaseService: DatabasesService,
   ) {}
 
   async getClientForDatabase(databaseId: string) {
@@ -139,6 +139,49 @@ export class PostgresAdapterService {
       const schemas = columns.map((column) => column.schema_name);
 
       return schemas;
+    } catch (e) {
+      console.log(e);
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
+
+  async getAllDatabaseConstraints(databaseId: string): Promise<any> {
+    const database = await this.databaseService.findOne(databaseId);
+    const client = await this.getClientForDatabase(databaseId);
+    assert(database, "Database not found");
+
+    try {
+      const result = await client.query(
+        `SELECT
+          tc.constraint_name,
+          tc.constraint_type,
+          tc.table_name,
+          kcu.column_name,
+          ccu.table_name AS foreign_table_name,
+          ccu.column_name AS foreign_column_name
+        FROM 
+          information_schema.table_constraints AS tc
+        JOIN 
+          information_schema.key_column_usage AS kcu
+          ON tc.constraint_name = kcu.constraint_name
+          AND tc.table_schema = kcu.table_schema
+        LEFT JOIN 
+          information_schema.constraint_column_usage AS ccu
+          ON tc.constraint_name = ccu.constraint_name
+          AND tc.table_schema = ccu.table_schema
+        WHERE 
+          tc.constraint_type IN ('FOREIGN KEY', 'PRIMARY KEY', 'UNIQUE')
+          AND tc.table_schema = $1
+        ORDER BY 
+          tc.table_name,
+          tc.constraint_type,
+          kcu.column_name;`,
+        [database.schema || "public"],
+      );
+
+      return result.rows;
     } catch (e) {
       console.log(e);
       throw e;
