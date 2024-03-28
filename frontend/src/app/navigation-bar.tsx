@@ -78,8 +78,7 @@ export default function NavigationBar({
   function renderClerkProfile() {
     const clerkPubKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
     const orgId = process.env.NEXT_PUBLIC_ORGANIZATION_ID;
-    const useClerk: boolean =
-      process.env.NEXT_PUBLIC_USE_AUTH === "true" && !!clerkPubKey && !orgId;
+    const useClerk: boolean = process.env.NEXT_PUBLIC_USE_AUTH === "true";
 
     if (useClerk && clerkPubKey) {
       return <UserProfileButton />;
