@@ -49,9 +49,15 @@ export const useCreateUserQuery = () => {
 };
 
 export const useUserQueryResults = (queryId: string, sql?: string) => {
-  const { data, error, isLoading } = useSWR<any>(sql, () => {
-    return backendGet(`/user-queries/${queryId}/run`);
-  });
+  const { data, error, isLoading } = useSWR<any>(
+    sql,
+    () => {
+      return backendGet(`/user-queries/${queryId}/run`);
+    },
+    {
+      revalidateOnFocus: false,
+    },
+  );
 
   return { data, error, isLoading };
 };

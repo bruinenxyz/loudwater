@@ -22,7 +22,6 @@ export default function RootLayout({
 }) {
   const path = usePathname();
   const clerkPubKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-  const orgId = process.env.NEXT_PUBLIC_ORGANIZATION_ID;
   const isUsingAuth: boolean = process.env.NEXT_PUBLIC_USE_AUTH === "true";
   const [darkMode, setDarkMode] = useDarkMode();
   // const [isCollapseNavMenu, setIsCollapseNavMenu] = useState<boolean>(false);
