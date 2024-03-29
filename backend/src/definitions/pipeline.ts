@@ -2,25 +2,27 @@ import { z } from "zod";
 import { ExternalColumnSchema } from ".";
 
 // SCHEMA INFERENCE:
-export const InferredSchemaColumnSchema = ExternalColumnSchema.extend({
-  table: z.string(),
-});
-export type InferredSchemaColumn = z.infer<typeof InferredSchemaColumnSchema>;
-
-// A relation used in a pipeline. Includes the API path to the relation from the base object defintiion and the object definition ID of the related object defintion
+// A relation used in a pipeline. Includes the id of the table being related in, the relation id, and the alias of the related table
 export const InferredSchemaRelationSchema = z.object({
-  api_path: z.string(),
-  object_definition_id: z.string(),
-  relation_name: z.string(),
+  table: z.string(),
+  relation: z.string(),
+  as: z.string(),
 });
 export type InferredSchemaRelation = z.infer<
   typeof InferredSchemaRelationSchema
 >;
 
+// Given a base external_column object, this schema includes the table and optional relation that the column is from
+export const InferredSchemaColumnSchema = ExternalColumnSchema.extend({
+  table: z.string(),
+  relation: InferredSchemaRelationSchema.optional(),
+});
+export type InferredSchemaColumn = z.infer<typeof InferredSchemaColumnSchema>;
+
 // Includes a list of inferred pipeline output properties and the relations used in the pipeline
 export const InferredSchemaSchema = z.object({
   relations: z.array(InferredSchemaRelationSchema),
-  properties: z.array(InferredSchemaColumnSchema),
+  columns: z.array(InferredSchemaColumnSchema),
 });
 export type InferredSchema = z.infer<typeof InferredSchemaSchema>;
 
@@ -116,16 +118,22 @@ export const AggregateStepSchema = z.object({
   type: z.literal(StepIdentifierEnum.Aggregate),
   group: z.array(InferredSchemaColumnSchema),
   operation: AggregationOperationsEnumSchema,
-  property: z.string(),
+  column: InferredSchemaColumnSchema,
   as: z.string(),
 });
 export type AggregateStep = z.infer<typeof AggregateStepSchema>;
 
 // Generic condition schema with property, operator, and value
 export const ConditionSchema = z.object({
-  property: z.string(),
+  column: InferredSchemaColumnSchema,
   operator: OperatorsEnumSchema,
-  value: z.union([z.string(), z.number(), z.boolean(), z.undefined()]),
+  value: z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.undefined(),
+    InferredSchemaColumnSchema,
+  ]),
 });
 export type Condition = z.infer<typeof ConditionSchema>;
 
@@ -236,7 +244,7 @@ export type DeriveStep = z.infer<typeof DeriveStepSchema>;
 
 // Order Step
 export const OrderPropertySchema = z.object({
-  property: z.string(),
+  column: InferredSchemaColumnSchema,
   direction: z.enum(["asc", "desc"]),
 });
 export type OrderProperty = z.infer<typeof OrderPropertySchema>;
@@ -258,7 +266,7 @@ export type TakeStep = z.infer<typeof TakeStepSchema>;
 // Relate Step
 export const RelateStepSchema = z.object({
   type: z.literal(StepIdentifierEnum.Relate),
-  relation: z.string(),
+  relation: InferredSchemaRelationSchema,
 });
 export type RelateStep = z.infer<typeof RelateStepSchema>;
 
