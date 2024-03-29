@@ -23,8 +23,7 @@ export default function RootLayout({
   const path = usePathname();
   const clerkPubKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   const orgId = process.env.NEXT_PUBLIC_ORGANIZATION_ID;
-  const useClerk: boolean =
-    process.env.NEXT_PUBLIC_USE_AUTH === "true" && !!clerkPubKey && !orgId;
+  const isUsingAuth: boolean = process.env.NEXT_PUBLIC_USE_AUTH === "true";
   const [darkMode, setDarkMode] = useDarkMode();
   // const [isCollapseNavMenu, setIsCollapseNavMenu] = useState<boolean>(false);
 
@@ -37,16 +36,17 @@ export default function RootLayout({
     }
   };
 
-  const useRouteGuard = () => {
-    if (useClerk && clerkPubKey) {
+  const routeGuard = () => {
+    if (isUsingAuth && clerkPubKey) {
       return <PrivateRouteGuard>{children}</PrivateRouteGuard>;
     } else {
       return children;
     }
   };
 
-  const useAuth = () => {
-    if (useClerk && clerkPubKey) {
+  const authRoute = () => {
+    console.log("isUsingAuth", isUsingAuth, clerkPubKey);
+    if (isUsingAuth && clerkPubKey) {
       return (
         <ClerkProvider publishableKey={clerkPubKey}>
           {renderChildren()}
@@ -61,7 +61,7 @@ export default function RootLayout({
     if (noLayoutPaths.some((p) => path.match(p))) {
       return (
         <body className={getBodyClassName()}>
-          <div className="flex h-screen max-h-screen">{useRouteGuard()}</div>
+          <div className="flex h-screen max-h-screen">{routeGuard()}</div>
         </body>
       );
     }
@@ -81,7 +81,7 @@ export default function RootLayout({
                 "w-[calc(100%-200px)] sm:left-[200px] h-[calc(100%-60px)] sm:h-full absolute"
               }
             >
-              {useRouteGuard()}
+              {routeGuard()}
             </div>
           </div>
         </body>
@@ -94,7 +94,7 @@ export default function RootLayout({
       <head>
         <title>Bruinen</title>
       </head>
-      {useAuth()}
+      {authRoute()}
     </html>
   );
 }

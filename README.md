@@ -2,7 +2,7 @@
 
 An interactive GUI for managing, querying, and sharing any postgres database. 
 
-Find user docs [here](https://docs.loudwater.co/using-loudwater)
+User documenation: [here](https://docs.loudwater.co/using-loudwater)
 
 <img width="1440" alt="Screenshot 2024-03-26 at 8 28 42 AM" src="https://github.com/bruinenxyz/loudwater/assets/19849533/223cd3c1-422d-442e-bf76-ef78e80edc59">
 
@@ -40,7 +40,7 @@ cp ./frontend/.env.example ./frontend/.env
 
 ### 3. Build & run
 
-There are two ways to "build" your Loudwater deployment. You can either use our pre-built Docker images or build locally on your machine.
+There are two ways to "build" your Loudwater deployment. You can use our pre-built Docker images or build locally on your machine.
 
 #### Use pre-built Docker images
 
@@ -68,4 +68,4 @@ To connect your first database, hover over the "Select a database" dropdown in t
 
 Name your database, provide the Postges connection URL, and optionally specify the database schema before clicking "Connect Database".
 
-Your database should now be available in the "Select a database" dropdown menu.
+Your database should be available in the "Select a database" dropdown menu.

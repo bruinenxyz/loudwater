@@ -1,5 +1,5 @@
 import { DatabasesService } from "@/databases/databases.service";
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable, forwardRef } from "@nestjs/common";
 import { Pool } from "pg";
 import { ExternalColumn } from "@/definitions/postgres-adapter";
 import * as assert from "assert";
@@ -47,7 +47,10 @@ const columnMapping = (column: any): ExternalColumn => {
 @Injectable()
 export class PostgresAdapterService {
   private connectionPool: Map<string, Pool> = new Map();
-  constructor(private readonly databaseService: DatabasesService) {}
+  constructor(
+    @Inject(forwardRef(() => DatabasesService))
+    private readonly databaseService: DatabasesService,
+  ) {}
 
   async getClientForDatabase(databaseId: string) {
     let connectionString =
@@ -113,6 +116,72 @@ export class PostgresAdapterService {
         tables[column.table_name][column.column_name] = columnMapping(column);
       }
       return tables;
+    } catch (e) {
+      console.log(e);
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
+
+  async getAllDatabaseSchema(databaseId: string): Promise<string[]> {
+    const database = await this.databaseService.findOne(databaseId);
+    const client = await this.getClientForDatabase(databaseId);
+    assert(database, "Database not found");
+
+    try {
+      const result = await client.query(
+        `select schema_name
+        from information_schema.schemata`,
+      );
+      const columns = result.rows;
+
+      const schemas = columns.map((column) => column.schema_name);
+
+      return schemas;
+    } catch (e) {
+      console.log(e);
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
+
+  async getAllDatabaseConstraints(databaseId: string): Promise<any> {
+    const database = await this.databaseService.findOne(databaseId);
+    const client = await this.getClientForDatabase(databaseId);
+    assert(database, "Database not found");
+
+    try {
+      const result = await client.query(
+        `SELECT
+          tc.constraint_name,
+          tc.constraint_type,
+          tc.table_name,
+          kcu.column_name,
+          ccu.table_name AS foreign_table_name,
+          ccu.column_name AS foreign_column_name
+        FROM 
+          information_schema.table_constraints AS tc
+        JOIN 
+          information_schema.key_column_usage AS kcu
+          ON tc.constraint_name = kcu.constraint_name
+          AND tc.table_schema = kcu.table_schema
+        LEFT JOIN 
+          information_schema.constraint_column_usage AS ccu
+          ON tc.constraint_name = ccu.constraint_name
+          AND tc.table_schema = ccu.table_schema
+        WHERE 
+          tc.constraint_type IN ('FOREIGN KEY', 'PRIMARY KEY', 'UNIQUE')
+          AND tc.table_schema = $1
+        ORDER BY 
+          tc.table_name,
+          tc.constraint_type,
+          kcu.column_name;`,
+        [database.schema || "public"],
+      );
+
+      return result.rows;
     } catch (e) {
       console.log(e);
       throw e;

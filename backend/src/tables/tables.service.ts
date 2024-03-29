@@ -41,8 +41,14 @@ export class TablesService {
     const table = await this.findOne(id);
     assert(table, "Table not found");
 
+    const database = await this.prismaService.database.findUnique({
+      where: {
+        id: table.database_id,
+      },
+    });
+
     // Begin building SQL statement
-    let sql = `SELECT * FROM ${table.external_name}`;
+    let sql = `SELECT * FROM ${database?.schema}.${table.external_name}`;
 
     const parameters: string[] = [];
 
@@ -144,6 +150,12 @@ export class TablesService {
       },
     });
 
+    const database = await this.prismaService.database.findUnique({
+      where: {
+        id: databaseId,
+      },
+    });
+
     const parsedTables: Table[] = _.map(tables, (table) =>
       TableSchema.parse(table),
     );
@@ -167,6 +179,7 @@ export class TablesService {
                 external_name: tableName,
                 icon: "cube",
                 color: "gray",
+                schema: database?.schema ?? "",
                 configuration: {},
                 visibility: "normal",
                 database_id: databaseId,
@@ -192,6 +205,15 @@ export class TablesService {
 
     // Wait for all promises to resolve
     const resolvedTables = await Promise.all(promises);
+
+    // Update schema field for each table if it empty
+    resolvedTables.forEach(async (table) => {
+      if (table.schema == "") {
+        await this.updateTable(table.id, {
+          schema: database?.schema,
+        });
+      }
+    });
 
     // Filter out hidden tables
     const results = _.filter(
@@ -331,7 +353,7 @@ export class TablesService {
       FROM pg_attribute a 
       JOIN pg_type t ON a.atttypid = t.oid 
       JOIN pg_enum e ON a.atttypid = e.enumtypid 
-      WHERE a.attrelid = '${table.external_name}'::regclass
+      WHERE a.attrelid = '${table.schema}.${table.external_name}'::regclass
       AND a.atttypid IN (
         SELECT oid 
         FROM pg_type 
@@ -393,7 +415,7 @@ export class TablesService {
     const table = await this.findOne(tableId);
     assert(table, "Table not found");
 
-    const sql = `UPDATE ${table.external_name} SET ${column_name} = $1 WHERE ${pk_column} = $2`;
+    const sql = `UPDATE ${table.schema}.${table.external_name} SET ${column_name} = $1 WHERE ${pk_column} = $2`;
     const parameters = [value, row_id];
 
     const result = await this.postgresAdapterService.run({

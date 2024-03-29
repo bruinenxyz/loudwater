@@ -76,14 +76,7 @@ export const useUpdateTable = () => {
       );
 
       mutate(`/tables/${arg.id}`, updateTableResponse, false);
-      mutate(`/tables`, updateTableResponse, {
-        populateCache: (
-          result: HydratedTable,
-          currentData: HydratedTable[],
-        ) => {
-          mergeByKey(currentData, result);
-        },
-      });
+      mutate(`/tables/db/${updateTableResponse.database_id}`);
 
       return updateTableResponse;
     },

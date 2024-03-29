@@ -8,6 +8,8 @@ import {
   MenuItem,
   MenuDivider,
   IconName,
+  Text,
+  Icon,
 } from "@blueprintjs/core";
 import React, { useEffect, useState } from "react";
 import logo from "@assets/logo.svg";
@@ -19,6 +21,9 @@ import { useTables } from "@/data/use-tables";
 import DatabaseSelector from "./databases/database-selector";
 import { useSelectedDatabase } from "@/stores";
 import { useCreateUserQuery, useUserQueries } from "@/data/use-user-query";
+import { useRelations } from "@/data/use-relations";
+import * as _ from "lodash";
+import CreateRelation from "@/components/relation/create-relation";
 
 export enum NavigationTabEnums {
   SOURCES = "sources",
@@ -42,6 +47,8 @@ export default function NavigationBar({
     NavigationTabEnums | undefined
   >();
   const [selectedDatabase, setSelectedDatabase] = useSelectedDatabase();
+  const [createRelationToggle, setCreateRelationToggle] =
+    useState<boolean>(false);
 
   const {
     data: tables,
@@ -49,11 +56,18 @@ export default function NavigationBar({
     error: tablesError,
   } = useTables(selectedDatabase.id);
 
+  const {
+    data: relations,
+    isLoading: isLoadingRelations,
+    error: relationsError,
+  } = useRelations(selectedDatabase.id);
+
   const handlePageChange = (id: string) => {
     router.push(`/${id}`);
   };
   const { trigger: triggerNewQuery, isMutating: isLoadingNewQuery } =
     useCreateUserQuery();
+
   const handleNewQuery = async () => {
     const newUserQuery = await triggerNewQuery();
     handlePageChange(`queries/${newUserQuery.id}`);
@@ -78,8 +92,7 @@ export default function NavigationBar({
   function renderClerkProfile() {
     const clerkPubKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
     const orgId = process.env.NEXT_PUBLIC_ORGANIZATION_ID;
-    const useClerk: boolean =
-      process.env.NEXT_PUBLIC_USE_AUTH === "true" && !!clerkPubKey && !orgId;
+    const useClerk: boolean = process.env.NEXT_PUBLIC_USE_AUTH === "true";
 
     if (useClerk && clerkPubKey) {
       return <UserProfileButton />;
@@ -110,10 +123,45 @@ export default function NavigationBar({
               <MenuItem
                 key={table.id}
                 text={table.name}
-                icon={table.icon as IconName}
+                icon={
+                  <Icon icon={table.icon as IconName} color={table.color} />
+                }
                 onClick={() => handlePageChange(`tables/${table.id}`)}
               />
             ))}
+            <MenuDivider />
+            <H5>Relations</H5>
+            <MenuItem
+              icon="new-object"
+              text="New relation"
+              intent="success"
+              onClick={() => setCreateRelationToggle(true)}
+              popoverProps={{
+                usePortal: true,
+              }}
+            />
+            {relations?.map((relation) => {
+              const table1 = _.find(tables, { id: relation.table_1 });
+              const table2 = _.find(tables, { id: relation.table_2 });
+              return table1 && table2 ? (
+                <MenuItem
+                  key={relation.id}
+                  text={
+                    <>
+                      <Text>{`${table1?.name} - ${table2?.name}`}</Text>
+                      <Text className="bp5-text-muted" ellipsize>
+                        {`${relation.column_1} - ${relation.column_2}`}
+                      </Text>
+                    </>
+                  }
+                  // TODO: onClick={() => handlePageChange(`relations/${relation.id}`)}
+                />
+              ) : null;
+            })}
+            <CreateRelation
+              isOpen={createRelationToggle}
+              setIsOpen={setCreateRelationToggle}
+            />
             <MenuDivider />
             <H5>Queries</H5>
             <MenuItem

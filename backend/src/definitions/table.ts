@@ -4,6 +4,8 @@ import { z } from "zod";
 export const TableConfigurationSchema = z.object({
   primary_key: z.string().optional(),
   title_property: z.string().optional(),
+  hidden_columns: z.array(z.string()).optional(),
+  ordered_columns: z.array(z.string()).optional(),
 });
 export type TableConfiguration = z.infer<typeof TableConfigurationSchema>;
 
@@ -14,6 +16,7 @@ export const TableSchema = z.object({
   description: z.string().optional().nullable(),
   icon: z.string(),
   color: z.string(),
+  schema: z.string(),
   configuration: TableConfigurationSchema,
   visibility: z.enum(["normal", "hidden"]),
   properties: z.any(),

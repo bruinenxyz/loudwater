@@ -38,18 +38,19 @@ export default function AddDatabase({
   const [selectedDatabase, setSelectedDatabase] = useSelectedDatabase();
   const nameField = useField<string>("");
   const urlField = useField<string>("");
-  const schemaField = useField<string>("");
   const [requireSsl, setRequireSsl] = useState<boolean>(true);
+
+  // This is conditionally called, but it will never be called if the condition is false, and is set pre-build
   const hasPermissionConnectDatabase =
     process.env.NEXT_PUBLIC_USE_AUTH === "true"
-      ? useUserPermission(SOURCE_EDIT_PERMISSION)
+      ? /* eslint-disable-next-line */
+        useUserPermission(SOURCE_EDIT_PERMISSION)
       : true;
 
   async function submitDatabase() {
     const databaseConfig = {
       name: nameField.value,
       connection_url: urlField.value,
-      schema: schemaField.value || undefined,
       require_ssl: requireSsl,
     };
     const data = CreateDatabaseSchema.parse(databaseConfig);
@@ -65,7 +66,6 @@ export default function AddDatabase({
     const databaseConfig = {
       name: nameField.value || undefined,
       connection_url: urlField.value || undefined,
-      schema: schemaField.value || undefined,
       require_ssl: requireSsl,
     };
     return CreateDatabaseSchema.safeParse(databaseConfig).success;
@@ -74,7 +74,6 @@ export default function AddDatabase({
   function resetFields() {
     nameField.onValueChange("");
     urlField.onValueChange("");
-    schemaField.onValueChange("");
     setRequireSsl(true);
   }
 
@@ -109,23 +108,6 @@ export default function AddDatabase({
                   labelInfo="(required)"
                 >
                   <InputGroup id="url-input" {...urlField} autoFocus={false} />
-                </FormGroup>
-                <FormGroup
-                  label={
-                    <div className="flex flex-row items-center">
-                      <Text>Schema</Text>
-                      <Tooltip content="Optional. Defaults to 'public'">
-                        <Icon className="ml-1" icon="small-info-sign" />
-                      </Tooltip>
-                    </div>
-                  }
-                  labelFor="schema-input"
-                >
-                  <InputGroup
-                    id="schema-input"
-                    {...schemaField}
-                    autoFocus={false}
-                  />
                 </FormGroup>
 
                 <div className="flex flex-row">
