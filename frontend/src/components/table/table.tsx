@@ -112,23 +112,28 @@ const Table: React.FC<Props> = (props) => {
 
   function orderTableData(direction: "asc" | "desc", key?: string) {
     if (key !== undefined && results && resultsConfig && setResultsConfig) {
-      const columnName = key;
-      const order: OrderStep = OrderStepSchema.parse({
-        type: StepIdentifierEnum.Order,
-        order: [{ property: columnName, direction }],
-      });
-      setResultsConfig({
-        ...resultsConfig,
-        order: order,
-      });
-      const sortedData =
-        direction === "asc"
-          ? _.sortBy(results.rows, columnName)
-          : _.sortBy(results.rows, columnName).reverse();
-      setTableData({
-        rowCount: results.rowCount,
-        columns: convertToColumns(sortedData),
-      });
+      const column = _.find(
+        table?.external_columns,
+        (column) => column.name === key,
+      );
+      if (column && table) {
+        const order: OrderStep = OrderStepSchema.parse({
+          type: StepIdentifierEnum.Order,
+          order: [{ column: { ...column, table: table.id }, direction }],
+        });
+        setResultsConfig({
+          ...resultsConfig,
+          order: order,
+        });
+        const sortedData =
+          direction === "asc"
+            ? _.sortBy(results.rows, column.name)
+            : _.sortBy(results.rows, column.name).reverse();
+        setTableData({
+          rowCount: results.rowCount,
+          columns: convertToColumns(sortedData),
+        });
+      }
     }
   }
 
