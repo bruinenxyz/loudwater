@@ -5,7 +5,8 @@ import { CreateRelationDto, UpdateRelationDto } from "./dtos/relation.dto";
 import { PostgresAdapterService } from "@/postgres-adapter/postgres-adapter.service";
 import * as assert from "assert";
 import * as _ from "lodash";
-import { RelationSchema } from "@/definitions";
+import { Relation, RelationSchema, RelationType } from "@/definitions";
+import { TablesService } from "@/tables/tables.service";
 
 @Injectable()
 export class RelationsService {
@@ -13,6 +14,7 @@ export class RelationsService {
     private prismaService: PrismaService,
     private readonly httpRequestContextService: HttpRequestContextService,
     private readonly postgresAdapterService: PostgresAdapterService,
+    private readonly tablesService: TablesService,
   ) {}
 
   async create(createRelationDto: CreateRelationDto) {
@@ -21,41 +23,95 @@ export class RelationsService {
     const relation = await this.prismaService.relation.create({
       data: {
         ...createRelationDto,
+        generated: false,
         organization_id: orgId,
         deleted_at: null,
       },
     });
 
-    return relation;
+    return RelationSchema.parse(relation);
   }
 
   async findAllForDatabase(databaseId: string) {
     const orgId = this.httpRequestContextService.checkAndGetOrgId();
 
     // Pull user-created relations from the db
-    const relations = await this.prismaService.relation.findMany({
+    const existingRelations = await this.prismaService.relation.findMany({
       where: {
         database_id: databaseId,
         deleted_at: null,
         organization_id: orgId,
       },
     });
+    const parsedExistingRelations = _.map(existingRelations, (relation) =>
+      RelationSchema.parse(relation),
+    );
 
     // Pull relations from fk constraints in the external db
     const externalConstraints =
       await this.postgresAdapterService.getAllDatabaseConstraints(databaseId);
 
-    // TODO look through for foreign key constraints and create relations from them
-    // We’re checking for one-to-one and one-to-many relations
-    // To find a one-to-many relation, we check for a foreign key constraint in the db
-    // - If we find one, then the foreign column will be the “one” side of the one-to-many relation
-    // - In the case where the *same* column on the base table with the fk constraint has *either* a unique or a primary key constraint, then the relation will be one-to-one
+    const tables = await this.tablesService.findAllForDatabase(databaseId);
 
-    console.log(externalConstraints);
+    const promises: Promise<Relation>[] = [];
 
-    // TODO combine the other relations with the current relations
+    _.forEach(externalConstraints, (constraint) => {
+      if (constraint.constraint_type === "FOREIGN KEY") {
+        const table1 = _.find(tables, (table) => {
+          return table.external_name === constraint.foreign_table_name;
+        });
+        assert(table1, `Table not found: ${constraint.foreign_table_name}`);
 
-    return relations;
+        const table2 = _.find(tables, (table) => {
+          return table.external_name === constraint.table_name;
+        });
+        assert(table2, `Table not found: ${constraint.table_name}`);
+
+        // To determine the relation type, check for uniqueness of the current column
+        // If the column is unique, then the relation is one-to-one (otherwise it’s one-to-many)
+        const isUnique = _.some(externalConstraints, (c) => {
+          return (
+            c.table_name === constraint.table_name &&
+            c.column_name === constraint.column_name &&
+            (c.constraint_type === "UNIQUE" ||
+              c.constraint_type === "PRIMARY KEY")
+          );
+        });
+
+        const relationType = (
+          isUnique ? "one_to_one" : "one_to_many"
+        ) as RelationType;
+
+        const foundConstraint = _.find(parsedExistingRelations, (relation) => {
+          return (
+            relation.table_1 === table1.id &&
+            relation.table_2 === table2.id &&
+            relation.column_1 === constraint.foreign_column_name &&
+            relation.column_2 === constraint.column_name &&
+            relation.type === relationType
+          );
+        });
+
+        // If the relation isn't found, add it in the db
+        if (!foundConstraint) {
+          const newRelation = {
+            database_id: databaseId,
+            type: relationType,
+            table_1: table1.id,
+            table_2: table2.id,
+            column_1: constraint.foreign_column_name,
+            column_2: constraint.column_name,
+          };
+
+          promises.push(this.create(newRelation));
+        }
+      }
+    });
+
+    const newRelations: Relation[] = await Promise.all(promises);
+    const allRelations = _.concat(parsedExistingRelations, newRelations);
+
+    return allRelations;
   }
 
   async findOne(id: string) {
