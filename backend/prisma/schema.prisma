@@ -91,6 +91,7 @@ model relation {
     database_id     String
     database        database     @relation(fields: [database_id], references: [id])
     type            RelationType
+    generated       Boolean      @default(false)
     table_1         String
     table_2         String
     column_1        String
