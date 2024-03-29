@@ -3,6 +3,9 @@ import Loading from "@/app/loading";
 import { ErrorDisplay } from "@/components/error-display";
 import QueryEditor from "@/components/query/query-editor";
 import { QueryHeader } from "@/components/query/query-header";
+import QueryParameters, {
+  Parameter,
+} from "@/components/query/query-parameters";
 import Table from "@/components/table/table";
 import {
   useUpdateUserQuery,
@@ -36,6 +39,8 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
     isLoading: isLoadingResults,
     error: resultsError,
   } = useUserQueryResults(userQueryId, userQuery?.sql);
+
+  const [parameters, setParameters] = useState<Parameter[]>([]);
 
   const handleSaveQuery = () => {
     updateUserQueryTrigger({ sql: sqlQuery });
@@ -71,6 +76,7 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
   return (
     <div className="flex flex-col h-full">
       <QueryHeader query={userQuery} />
+      <QueryParameters parameters={parameters} setParameters={setParameters} />
       <QueryEditor value={sqlQuery} onChange={setSqlQuery} />
       <div className="flex flex-row items-center">
         <Button
