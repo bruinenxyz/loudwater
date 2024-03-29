@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import Editor, { useMonaco } from "@monaco-editor/react";
 import { useEffect } from "react";
 import * as monaco from "monaco-editor";
@@ -7,6 +6,7 @@ import {
   MonacoThemeDark,
   MonacoThemeLight,
 } from "@blueprintjs/monaco-editor-theme";
+import { useDarkModeContext } from "../context/dark-mode-context";
 
 function createDependencyProposals(
   range: monaco.IRange,
@@ -32,6 +32,7 @@ interface QueryEditorProps {
 
 function QueryEditor({ value, onChange }: QueryEditorProps) {
   const monacoInstance = useMonaco();
+  const { darkMode, setDarkMode } = useDarkModeContext();
 
   useEffect(() => {
     if (!monacoInstance || !window) return;
@@ -62,8 +63,10 @@ function QueryEditor({ value, onChange }: QueryEditorProps) {
         };
       },
     });
+
     monacoInstance.editor.defineTheme("vs-dark", { ...MonacoThemeDark });
-    monacoInstance.editor.setTheme("vs-dark");
+    monacoInstance.editor.defineTheme("vs-light", { ...MonacoThemeLight });
+    monacoInstance.editor.setTheme(darkMode ? "vs-dark" : "vs-light");
 
     monacoInstance.editor.addCommand({
       id: "run-query",
@@ -78,7 +81,7 @@ function QueryEditor({ value, onChange }: QueryEditorProps) {
       ],
       run: () => {},
     });
-  }, [monacoInstance]);
+  }, [monacoInstance, darkMode]);
 
   return (
     <div className="h-full overflow-hidden rounded-md ">

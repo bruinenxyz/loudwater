@@ -24,6 +24,7 @@ import { useCreateUserQuery, useUserQueries } from "@/data/use-user-query";
 import { useRelations } from "@/data/use-relations";
 import * as _ from "lodash";
 import CreateRelation from "@/components/relation/create-relation";
+import { useDarkModeContext } from "@/components/context/dark-mode-context";
 
 export enum NavigationTabEnums {
   SOURCES = "sources",
@@ -37,10 +38,7 @@ export type NavigationBarProps = {
   setDarkMode: (darkMode: boolean) => void;
 };
 
-export default function NavigationBar({
-  darkMode,
-  setDarkMode,
-}: NavigationBarProps) {
+export default function NavigationBar({}) {
   const pathname = usePathname();
   const router = useRouter();
   const [selectedNavigationTab, setSelectedNavigationTab] = useState<
@@ -49,6 +47,7 @@ export default function NavigationBar({
   const [selectedDatabase, setSelectedDatabase] = useSelectedDatabase();
   const [createRelationToggle, setCreateRelationToggle] =
     useState<boolean>(false);
+  const { darkMode, setDarkMode } = useDarkModeContext();
 
   const {
     data: tables,
