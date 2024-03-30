@@ -29,21 +29,23 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
     isLoading: isLoadingUserQuery,
     error: userQueryError,
   } = useUserQuery(userQueryId);
+  const [parameters, setParameters] = useState<Parameter[]>([]);
+  const [savedParameters, setSavedParameters] = useState<Parameter[]>([]);
 
   useEffect(() => {
     setSqlQuery(userQuery?.sql || "");
-  }, [userQuery, setSqlQuery]);
+    setParameters(userQuery?.parameters || []);
+  }, [userQuery, setSqlQuery, setParameters]);
 
   const {
     data: results,
     isLoading: isLoadingResults,
     error: resultsError,
-  } = useUserQueryResults(userQueryId, userQuery?.sql);
-
-  const [parameters, setParameters] = useState<Parameter[]>([]);
+  } = useUserQueryResults(userQueryId, userQuery?.sql, savedParameters);
 
   const handleSaveQuery = () => {
-    updateUserQueryTrigger({ sql: sqlQuery });
+    setSavedParameters(parameters);
+    updateUserQueryTrigger({ sql: sqlQuery, parameters: parameters });
   };
 
   const { trigger: updateUserQueryTrigger, isMutating: isUpdatingUserQuery } =

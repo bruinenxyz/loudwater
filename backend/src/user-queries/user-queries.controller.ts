@@ -10,6 +10,7 @@ import {
   UseInterceptors,
   HttpException,
   HttpStatus,
+  Query,
 } from "@nestjs/common";
 import { UserQueriesService } from "./user-queries.service";
 import { OrgGuard } from "@/auth/organizations.guard";
@@ -67,9 +68,12 @@ export class UserQueriesController {
   @Get("/:id/run")
   @UseGuards(OrgGuard("query"))
   @UseInterceptors(TrackingInterceptor)
-  async run(@Param("id") id: string): Promise<QueryResult<any>> {
+  async run(
+    @Param("id") id: string,
+    @Query() query: any,
+  ): Promise<QueryResult<any>> {
     try {
-      const results = await this.userQueriesService.run(id);
+      const results = await this.userQueriesService.run(id, query);
       return results;
     } catch (e) {
       throw new HttpException(

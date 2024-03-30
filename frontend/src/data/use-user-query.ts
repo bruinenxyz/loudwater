@@ -3,6 +3,7 @@ import { backendCreate, backendGet, backendUpdate } from "./client";
 import { CreateUserQuery, UserQuery } from "@/definitions";
 import useSWRMutation from "swr/mutation";
 import { useSelectedDatabase } from "@/stores";
+import { Parameter } from "@/components/query/query-parameters";
 
 export const useUserQuery = (queryId?: string) => {
   const { data, error, isLoading } = useSWR<UserQuery>(
@@ -48,9 +49,20 @@ export const useCreateUserQuery = () => {
   return { data, error, trigger, isMutating };
 };
 
-export const useUserQueryResults = (queryId: string, sql?: string) => {
-  const { data, error, isLoading } = useSWR<any>(sql, () => {
-    return backendGet(`/user-queries/${queryId}/run`);
+export const useUserQueryResults = (
+  queryId: string,
+  sql?: string,
+  params?: Parameter[],
+) => {
+  const reducedParams: Record<string, any> = {};
+  if (params) {
+    for (const param of params) {
+      reducedParams[param.name] = param.value || param.defaultValue;
+    }
+  }
+  const paramsString = new URLSearchParams(reducedParams).toString();
+  const { data, error, isLoading } = useSWR<any>(sql + paramsString, () => {
+    return backendGet(`/user-queries/${queryId}/run?${paramsString}`);
   });
 
   return { data, error, isLoading };

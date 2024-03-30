@@ -129,7 +129,7 @@ export class UserQueriesService {
   }
 
   // TODO decide on the correct return type here
-  async run(id: string): Promise<QueryResult<any>> {
+  async run(id: string, query): Promise<QueryResult<any>> {
     const userQuery = await this.findOne(id);
 
     assert(userQuery, new NotFoundException(`Query not found with id ${id}`));
@@ -142,13 +142,37 @@ export class UserQueriesService {
         userQuery.sql,
         `SQL statement not found for query ${userQuery.name}`,
       );
-
+      const { sql, params } = parseParametersFromSQL(userQuery.sql, query);
       const results = await this.postgresAdapterService.run({
         databaseId: userQuery.database_id,
-        sql: userQuery.sql,
+        sql: sql,
+        values: params,
       });
 
       return results;
     }
   }
 }
+
+const parseParametersFromSQL = (
+  sql: string,
+  parameters: Record<string, any>,
+): { sql: string; params: any[] } => {
+  const matches = sql.match(/{{(.*?)}}/g);
+  let paramIndex = 1;
+  const params: any[] = [];
+  console.log("Matches", matches);
+  if (!matches) {
+    return { sql, params: [] };
+  }
+  matches.forEach((match) => {
+    const paramName = match.replace("{{", "").replace("}}", "");
+    if (parameters[paramName] !== undefined) {
+      sql = sql.replace(match, `$${paramIndex}`);
+      params.push(parameters[paramName]);
+      paramIndex++;
+    }
+  });
+
+  return { sql, params };
+};
