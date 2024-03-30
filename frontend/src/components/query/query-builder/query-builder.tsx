@@ -55,7 +55,7 @@ export default function QueryBuilder({
     if (schema) {
       if (schema.success) {
         setValidationErrorIndex(null);
-      } else {
+      } else if (typeof schema.error !== "string") {
         setValidationErrorIndex(schema.error.issues[0].path[0]);
       }
     }

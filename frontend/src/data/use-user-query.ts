@@ -113,7 +113,11 @@ export const usePipelineSchema = (pipeline: Pipeline) => {
   const baseTable = _.find(tables, (table) => table.id === pipeline.from);
 
   if (!baseTable) {
-    return { success: false, error: "Base table not found" };
+    return {
+      isLoading: false,
+      data: { success: false, error: "Base table not found" },
+      error: null,
+    };
   }
 
   // Create the base columns from the root table

@@ -1,5 +1,6 @@
 "use client";
 import {
+  InferSchemaOutputSuccess,
   InferredSchemaColumn,
   Pipeline,
   SelectStep,
@@ -210,17 +211,18 @@ export default function SelectStepComponent({
   function renderContent() {
     if (isLoadingSchema || isLoadingInputSchema) {
       return <Loading />;
-    } else if (schemaError || inputSchemaError) {
+    } else if (schemaError || inputSchemaError || !inputSchema || !schema) {
       return <ErrorDisplay description={schemaError || inputSchemaError} />;
-    } else if (inputSchema && !inputSchema.success) {
+    } else if (!inputSchema.success) {
       return null;
     } else if (edit || create || !step) {
+      const successInputSchema = inputSchema as InferSchemaOutputSuccess;
       return (
         <MultiColumnSelector
           className="mx-3 my-2"
           selected={selected}
           setSelected={setSelected}
-          items={inputSchema!.data.columns}
+          items={successInputSchema.data.columns}
         />
       );
     }

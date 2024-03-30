@@ -1,4 +1,6 @@
 "use client";
+import { Pipeline } from "@/definitions/pipeline";
+import { Button, Callout, Drawer, Tab, Tabs } from "@blueprintjs/core";
 import Loading from "@/app/loading";
 import { ErrorDisplay } from "@/components/error-display";
 import QueryBuilder from "@/components/query/query-builder/query-builder";
@@ -6,14 +8,13 @@ import QueryEditor from "@/components/query/query-editor";
 import { QueryHeader } from "@/components/query/query-header";
 import Table from "@/components/table/table";
 import {
+  usePipelineSchema,
   useUpdateUserQuery,
   useUserQuery,
   useUserQueryResults,
 } from "@/data/use-user-query";
-import { Pipeline } from "@/definitions/pipeline";
-import { Button, Callout, Drawer, Tab, Tabs } from "@blueprintjs/core";
-import * as _ from "lodash";
 import React, { useEffect, useState } from "react";
+import * as _ from "lodash";
 
 interface UserQueryPageProps {
   params: {
@@ -47,6 +48,12 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
     error: resultsError,
   } = useUserQueryResults(userQueryId, userQuery?.sql);
 
+  const {
+    data: pipelineSchema,
+    isLoading: isLoadingPipelineSchema,
+    error: pipelineSchemaError,
+  } = usePipelineSchema(pipeline);
+
   const handleSaveQuery = () => {
     updateUserQueryTrigger({ sql: sqlQuery });
   };
@@ -54,15 +61,15 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
   const { trigger: updateUserQueryTrigger, isMutating: isUpdatingUserQuery } =
     useUpdateUserQuery(userQueryId);
 
-  if (isLoadingUserQuery) {
+  if (isLoadingUserQuery || isLoadingPipelineSchema) {
     return <Loading />;
   }
 
-  if (userQueryError) {
+  if (userQueryError || pipelineSchemaError) {
     return (
       <ErrorDisplay
         title="An unexpected error occurred"
-        description={userQueryError.message}
+        description={userQueryError || pipelineSchemaError}
       />
     );
   }
@@ -133,7 +140,11 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
         <Button
           className="my-2 mr-2 w-fit "
           loading={isUpdatingUserQuery}
-          disabled={isLoadingResults || isUpdatingUserQuery}
+          disabled={
+            isLoadingResults ||
+            isUpdatingUserQuery ||
+            (tab === QueryTabEnum.PIPELINE && !pipelineSchema!.success)
+          }
           onClick={handleSaveQuery}
         >
           Save and run
