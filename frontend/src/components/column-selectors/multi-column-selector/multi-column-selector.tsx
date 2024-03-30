@@ -90,7 +90,6 @@ export default function MultiColumnSelector({
           !!column.relation &&
           column.relation.as !== columnToRemove.relation.as),
     );
-    console.log("New selected:", newSelected);
     setSelected(newSelected);
   };
 

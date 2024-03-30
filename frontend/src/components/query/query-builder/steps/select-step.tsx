@@ -19,7 +19,8 @@ import Loading from "@/app/loading";
 import { ErrorDisplay } from "@/components/error-display";
 import MultiColumnSelector from "@/components/column-selectors/multi-column-selector/multi-column-selector";
 import InferredSchemaColumnTag from "@/components/column/inferred-schema-column-tag";
-import { useState } from "react";
+import InvalidStepPopover from "../invalid-step-popover";
+import { useEffect, useState } from "react";
 import { usePipelineSchema } from "@/data/use-user-query";
 import * as _ from "lodash";
 
@@ -51,19 +52,63 @@ export default function SelectStepComponent({
   );
 
   const {
-    data: schema,
-    isLoading: isLoadingSchema,
-    error: schemaError,
+    data: inputSchema,
+    isLoading: isLoadingInputSchema,
+    error: inputSchemaError,
   } = usePipelineSchema({
     ...pipeline,
     steps: _.slice(pipeline.steps, 0, index),
   });
 
+  const {
+    data: schema,
+    isLoading: isLoadingSchema,
+    error: schemaError,
+  } = usePipelineSchema({
+    ...pipeline,
+    steps: _.slice(pipeline.steps, 0, index + 1),
+  });
+
+  useEffect(() => {
+    if (step) {
+      setSelected(step.select);
+    } else {
+      setSelected([]);
+    }
+  }, [step]);
+
+  function getAdditionalClasses() {
+    if (inputSchema && !inputSchema.success) {
+      return "border-2 border-gold";
+    } else if (schema && !schema.success) {
+      return "border-2 border-error";
+    }
+  }
+
   function renderTitle() {
     if (edit || create || !step) {
       return <Text className="text-xl grow-0">Select:</Text>;
+    } else if (inputSchema && !inputSchema.success) {
+      return (
+        <div className="flex flex-row items-center">
+          <Text className="text-xl grow-0">Select:</Text>
+          <div className="flex flex-row flex-wrap gap-1 mx-2 grow">
+            {_.map(
+              step.select,
+              (column: InferredSchemaColumn, index: number) => {
+                return <InferredSchemaColumnTag key={index} column={column} />;
+              },
+            )}
+          </div>
+        </div>
+      );
     } else if (schema && !schema.success) {
-      // TODO: Handle schema validation errors
+      return (
+        <div className="flex flex-row items-center">
+          <Text className="text-xl grow-0">Select:</Text>
+          <InvalidStepPopover errors={schema!.error.issues} />
+        </div>
+      );
     } else {
       return (
         <div className="flex flex-row items-center">
@@ -136,6 +181,10 @@ export default function SelectStepComponent({
                 <MenuItem
                   icon="edit"
                   text="Edit step"
+                  disabled={
+                    (!!inputSchema && !inputSchema.success) ||
+                    (!!schema && !schema.success)
+                  }
                   onClick={() => setEditStepIndex(index)}
                 />
                 <MenuItem
@@ -159,19 +208,19 @@ export default function SelectStepComponent({
   }
 
   function renderContent() {
-    if (isLoadingSchema) {
+    if (isLoadingSchema || isLoadingInputSchema) {
       return <Loading />;
-    } else if (schemaError || !schema) {
-      return <ErrorDisplay description={schemaError} />;
-    } else if (!schema.success) {
-      // TODO: Handle schema validation errors
+    } else if (schemaError || inputSchemaError) {
+      return <ErrorDisplay description={schemaError || inputSchemaError} />;
+    } else if (inputSchema && !inputSchema.success) {
+      return null;
     } else if (edit || create || !step) {
       return (
         <MultiColumnSelector
           className="mx-3 my-2"
           selected={selected}
           setSelected={setSelected}
-          items={schema.data.columns}
+          items={inputSchema!.data.columns}
         />
       );
     }
@@ -179,7 +228,7 @@ export default function SelectStepComponent({
 
   return (
     <Section
-      className="flex-none w-full rounded-sm"
+      className={`flex-none w-full rounded-sm ${getAdditionalClasses()}`}
       title={renderTitle()}
       rightElement={<div className="flex flex-row">{renderRightElement()}</div>}
     >

@@ -90,7 +90,7 @@ function createSelectStepValidator(
         ) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: `Column '${column.name}' on table '${column.table}' ${column.relation && `via relation '${column.relation.as}' `}does not exist in input schema`,
+            message: `Column '${column.name}' on table '${column.table}' ${column.relation ? `via relation '${column.relation.as}' ` : ""}does not exist in input schema`,
             path: [
               stepIndex.toString(),
               `step ${stepIndex + 1} - Select`,

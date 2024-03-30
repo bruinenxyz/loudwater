@@ -49,7 +49,7 @@ export default function FromStepComponent({
     if (tables && pipeline.from) {
       setSelected(tables.find((table) => table.id === pipeline.from) || null);
     }
-  }, [tables]);
+  }, [tables, pipeline]);
 
   const renderTable: ItemRenderer<HydratedTable> = (
     table: HydratedTable,

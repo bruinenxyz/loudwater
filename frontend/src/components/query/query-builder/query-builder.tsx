@@ -10,8 +10,11 @@ import { Button, NonIdealState, Section } from "@blueprintjs/core";
 import StepTypeSelector from "./step-type-selector";
 import FromStepComponent from "./steps/from-step";
 import SelectStepComponent from "./steps/select-step";
+import { usePipelineSchema } from "@/data/use-user-query";
 import { useState, useEffect } from "react";
 import * as _ from "lodash";
+import Loading from "@/app/loading";
+import { ErrorDisplay } from "@/components/error-display";
 
 interface QueryBuilderProps {
   pipeline: Pipeline;
@@ -33,10 +36,29 @@ export default function QueryBuilder({
   const [editStepIndex, setEditStepIndex] = useState<number | null>(
     pipeline.from ? null : -1,
   );
+  const [validationErrorIndex, setValidationErrorIndex] = useState<
+    number | null
+  >(null);
+
+  const {
+    data: schema,
+    isLoading: isLoadingSchema,
+    error: schemaError,
+  } = usePipelineSchema(pipeline);
 
   useEffect(() => {
     setNewStepType(null);
   }, [pipeline]);
+
+  useEffect(() => {
+    if (schema) {
+      if (schema.success) {
+        setValidationErrorIndex(null);
+      } else {
+        setValidationErrorIndex(schema.error.issues[0].path[0]);
+      }
+    }
+  }, [schema]);
 
   function renderStep(
     stepType: StepIdentifier,
@@ -86,7 +108,7 @@ export default function QueryBuilder({
   function renderSteps() {
     return (
       <>
-        {_.map(pipeline.steps, (step: Step, index) => {
+        {_.map(pipeline.steps, (step: Step, index: number) => {
           return (
             <>
               {newStepType && newStepType.index === index ? (
@@ -96,7 +118,12 @@ export default function QueryBuilder({
                   key={`selector-${index}`}
                   index={index}
                   setNewStepType={setNewStepType}
-                  disabled={newStepType !== null || editStepIndex !== null}
+                  disabled={
+                    newStepType !== null ||
+                    editStepIndex !== null ||
+                    (validationErrorIndex !== null &&
+                      validationErrorIndex < index)
+                  }
                 />
               )}
               {renderStep(step.type, step, index)}
@@ -109,10 +136,31 @@ export default function QueryBuilder({
           <StepTypeSelector
             index={pipeline.steps.length}
             setNewStepType={setNewStepType}
-            disabled={newStepType !== null || editStepIndex !== null}
+            disabled={
+              newStepType !== null ||
+              editStepIndex !== null ||
+              (validationErrorIndex !== null &&
+                validationErrorIndex <= pipeline.steps.length)
+            }
           />
         )}
       </>
+    );
+  }
+
+  if (isLoadingSchema) {
+    return (
+      <Section className={className}>
+        <Loading />
+      </Section>
+    );
+  }
+
+  if ((schemaError || !schema) && !!pipeline.from) {
+    return (
+      <Section className={className}>
+        <ErrorDisplay description={schemaError} />
+      </Section>
     );
   }
 
