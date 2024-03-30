@@ -48,6 +48,7 @@ export default function QueryBuilder({
 
   useEffect(() => {
     setNewStepType(null);
+    setEditStepIndex(pipeline.from ? null : -1);
   }, [pipeline]);
 
   useEffect(() => {
