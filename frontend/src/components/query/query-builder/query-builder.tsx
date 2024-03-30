@@ -6,12 +6,12 @@ import {
   StepIdentifier,
   StepIdentifierEnum,
 } from "@/definitions/pipeline";
-import { Section } from "@blueprintjs/core";
+import { Button, NonIdealState, Section } from "@blueprintjs/core";
+import StepTypeSelector from "./step-type-selector";
 import FromStepComponent from "./steps/from-step";
 import SelectStepComponent from "./steps/select-step";
-import * as _ from "lodash";
 import { useState, useEffect } from "react";
-import StepTypeSelector from "./step-type-selector";
+import * as _ from "lodash";
 
 interface QueryBuilderProps {
   pipeline: Pipeline;
@@ -38,19 +38,46 @@ export default function QueryBuilder({
     setNewStepType(null);
   }, [pipeline]);
 
-  function renderStep(step: Step, index: number) {
-    switch (step.type) {
+  function renderStep(
+    stepType: StepIdentifier,
+    step: Step | null,
+    index: number,
+    create?: boolean,
+  ) {
+    switch (stepType) {
       case StepIdentifierEnum.Select:
         return (
           <SelectStepComponent
-            key={index}
-            step={step as SelectStep}
+            key={create ? "new step" : index}
+            index={index}
+            step={!!step ? (step as SelectStep) : step}
             pipeline={pipeline}
             setPipeline={setPipeline}
-            editStepIndex={editStepIndex}
+            edit={editStepIndex === index}
             setEditStepIndex={setEditStepIndex}
             newStepType={newStepType}
+            setNewStepType={setNewStepType}
+            create={create}
           />
+        );
+      case StepIdentifierEnum.Aggregate:
+      case StepIdentifierEnum.Relate:
+      case StepIdentifierEnum.Derive:
+      case StepIdentifierEnum.Filter:
+      case StepIdentifierEnum.Order:
+      case StepIdentifierEnum.Take:
+        return (
+          <Section className="flex-none w-full py-2 rounded-sm">
+            <NonIdealState
+              title="This step is still in development"
+              description={<div>This step isn&rsquo;t available yet. </div>}
+              icon="build"
+              layout="horizontal"
+              action={
+                <Button text="Close" onClick={() => setNewStepType(null)} />
+              }
+            />
+          </Section>
         );
     }
     return <></>;
@@ -63,20 +90,21 @@ export default function QueryBuilder({
           return (
             <>
               {newStepType && newStepType.index === index ? (
-                <></>
+                renderStep(newStepType.stepType, null, newStepType.index, true)
               ) : (
                 <StepTypeSelector
+                  key={`selector-${index}`}
                   index={index}
                   setNewStepType={setNewStepType}
                   disabled={newStepType !== null || editStepIndex !== null}
                 />
               )}
-              {renderStep(step, index)}
+              {renderStep(step.type, step, index)}
             </>
           );
         })}
         {newStepType && newStepType.index === pipeline.steps.length ? (
-          <></>
+          renderStep(newStepType.stepType, null, newStepType.index, true)
         ) : (
           <StepTypeSelector
             index={pipeline.steps.length}
@@ -91,6 +119,7 @@ export default function QueryBuilder({
   return (
     <Section className={className}>
       <FromStepComponent
+        key="from"
         pipeline={pipeline}
         setPipeline={setPipeline}
         editStepIndex={editStepIndex}

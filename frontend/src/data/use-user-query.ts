@@ -1,14 +1,18 @@
+import {
+  InferSchemaOutputSchema,
+  InferredSchema,
+  InferredSchemaColumn,
+  InferredSchemaRelation,
+  UserQuery,
+  Pipeline,
+} from "@/definitions";
 import useSWR, { useSWRConfig } from "swr";
-import { backendCreate, backendGet, backendUpdate } from "./client";
-import { CreateUserQuery, UserQuery } from "@/definitions";
 import useSWRMutation from "swr/mutation";
+import { backendCreate, backendGet, backendUpdate } from "./client";
+import { applyPipelineStep, validatePipelineStep } from "@/utils/pipeline";
 import { useSelectedDatabase } from "@/stores";
 import { useTables } from "./use-tables";
-import {
-  AggregateStep,
-  Pipeline,
-  StepIdentifierEnum,
-} from "@/definitions/pipeline";
+import { useRelations } from "./use-relations";
 import * as _ from "lodash";
 
 export const useUserQuery = (queryId?: string) => {
@@ -83,66 +87,98 @@ export const useUpdateUserQuery = (queryId: string) => {
 
 export const usePipelineSchema = (pipeline: Pipeline) => {
   const [selectedDatabase] = useSelectedDatabase();
-  const { data: tables, isLoading, error } = useTables(selectedDatabase.id);
+  const {
+    data: tables,
+    isLoading: isLoadingTables,
+    error: tablesError,
+  } = useTables(selectedDatabase.id);
+  const {
+    data: relations,
+    isLoading: isLoadingRelations,
+    error: relationsError,
+  } = useRelations(selectedDatabase.id);
+
+  if (isLoadingTables || isLoadingRelations) {
+    return { data: null, isLoading: true, error: null };
+  }
+
+  if (tablesError || relationsError || !tables) {
+    return {
+      data: null,
+      isLoading: false,
+      error: tablesError || relationsError || "Tables not found",
+    };
+  }
 
   const baseTable = _.find(tables, (table) => table.id === pipeline.from);
 
-  if (baseTable) {
-    let resultSchema = _.map(_.values(baseTable.external_columns), (column) => {
-      return { ...column, table: baseTable.id };
-    });
-    for (let i = 0; i < pipeline.steps.length; i++) {
-      const step = pipeline.steps[i];
-      switch (step.type) {
-        case StepIdentifierEnum.Select:
-          // Filter the schema to only include the selected columns
-          resultSchema = _.filter(
-            resultSchema,
-            (column) =>
-              _.find(
-                step.select,
-                (selectedColumn) =>
-                  selectedColumn.name === column.name &&
-                  selectedColumn.table === column.table,
-              ) !== undefined,
-          );
-        case StepIdentifierEnum.Aggregate:
-          // Filter the schema to only include the group columns and the new aggregate column
-          const aggregateStep = step as AggregateStep;
-          const updatedColumns = _.filter(
-            resultSchema,
-            (column) =>
-              _.find(
-                aggregateStep.group,
-                (selectedColumn) =>
-                  selectedColumn.name === column.name &&
-                  selectedColumn.table === column.table,
-              ) !== undefined,
-          );
-          updatedColumns.push({
-            name: aggregateStep.as,
-            table: "aggregate",
-            type: "", //TODO: Add type
-            is_nullable: false,
-            is_identity: false,
-            is_updateable: false,
-            default_expression: null,
-          });
-          resultSchema = updatedColumns;
-        case StepIdentifierEnum.Relate:
-        case StepIdentifierEnum.Derive:
-        case StepIdentifierEnum.Filter:
-        case StepIdentifierEnum.Order:
-        case StepIdentifierEnum.Take:
-          // No schema changes
-          resultSchema = resultSchema;
-        default:
-          throw new Error("Invalid step type");
-      }
-    }
-
-    return { data: resultSchema, isLoading, error: null };
+  if (!baseTable) {
+    return { success: false, error: "Base table not found" };
   }
 
-  return { data: null, isLoading, error: error || "Base table not found" };
+  // Create the base columns from the root table
+  let baseColumns: InferredSchemaColumn[] = _.map(
+    _.values(baseTable.external_columns),
+    (column) => {
+      return { ...column, table: baseTable.id };
+    },
+  );
+  if (!baseColumns.length) {
+    throw new Error("Root table has no columns");
+  }
+
+  // Create the base relations as an empty array
+  let baseRelations: InferredSchemaRelation[] = [];
+
+  // Create the base result schema
+  let resultSchema: InferredSchema = {
+    columns: baseColumns,
+    relations: baseRelations,
+  };
+
+  // Iterate through each step in the pipeline, validate it, and if it is valid, apply it to the schema
+  for (let i = 0; i < pipeline.steps.length; i++) {
+    const step = pipeline.steps[i];
+
+    // Validate the step
+    const validation = validatePipelineStep(
+      step,
+      i,
+      resultSchema,
+      baseTable,
+      tables,
+      relations || [],
+    );
+
+    // If the step is not valid, return the validation error
+    if (!validation.success) {
+      if (!validation.error) {
+        throw new Error("No validation error returned");
+      }
+      return {
+        data: validation,
+        isLoading: !!(isLoadingTables || isLoadingRelations),
+        error: null,
+      };
+    }
+
+    // Apply the step to the schema
+    resultSchema = applyPipelineStep(
+      step,
+      resultSchema,
+      baseTable,
+      tables,
+      relations || [],
+    );
+  }
+
+  // Return the parsed result schema
+  return {
+    data: InferSchemaOutputSchema.parse({
+      success: true,
+      data: resultSchema,
+    }),
+    isLoading: false,
+    error: null,
+  };
 };

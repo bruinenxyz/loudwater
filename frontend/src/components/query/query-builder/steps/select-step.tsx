@@ -3,36 +3,52 @@ import {
   InferredSchemaColumn,
   Pipeline,
   SelectStep,
+  Step,
+  StepIdentifierEnum,
 } from "@/definitions/pipeline";
-import { Button, Section, Text } from "@blueprintjs/core";
+import {
+  Button,
+  Menu,
+  MenuItem,
+  Popover,
+  Section,
+  Text,
+} from "@blueprintjs/core";
 import { NewStepSelection } from "../query-builder";
 import Loading from "@/app/loading";
 import { ErrorDisplay } from "@/components/error-display";
 import MultiColumnSelector from "@/components/column-selectors/multi-column-selector/multi-column-selector";
+import InferredSchemaColumnTag from "@/components/column/inferred-schema-column-tag";
 import { useState } from "react";
 import { usePipelineSchema } from "@/data/use-user-query";
 import * as _ from "lodash";
 
 interface SelectStepProps {
-  key: number;
-  step: SelectStep;
+  index: number;
+  step: SelectStep | null;
   pipeline: Pipeline;
   setPipeline: (value: Pipeline) => void;
-  editStepIndex: number | null;
+  edit: boolean;
   setEditStepIndex: (value: number | null) => void;
   newStepType: NewStepSelection | null;
+  setNewStepType: (value: NewStepSelection | null) => void;
+  create?: boolean;
 }
 
 export default function SelectStepComponent({
-  key,
+  index,
   step,
   pipeline,
   setPipeline,
-  editStepIndex,
+  edit,
   setEditStepIndex,
   newStepType,
+  setNewStepType,
+  create,
 }: SelectStepProps) {
-  const [selected, setSelected] = useState<InferredSchemaColumn[]>(step.select);
+  const [selected, setSelected] = useState<InferredSchemaColumn[]>(
+    !!step ? step.select : [],
+  );
 
   const {
     data: schema,
@@ -40,74 +56,134 @@ export default function SelectStepComponent({
     error: schemaError,
   } = usePipelineSchema({
     ...pipeline,
-    steps: _.slice(pipeline.steps, 0, key),
+    steps: _.slice(pipeline.steps, 0, index),
   });
+
+  function renderTitle() {
+    if (edit || create || !step) {
+      return <Text className="text-xl grow-0">Select:</Text>;
+    } else if (schema && !schema.success) {
+      // TODO: Handle schema validation errors
+    } else {
+      return (
+        <div className="flex flex-row items-center">
+          <Text className="text-xl grow-0">Select:</Text>
+          <div className="flex flex-row flex-wrap gap-1 mx-2 grow">
+            {_.map(
+              step.select,
+              (column: InferredSchemaColumn, index: number) => {
+                return <InferredSchemaColumnTag key={index} column={column} />;
+              },
+            )}
+          </div>
+        </div>
+      );
+    }
+  }
+
+  function renderRightElement() {
+    if (create) {
+      return (
+        <>
+          <Button
+            alignText="left"
+            disabled={selected.length === 0}
+            text="Add step"
+            onClick={() => {
+              const newStep = {
+                type: StepIdentifierEnum.Select,
+                select: selected,
+              } as SelectStep;
+              const newSteps: Step[] = [...pipeline.steps];
+              newSteps.splice(index, 0, newStep as Step);
+              setPipeline({ ...pipeline, steps: newSteps });
+            }}
+          />
+          <Button
+            className="ml-2"
+            alignText="left"
+            text="Cancel step"
+            onClick={() => {
+              setNewStepType(null);
+            }}
+          />
+        </>
+      );
+    } else {
+      if (edit) {
+        return (
+          <Button
+            alignText="left"
+            disabled={selected.length === 0}
+            text="Confirm step"
+            onClick={() => {
+              const updatedStep = {
+                type: StepIdentifierEnum.Select,
+                select: selected,
+              } as SelectStep;
+              const newSteps: Step[] = [...pipeline.steps];
+              newSteps.splice(index, 1, updatedStep as Step);
+              setPipeline({ ...pipeline, steps: newSteps });
+              setEditStepIndex(null);
+            }}
+          />
+        );
+      } else {
+        return (
+          <Popover
+            content={
+              <Menu>
+                <MenuItem
+                  icon="edit"
+                  text="Edit step"
+                  onClick={() => setEditStepIndex(index)}
+                />
+                <MenuItem
+                  icon="trash"
+                  text="Delete step"
+                  onClick={() => {
+                    const newSteps: Step[] = [...pipeline.steps];
+                    newSteps.splice(index, 1);
+                    setPipeline({ ...pipeline, steps: newSteps });
+                  }}
+                />
+              </Menu>
+            }
+            placement="bottom"
+          >
+            <Button alignText="left" rightIcon="caret-down" text="Options" />
+          </Popover>
+        );
+      }
+    }
+  }
 
   function renderContent() {
     if (isLoadingSchema) {
       return <Loading />;
     } else if (schemaError || !schema) {
       return <ErrorDisplay description={schemaError} />;
-    } else {
-      if (editStepIndex === key) {
-        return (
-          <div className="flex flex-row items-center">
-            <Text className="mr-3 text-xl">Select:</Text>
-            <MultiColumnSelector
-              selected={selected}
-              setSelected={setSelected}
-              items={schema}
-            />
-          </div>
-        );
-      } else {
-        return (
-          <div className="flex flex-row items-center">
-            <Text className="text-xl">From:</Text>
-            <Button className="ml-2 bg-white border border-bluprint-border-gray">
-              {/* <div className="flex flex-row items-center">
-                <SquareIcon
-                  icon={fromTable.icon as IconName}
-                  color={fromTable.color}
-                  size={SquareIconSize.SMALL}
-                />
-                <div className="flex flex-row items-center ml-2">
-                  <Text className="text-md">{fromTable.name}</Text>
-                </div>
-              </div> */}
-            </Button>
-          </div>
-        );
-      }
+    } else if (!schema.success) {
+      // TODO: Handle schema validation errors
+    } else if (edit || create || !step) {
+      return (
+        <MultiColumnSelector
+          className="mx-3 my-2"
+          selected={selected}
+          setSelected={setSelected}
+          items={schema.data.columns}
+        />
+      );
     }
   }
 
   return (
     <Section
       className="flex-none w-full rounded-sm"
-      title={renderContent()}
-      rightElement={
-        <div className="flex flex-row">
-          {editStepIndex === key ? (
-            <Button
-              alignText="left"
-              disabled={selected.length === 0}
-              text="Confirm step"
-              onClick={() => {
-                setPipeline({ ...pipeline, steps: [] });
-                setEditStepIndex(null);
-              }}
-            />
-          ) : (
-            <Button
-              alignText="left"
-              text="Edit step"
-              disabled={editStepIndex !== null || newStepType !== null}
-              onClick={() => setEditStepIndex(key)}
-            />
-          )}
-        </div>
-      }
-    />
+      title={renderTitle()}
+      rightElement={<div className="flex flex-row">{renderRightElement()}</div>}
+    >
+      {renderContent()}
+    </Section>
   );
 }

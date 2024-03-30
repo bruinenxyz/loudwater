@@ -62,14 +62,14 @@ export default function MultiColumnSelector({
   const selectColumn = (column: InferredSchemaColumn) => {
     if (
       selected.find(
-        (selectedCol: { name: string; table: string }) =>
+        (selectedCol: InferredSchemaColumn) =>
           selectedCol.name === column.name &&
           selectedCol.table === column.table,
       )
     ) {
       setSelected([
         ...selected.filter(
-          (selectedCol: { name: string; table: string }) =>
+          (selectedCol: InferredSchemaColumn) =>
             selectedCol.name !== column.name &&
             selectedCol.table !== column.table,
         ),
@@ -79,14 +79,19 @@ export default function MultiColumnSelector({
     }
   };
 
-  const removeColumn = (column: InferredSchemaColumn) => {
-    setSelected([
-      ...selected.filter(
-        (selectedCol: { name: string; table: string }) =>
-          selectedCol.name !== column.name &&
-          selectedCol.table !== column.table,
-      ),
-    ]);
+  const removeColumn = (columnToRemove: InferredSchemaColumn) => {
+    console.log("To remove:", columnToRemove);
+    const newSelected = _.filter(
+      selected,
+      (column: InferredSchemaColumn) =>
+        column.name !== columnToRemove.name ||
+        column.table !== columnToRemove.table ||
+        (!!columnToRemove.relation &&
+          !!column.relation &&
+          column.relation.as !== columnToRemove.relation.as),
+    );
+    console.log("New selected:", newSelected);
+    setSelected(newSelected);
   };
 
   const renderTag = (column: InferredSchemaColumn) => {
