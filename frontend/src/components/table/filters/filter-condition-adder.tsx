@@ -4,7 +4,11 @@ import {
   Operators,
   OperatorsEnumSchema,
 } from "@/definitions/pipeline";
-import { HydratedTable } from "@/definitions";
+import {
+  HydratedTable,
+  InferredSchemaColumn,
+  InferredSchemaColumnSchema,
+} from "@/definitions";
 import {
   Button,
   InputGroup,
@@ -26,7 +30,7 @@ const operators: Operators[] = _.map(
   },
 );
 
-type ValueType = "property" | "value";
+type ValueType = "column" | "value";
 
 export default function FilterConditionAdder({
   table,
@@ -37,21 +41,22 @@ export default function FilterConditionAdder({
   conditions: FilterCondition[];
   setConditions: (conditions: FilterCondition[]) => void;
 }) {
-  const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
+  const [selectedColumn, setSelectedColumn] =
+    useState<InferredSchemaColumn | null>(null);
   const [selectedOperator, setSelectedOperator] = useState<Operators | null>(
     null,
   );
   const [valueType, setValueType] = useState<ValueType | null>(null);
   const [selectedValue, setSelectedValue] = useState<
-    string | boolean | number | null
+    string | boolean | number | null | InferredSchemaColumn
   >(null);
 
-  // Reset operator, value type, & value when property changes
+  // Reset operator, value type, & value when column changes
   useEffect(() => {
     setSelectedOperator(null);
     setValueType(null);
     setSelectedValue(null);
-  }, [selectedProperty]);
+  }, [selectedColumn]);
 
   // Reset value type & value when operator changes to null or is_null/is_not_null
   useEffect(() => {
@@ -71,32 +76,34 @@ export default function FilterConditionAdder({
 
   // Checks if the condition can be added to the list of conditions
   function canAddCondition() {
-    if (!selectedProperty || !selectedOperator) {
-      // If no property or operator is selected, return false
+    if (!selectedColumn || !selectedOperator) {
+      // If no column or operator is selected, return false
       return false;
     } else if (!_.includes(["is_null", "is_not_null"], selectedOperator)) {
       // If the operator is not is_null or is_not_null, check if the value is valid
       if (!valueType || selectedValue === null) {
         // If no value type or value is selected, return false
         return false;
-      } else if (valueType === "property") {
-        // If the value type is property, check if the selected property is a valid property on the table's schema
-        return _.includes(_.keys(table.external_columns), selectedValue);
+      } else if (valueType === "column") {
+        // If the value type is column, check if the selected column is a valid column on the table's schema
+        return (
+          typeof selectedValue === "object" &&
+          "name" in selectedValue &&
+          _.includes(_.keys(table.external_columns), selectedValue.name)
+        );
       } else {
-        const selectedPropertyType =
-          table.external_columns[selectedProperty].type;
         if (
-          selectedPropertyType === "number" ||
-          selectedPropertyType === "float"
+          selectedColumn.type === "number" ||
+          selectedColumn.type === "float"
         ) {
-          // If the property type is number or float, check if the value is a number
+          // If the column type is number or float, check if the value is a number
           return "number" === typeof selectedValue;
         } else if (
-          selectedPropertyType !== "date" &&
-          selectedPropertyType !== "datetime"
+          selectedColumn.type !== "date" &&
+          selectedColumn.type !== "datetime"
         ) {
-          // If the property type is not date or datetime, check if the type of the value is the same type as the property (only string and boolean left)
-          return selectedPropertyType === typeof selectedValue;
+          // If the column type is not date or datetime, check if the type of the value is the same type as the column (only string and boolean left)
+          return selectedColumn.type === typeof selectedValue;
         } else {
           // Otherwise, the value type is date or datetime, so check if the value is a string (to convert to date when adding the condition)
           return "string" === typeof selectedValue;
@@ -110,13 +117,13 @@ export default function FilterConditionAdder({
 
   function addCondition() {
     const newCondition = {
-      property: selectedProperty,
+      column: { ...selectedColumn, table: table.id },
       operator: selectedOperator,
       value: selectedValue === null ? undefined : selectedValue,
     } as FilterCondition;
     const newConditions = [...conditions, newCondition] as FilterCondition[];
     setConditions(newConditions);
-    setSelectedProperty(null);
+    setSelectedColumn(null);
     setSelectedOperator(null);
     setValueType(null);
     setSelectedValue(null);
@@ -168,8 +175,35 @@ export default function FilterConditionAdder({
     }
   };
 
-  function selectValueColumn(selection: string) {
-    if (selectedValue && selection === selectedValue) {
+  const renderValueColumn: ItemRenderer<InferredSchemaColumn> = (
+    column: InferredSchemaColumn,
+    { handleClick, modifiers },
+  ) => {
+    return (
+      <MenuItem
+        key={column.name}
+        roleStructure="listoption"
+        selected={
+          !!(
+            selectedValue &&
+            typeof selectedValue === "object" &&
+            selectedValue.name === column.name
+          )
+        }
+        shouldDismissPopover={true}
+        text={<Text className="font-bold">{column.name}</Text>}
+        onClick={handleClick}
+      />
+    );
+  };
+
+  function selectValueColumn(selection: InferredSchemaColumn) {
+    if (
+      selectedValue &&
+      typeof selectedValue === "object" &&
+      "name" in selectedValue &&
+      selection.name === selectedValue.name
+    ) {
       setSelectedValue(null);
     } else {
       setSelectedValue(selection);
@@ -177,20 +211,23 @@ export default function FilterConditionAdder({
   }
 
   function renderValueSelector() {
-    if (valueType === "property") {
+    if (valueType === "column") {
       return (
-        <Select<string>
-          items={_.keys(table.external_columns)}
+        <Select<InferredSchemaColumn>
+          items={_.map(table.external_columns, (column) => {
+            return { ...column, table: table.id };
+          })}
           itemPredicate={filterColumns}
-          itemRenderer={renderColumn}
+          itemRenderer={renderValueColumn}
           onItemSelect={selectValueColumn}
           noResults={noResults}
         >
           <Button
+            className="ml-3"
             rightIcon="double-caret-vertical"
             text={
-              selectedProperty ? (
-                <Text className="font-bold">{selectedProperty}</Text>
+              selectedValue && typeof selectedValue === "object" ? (
+                <Text className="font-bold">{selectedValue.name}</Text>
               ) : (
                 "Select column"
               )
@@ -199,8 +236,7 @@ export default function FilterConditionAdder({
         </Select>
       );
     }
-    const selectedPropertyType = table.external_columns[selectedProperty!].type;
-    switch (selectedPropertyType) {
+    switch (selectedColumn!.type) {
       case "boolean":
         return (
           <RadioGroup
@@ -283,30 +319,30 @@ export default function FilterConditionAdder({
     }
   }
 
-  const filterColumns = (query: string, column: string) =>
-    column.toLowerCase().includes(query.toLowerCase());
+  const filterColumns = (query: string, column: InferredSchemaColumn) =>
+    column.name.toLowerCase().includes(query.toLowerCase());
 
-  const renderColumn: ItemRenderer<string> = (
-    column: string,
+  const renderColumn: ItemRenderer<InferredSchemaColumn> = (
+    column: InferredSchemaColumn,
     { handleClick, modifiers },
   ) => {
     return (
       <MenuItem
-        key={column}
+        key={column.name}
         roleStructure="listoption"
-        selected={!!(selectedProperty && selectedProperty === column)}
+        selected={!!(selectedColumn && selectedColumn.name === column.name)}
         shouldDismissPopover={true}
-        text={<Text className="font-bold">{column}</Text>}
+        text={<Text className="font-bold">{column.name}</Text>}
         onClick={handleClick}
       />
     );
   };
 
-  function selectColumn(selection: string) {
-    if (selectedProperty && selection === selectedProperty) {
-      setSelectedProperty(null);
+  function selectColumn(selection: InferredSchemaColumn) {
+    if (selectedColumn && selection.name === selectedColumn.name) {
+      setSelectedColumn(null);
     } else {
-      setSelectedProperty(selection);
+      setSelectedColumn(selection);
     }
   }
 
@@ -316,8 +352,10 @@ export default function FilterConditionAdder({
 
   return (
     <div className="flex flex-row items-center mt-2">
-      <Select<string>
-        items={_.keys(table.external_columns)}
+      <Select<InferredSchemaColumn>
+        items={_.map(table.external_columns, (column) => {
+          return { ...column, table: table.id };
+        })}
         itemPredicate={filterColumns}
         itemRenderer={renderColumn}
         onItemSelect={selectColumn}
@@ -326,8 +364,8 @@ export default function FilterConditionAdder({
         <Button
           rightIcon="double-caret-vertical"
           text={
-            selectedProperty ? (
-              <Text className="font-bold">{selectedProperty}</Text>
+            selectedColumn ? (
+              <Text className="font-bold">{selectedColumn.name}</Text>
             ) : (
               "Select column"
             )
@@ -350,16 +388,16 @@ export default function FilterConditionAdder({
           }
         />
       </Select>
-      <Select<"property" | "value">
+      <Select<ValueType>
         className="ml-3"
-        items={["property", "value"]}
+        items={["column", "value"]}
         itemRenderer={renderValueType}
         filterable={false}
         onItemSelect={selectValueType}
         disabled={
           !selectedOperator ||
           _.includes(["is_null", "is_not_null"], selectedOperator) ||
-          !selectedProperty
+          !selectedColumn
         }
       >
         <Button
@@ -368,12 +406,12 @@ export default function FilterConditionAdder({
           disabled={
             !selectedOperator ||
             _.includes(["is_null", "is_not_null"], selectedOperator) ||
-            !selectedProperty
+            !selectedColumn
           }
         />
       </Select>
       {!selectedOperator ||
-      !selectedProperty ||
+      !selectedColumn ||
       !valueType ||
       _.includes(["is_null", "is_not_null"], selectedOperator)
         ? null
