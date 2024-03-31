@@ -10,7 +10,6 @@ import {
   UseInterceptors,
   HttpException,
   HttpStatus,
-  Query,
 } from "@nestjs/common";
 import { UserQueriesService } from "./user-queries.service";
 import { OrgGuard } from "@/auth/organizations.guard";
