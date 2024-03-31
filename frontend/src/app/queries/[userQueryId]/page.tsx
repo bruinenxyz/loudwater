@@ -55,7 +55,7 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
   } = usePipelineSchema(pipeline);
 
   const handleSaveQuery = () => {
-    updateUserQueryTrigger({ sql: sqlQuery });
+    updateUserQueryTrigger({ sql: sqlQuery, pipeline: pipeline });
   };
 
   const { trigger: updateUserQueryTrigger, isMutating: isUpdatingUserQuery } =
