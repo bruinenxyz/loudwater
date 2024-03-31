@@ -13,21 +13,13 @@ export function parseFrom(
   tables: Table[],
   tablesSchema: Record<string, Record<string, ExternalColumn>>,
 ) {
-  // TODO assume that the "from" sends through the table ID
   const table = _.find(tables, (table) => table.id === from);
   assert(table, `Table not found: ${from}`);
 
-  // TODO what's the right way to index this?
-  // TODO do we just need the names?
-  console.log("tablesSchema:", tablesSchema);
-  // console.log()
-
   // TODO we need to deal with schema here as well
   const columns = _.keys(tablesSchema[table.external_name]);
-  console.log("columns:", columns);
 
   // Define the base object using the table schema
-
   const baseObjectPrql = compileTemplate(baseObjectTemplate, {
     varName: `${table.schema}__${table.external_name}`,
     // TODO will need to update this to add the schema
