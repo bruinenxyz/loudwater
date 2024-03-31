@@ -186,3 +186,15 @@ export const usePipelineSchema = (pipeline: Pipeline) => {
     error: null,
   };
 };
+
+export const useParsePipeline = () => {
+  const [selectedDatabase] = useSelectedDatabase();
+  const { data, error, trigger, isMutating } = useSWRMutation(
+    `/user-queries/parse/${selectedDatabase.id}`,
+    async (url: string, { arg }: { arg: Pipeline }): Promise<any> => {
+      const createUserQueryResponse = await backendCreate(url, arg);
+      return createUserQueryResponse;
+    },
+  );
+  return { data, error, trigger, isMutating };
+};

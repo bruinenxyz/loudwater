@@ -1,4 +1,4 @@
-import { UserQuery, UserQuerySchema } from "@/definitions";
+import { Pipeline, UserQuery, UserQuerySchema } from "@/definitions";
 import { PrismaService } from "@/prisma/prisma.service";
 import { PostgresAdapterService } from "@/postgres-adapter/postgres-adapter.service";
 import { HttpRequestContextService } from "@/shared/http-request-context/http-request-context.service";
@@ -65,11 +65,14 @@ export class UserQueriesService {
       const tableSchema = await this.postgresAdapterService.getAllTableSchema(
         createUserQueryDto.database_id,
       );
-      createUserQueryDto.sql = writeSQL(
+
+      const cleanedSQL = writeSQL(
         createUserQueryDto.pipeline,
         tables,
         tableSchema,
-      );
+      ).split("\n\n--")[0];
+
+      createUserQueryDto.sql = cleanedSQL;
     }
 
     // Create the query record in DB
@@ -110,11 +113,12 @@ export class UserQueriesService {
       const tableSchema = await this.postgresAdapterService.getAllTableSchema(
         targetQuery.database_id,
       );
-      updateUserQueryDto.sql = writeSQL(
+      const cleanedSQL = writeSQL(
         updateUserQueryDto.pipeline,
         tables,
         tableSchema,
-      );
+      ).split("\n\n--")[0];
+      updateUserQueryDto.sql = cleanedSQL;
     }
 
     const updateUserQuery = _.merge(targetQuery, updateUserQueryDto);
@@ -176,5 +180,14 @@ export class UserQueriesService {
     });
 
     return results;
+  }
+
+  async parsePipeline(databaseId: string, pipeline: Pipeline): Promise<any> {
+    const tables = await this.tablesService.findAllForDatabase(databaseId);
+    const tableSchema =
+      await this.postgresAdapterService.getAllTableSchema(databaseId);
+    const pipelineSQL = writeSQL(pipeline, tables, tableSchema);
+    const cleanedSQL = pipelineSQL.split("\n\n--")[0];
+    return { sql: cleanedSQL };
   }
 }

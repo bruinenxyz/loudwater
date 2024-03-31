@@ -7,7 +7,9 @@ import QueryBuilder from "@/components/query/query-builder/query-builder";
 import QueryEditor from "@/components/query/query-editor";
 import { QueryHeader } from "@/components/query/query-header";
 import Table from "@/components/table/table";
+import OverwriteSQLDialog from "@/components/query/overwrite-sql-dialog";
 import {
+  useParsePipeline,
   usePipelineSchema,
   useUpdateUserQuery,
   useUserQuery,
@@ -27,20 +29,22 @@ enum QueryTabEnum {
   PIPELINE = "pipeline",
 }
 
+export interface PipelineSQLDivergence {
+  sql: string;
+}
+
 const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
   const [tab, setTab] = useState<QueryTabEnum>(QueryTabEnum.SQL);
   const [drawerToggle, setDrawerToggle] = useState<boolean>(false);
   const [sqlQuery, setSqlQuery] = useState<string>("");
   const [pipeline, setPipeline] = useState<Pipeline>({ from: "", steps: [] });
+  const [pipelineSQLDivergence, setPipelineSQLDivergence] =
+    useState<PipelineSQLDivergence | null>(null);
   const {
     data: userQuery,
     isLoading: isLoadingUserQuery,
     error: userQueryError,
   } = useUserQuery(userQueryId);
-
-  useEffect(() => {
-    setSqlQuery(userQuery?.sql || "");
-  }, [userQuery, setSqlQuery]);
 
   const {
     data: results,
@@ -54,12 +58,33 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
     error: pipelineSchemaError,
   } = usePipelineSchema(pipeline);
 
-  const handleSaveQuery = () => {
-    updateUserQueryTrigger({ sql: sqlQuery, pipeline: pipeline });
-  };
-
   const { trigger: updateUserQueryTrigger, isMutating: isUpdatingUserQuery } =
     useUpdateUserQuery(userQueryId);
+
+  const { trigger: parsePipelineTrigger, isMutating: isParsingPipeline } =
+    useParsePipeline();
+
+  useEffect(() => {
+    if (userQuery) {
+      setSqlQuery(userQuery?.sql || "");
+      if (userQuery.pipeline) {
+        setPipeline(userQuery.pipeline);
+      }
+    }
+  }, [userQuery, setSqlQuery, setPipeline]);
+
+  async function handleSaveQuery() {
+    if (tab === QueryTabEnum.SQL) {
+      await updateUserQueryTrigger({ sql: sqlQuery });
+    } else {
+      const pipelineSQL = await parsePipelineTrigger(pipeline);
+      if (pipelineSQL === sqlQuery) {
+        updateUserQueryTrigger({ pipeline: pipeline });
+      } else {
+        setPipelineSQLDivergence({ sql: pipelineSQL });
+      }
+    }
+  }
 
   if (isLoadingUserQuery || isLoadingPipelineSchema) {
     return <Loading />;
@@ -149,6 +174,12 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
         >
           Save and run
         </Button>
+        <OverwriteSQLDialog
+          userQueryId={userQueryId}
+          pipeline={pipeline}
+          divergence={pipelineSQLDivergence}
+          setDivergence={setPipelineSQLDivergence}
+        />
       </div>
       <Callout
         className="my-2"
