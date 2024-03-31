@@ -33,7 +33,7 @@ export default function MultiColumnSelector({
     return <Loading />;
   }
 
-  if (tablesError || !tables) {
+  if (tablesError) {
     return <ErrorDisplay description={tablesError} />;
   }
 
@@ -80,7 +80,6 @@ export default function MultiColumnSelector({
   };
 
   const removeColumn = (columnToRemove: InferredSchemaColumn) => {
-    console.log("To remove:", columnToRemove);
     const newSelected = _.filter(
       selected,
       (column: InferredSchemaColumn) =>

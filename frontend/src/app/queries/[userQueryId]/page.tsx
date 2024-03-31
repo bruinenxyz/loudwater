@@ -29,17 +29,13 @@ enum QueryTabEnum {
   PIPELINE = "pipeline",
 }
 
-export interface PipelineSQLDivergence {
-  sql: string;
-}
-
 const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
   const [tab, setTab] = useState<QueryTabEnum>(QueryTabEnum.SQL);
   const [drawerToggle, setDrawerToggle] = useState<boolean>(false);
   const [sqlQuery, setSqlQuery] = useState<string>("");
   const [pipeline, setPipeline] = useState<Pipeline>({ from: "", steps: [] });
   const [pipelineSQLDivergence, setPipelineSQLDivergence] =
-    useState<PipelineSQLDivergence | null>(null);
+    useState<boolean>(false);
   const {
     data: userQuery,
     isLoading: isLoadingUserQuery,
@@ -78,10 +74,10 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
       await updateUserQueryTrigger({ sql: sqlQuery });
     } else {
       const pipelineSQL = await parsePipelineTrigger(pipeline);
-      if (pipelineSQL === sqlQuery) {
+      if (pipelineSQL.sql === sqlQuery) {
         updateUserQueryTrigger({ pipeline: pipeline });
       } else {
-        setPipelineSQLDivergence({ sql: pipelineSQL });
+        setPipelineSQLDivergence(true);
       }
     }
   }

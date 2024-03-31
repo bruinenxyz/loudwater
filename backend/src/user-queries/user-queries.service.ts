@@ -121,14 +121,12 @@ export class UserQueriesService {
       updateUserQueryDto.sql = cleanedSQL;
     }
 
-    const updateUserQuery = _.merge(targetQuery, updateUserQueryDto);
-
     // Update the query record in DB
     const userQuery = await this.prismaService.query.update({
       where: {
         id,
       },
-      data: updateUserQuery,
+      data: updateUserQueryDto,
     });
 
     return UserQuerySchema.parse(userQuery);

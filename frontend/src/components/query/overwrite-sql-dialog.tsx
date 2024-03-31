@@ -8,15 +8,14 @@ import {
   DialogFooter,
   Text,
 } from "@blueprintjs/core";
-import { PipelineSQLDivergence } from "@/app/queries/[userQueryId]/page";
 import { useUpdateUserQuery } from "@/data/use-user-query";
 import Loading from "@/app/loading";
 
 interface OverwriteSQLDialogProps {
   userQueryId: string;
   pipeline: Pipeline;
-  divergence: PipelineSQLDivergence | null;
-  setDivergence: (value: PipelineSQLDivergence | null) => void;
+  divergence: boolean;
+  setDivergence: (value: boolean) => void;
 }
 
 export default function OverwriteSQLDialog({
@@ -30,20 +29,20 @@ export default function OverwriteSQLDialog({
 
   async function handleConfirm() {
     await updateUserQueryTrigger({ pipeline: pipeline });
-    setDivergence(null);
+    setDivergence(false);
   }
 
   return (
     <Dialog
-      isOpen={!!divergence}
+      isOpen={divergence}
       isCloseButtonShown
       title={"Saving this pipeline will overwrite SQL"}
       onClose={() => {
-        setDivergence(null);
+        setDivergence(false);
       }}
     >
       {isUpdatingUserQuery ? (
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center my-2">
           <Loading />
           <Text>Updating query...</Text>
         </div>
