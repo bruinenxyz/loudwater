@@ -3,13 +3,15 @@ import { PrismaService } from "@/prisma/prisma.service";
 import { PostgresAdapterService } from "@/postgres-adapter/postgres-adapter.service";
 import { HttpRequestContextService } from "@/shared/http-request-context/http-request-context.service";
 import { Injectable, NotFoundException } from "@nestjs/common";
-import * as assert from "assert";
 import {
   CreateUserQueryDto,
   UpdateUserQueryDto,
 } from "./dtos/user-queries.dto";
-import * as _ from "lodash";
+import { TablesService } from "@/tables/tables.service";
+import { writeSQL } from "./query-parsing/parse-query";
 import { QueryResult } from "pg";
+import * as assert from "assert";
+import * as _ from "lodash";
 
 @Injectable()
 export class UserQueriesService {
@@ -17,6 +19,7 @@ export class UserQueriesService {
     private prismaService: PrismaService,
     private readonly httpRequestContextService: HttpRequestContextService,
     private readonly postgresAdapterService: PostgresAdapterService,
+    private readonly tablesService: TablesService,
   ) {}
 
   async findAllForDatabase(databaseId: string): Promise<UserQuery[]> {
@@ -55,6 +58,20 @@ export class UserQueriesService {
     const orgId = this.httpRequestContextService.checkAndGetOrgId();
     const creatorId = this.httpRequestContextService.checkAndGetUserId();
 
+    if (createUserQueryDto.pipeline) {
+      const tables = await this.tablesService.findAllForDatabase(
+        createUserQueryDto.database_id,
+      );
+      const tableSchema = await this.postgresAdapterService.getAllTableSchema(
+        createUserQueryDto.database_id,
+      );
+      createUserQueryDto.sql = writeSQL(
+        createUserQueryDto.pipeline,
+        tables,
+        tableSchema,
+      );
+    }
+
     // Create the query record in DB
     const userQuery = await this.prismaService.query.create({
       data: {
@@ -85,6 +102,20 @@ export class UserQueriesService {
     });
 
     assert(targetQuery, new NotFoundException(`Query not found with id ${id}`));
+
+    if (updateUserQueryDto.pipeline) {
+      const tables = await this.tablesService.findAllForDatabase(
+        targetQuery.database_id,
+      );
+      const tableSchema = await this.postgresAdapterService.getAllTableSchema(
+        targetQuery.database_id,
+      );
+      updateUserQueryDto.sql = writeSQL(
+        updateUserQueryDto.pipeline,
+        tables,
+        tableSchema,
+      );
+    }
 
     const updateUserQuery = _.merge(targetQuery, updateUserQueryDto);
 
@@ -134,21 +165,16 @@ export class UserQueriesService {
 
     assert(userQuery, new NotFoundException(`Query not found with id ${id}`));
 
-    // TODO once pipelines are added, parse and run them here
-    if (userQuery.type === "pipeline") {
-      throw new Error("Pipelines are not yet supported");
-    } else {
-      assert(
-        userQuery.sql,
-        `SQL statement not found for query ${userQuery.name}`,
-      );
+    assert(
+      userQuery.sql,
+      `SQL statement not found for query ${userQuery.name}`,
+    );
 
-      const results = await this.postgresAdapterService.run({
-        databaseId: userQuery.database_id,
-        sql: userQuery.sql,
-      });
+    const results = await this.postgresAdapterService.run({
+      databaseId: userQuery.database_id,
+      sql: userQuery.sql,
+    });
 
-      return results;
-    }
+    return results;
   }
 }
