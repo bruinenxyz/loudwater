@@ -7,7 +7,7 @@ const selectTemplate = `
 let {{ stepName }} = (
   from {{ from }}
   select {
-    {{ properties }}
+    {{ columns }}
   }
 )`;
 
@@ -20,12 +20,16 @@ export function parseSelect(
   const selectPrql = compileTemplate(selectTemplate, {
     stepName: `step_${index}`,
     from: `step_${index - 1}`,
-    properties: _.map(selectStep.select, (property) => {
-      const table = _.find(tables, (table) => table.id === property.table);
-      assert(table, `Table not found: ${property.table}`);
+    columns: _.map(selectStep.select, (column) => {
+      if (column.table === "aggregate") {
+        return column.name;
+      }
+
+      const table = _.find(tables, (table) => table.id === column.table);
+      assert(table, `Table not found: ${column.table}`);
 
       // TODO add in schema?
-      return `${table.external_name}__${property.name}`;
+      return `${table.external_name}__${column.name}`;
     }).join(", "),
   });
 
