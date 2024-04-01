@@ -58,23 +58,23 @@ export class TablesService {
       sql += _.map(filters.conditions, (condition) => {
         switch (condition.operator) {
           case OperatorsEnum.isNull:
-            return `${condition.property} IS NULL`;
+            return `${condition.column.name} IS NULL`;
           case OperatorsEnum.isNotNull:
-            return `${condition.property} IS NOT NULL`;
+            return `${condition.column.name} IS NOT NULL`;
           case OperatorsEnum.like:
             //  Use a prepared statement if the value is a string
             if (typeof condition.value === "string") {
               parameters.push(`%${condition.value}%`);
-              return `${condition.property} LIKE $${parameters.length}`;
+              return `${condition.column.name} LIKE $${parameters.length}`;
             }
-            return `${condition.property} LIKE ${condition.value}`;
+            return `${condition.column.name} LIKE ${condition.value}`;
           case OperatorsEnum.notLike:
             //  Use a prepared statement if the value is a string
             if (typeof condition.value === "string") {
               parameters.push(`%${condition.value}%`);
-              return `${condition.property} NOT LIKE $${parameters.length}`;
+              return `${condition.column.name} NOT LIKE $${parameters.length}`;
             }
-            return `${condition.property} NOT LIKE ${condition.value}`;
+            return `${condition.column.name} NOT LIKE ${condition.value}`;
           case OperatorsEnum.equal:
           case OperatorsEnum.notEqual:
           case OperatorsEnum.greaterThan:
@@ -86,9 +86,9 @@ export class TablesService {
                 ? "="
                 : condition.operator;
             if (typeof condition.value === "string") {
-              return `${condition.property} ${operator} '${condition.value}'`;
+              return `${condition.column.name} ${operator} '${condition.value}'`;
             } else {
-              return `${condition.property} ${operator} ${condition.value}`;
+              return `${condition.column.name} ${operator} ${condition.value}`;
             }
           default:
             throw new Error(`Unknown operator: ${condition.operator}`);
@@ -101,8 +101,8 @@ export class TablesService {
       sql += "\nORDER BY ";
       sql += _.map(order.order, (order) => {
         return order.direction === "desc"
-          ? `${order.property} DESC`
-          : order.property;
+          ? `${order.column.name} DESC`
+          : order.column.name;
       }).join(", ");
       sql += "\n";
     }

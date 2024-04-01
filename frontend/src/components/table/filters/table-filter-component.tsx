@@ -8,7 +8,7 @@ import {
   StepIdentifierEnum,
   TakeStep,
 } from "@/definitions/pipeline";
-import { ExternalColumn, HydratedTable } from "@/definitions";
+import { HydratedTable, InferredSchemaColumn } from "@/definitions";
 import { Button, Icon, MenuItem, Popover, Text } from "@blueprintjs/core";
 import { ItemRenderer, Select } from "@blueprintjs/select";
 import FilterConditionAdder from "./filter-condition-adder";
@@ -80,24 +80,21 @@ export default function TableFilterComponent({
 
   function renderConditions() {
     const renderValue = (
-      value: string | number | boolean | undefined,
-      property: ExternalColumn,
+      value: string | number | boolean | undefined | InferredSchemaColumn,
+      column: InferredSchemaColumn,
     ) => {
       if (value === undefined) {
         return null;
-      } else if (
-        typeof value === "string" &&
-        _.keys(table.external_columns).includes(value)
-      ) {
+      } else if (typeof value === "object" && "name" in value) {
         return (
           <div className="flex flex-row items-center mr-2">
             <Text className="ml-1 font-bold text-bluprint-text-light">
-              {value}
+              {value.name}
             </Text>
           </div>
         );
       } else {
-        if (property.type === "date" || property.type === "datetime") {
+        if (column.type === "date" || column.type === "datetime") {
           const { localString, utcString } = getFormattedDateStrings(value);
           return (
             <Popover
@@ -147,18 +144,17 @@ export default function TableFilterComponent({
         {_.map(
           resultsConfig.filters!.conditions,
           (condition: FilterCondition, index: number) => {
-            const property = table.external_columns[condition.property];
             return (
               <div className="flex flex-row items-center h-4 rounded bg-bluprint-tag-gray">
                 <div className="flex flex-row items-center ml-1 mr-2">
                   <Text className="ml-1 font-bold text-bluprint-text-light">
-                    {condition.property}
+                    {condition.column.name}
                   </Text>
                 </div>
                 <Text className="mr-2 font-bold flex-nowrap text-bluprint-text-light">
                   {condition.operator.replace(/_/g, " ")}
                 </Text>
-                {renderValue(condition.value, property)}
+                {renderValue(condition.value, condition.column)}
                 <Icon
                   className="mr-1 cursor-pointer text-bluprint-text-light"
                   icon="cross"

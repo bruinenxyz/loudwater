@@ -38,7 +38,7 @@ export function QueryHeader({ query }: { query?: UserQuery }) {
           </div>
         </div>
       </div>
-      <Divider className="my-2" />
+      <Divider className="mt-2 mb-1" />
     </>
   );
 }
