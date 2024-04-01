@@ -152,7 +152,7 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
         <QueryEditor value={sqlQuery} onChange={setSqlQuery} />
       ) : (
         <QueryBuilder
-          className="overflow-y-auto h-[400px] flex flex-col p-3 gap-y-2"
+          className="overflow-y-auto h-[300px] flex flex-col p-3 gap-y-2"
           pipeline={pipeline}
           setPipeline={setPipeline}
         />

@@ -190,10 +190,7 @@ export default function SelectStepComponent({
                 <MenuItem
                   icon="edit"
                   text="Edit step"
-                  disabled={
-                    (!!inputSchema && !inputSchema.success) ||
-                    (!!schema && !schema.success)
-                  }
+                  disabled={!!inputSchema && !inputSchema.success}
                   onClick={() => setEditStepIndex(index)}
                 />
                 <MenuItem
