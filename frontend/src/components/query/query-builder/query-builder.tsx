@@ -7,14 +7,14 @@ import {
   StepIdentifierEnum,
 } from "@/definitions/pipeline";
 import { Button, NonIdealState, Section } from "@blueprintjs/core";
+import Loading from "@/app/loading";
+import { ErrorDisplay } from "@/components/error-display";
 import StepTypeSelector from "./step-type-selector";
 import FromStepComponent from "./steps/from-step";
 import SelectStepComponent from "./steps/select-step";
 import { usePipelineSchema } from "@/data/use-user-query";
 import { useState, useEffect } from "react";
 import * as _ from "lodash";
-import Loading from "@/app/loading";
-import { ErrorDisplay } from "@/components/error-display";
 
 interface QueryBuilderProps {
   pipeline: Pipeline;
@@ -61,6 +61,22 @@ export default function QueryBuilder({
     }
   }, [schema]);
 
+  if (isLoadingSchema) {
+    return (
+      <Section className={className}>
+        <Loading />
+      </Section>
+    );
+  }
+
+  if (schemaError) {
+    return (
+      <Section className={className}>
+        <ErrorDisplay description={schemaError} />
+      </Section>
+    );
+  }
+
   function renderStep(
     stepType: StepIdentifier,
     step: Step | null,
@@ -78,7 +94,6 @@ export default function QueryBuilder({
             setPipeline={setPipeline}
             edit={editStepIndex === index}
             setEditStepIndex={setEditStepIndex}
-            newStepType={newStepType}
             setNewStepType={setNewStepType}
             create={create}
           />
@@ -103,7 +118,6 @@ export default function QueryBuilder({
           </Section>
         );
     }
-    return <></>;
   }
 
   function renderSteps() {
@@ -146,22 +160,6 @@ export default function QueryBuilder({
           />
         )}
       </>
-    );
-  }
-
-  if (isLoadingSchema) {
-    return (
-      <Section className={className}>
-        <Loading />
-      </Section>
-    );
-  }
-
-  if ((schemaError || !schema) && !!pipeline.from) {
-    return (
-      <Section className={className}>
-        <ErrorDisplay description={schemaError} />
-      </Section>
     );
   }
 

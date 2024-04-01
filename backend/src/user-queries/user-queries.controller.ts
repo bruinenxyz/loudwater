@@ -14,7 +14,7 @@ import {
 import { UserQueriesService } from "./user-queries.service";
 import { OrgGuard } from "@/auth/organizations.guard";
 import { TrackingInterceptor } from "@/interceptors/tracking/tracking.interceptor";
-import { UserQuery } from "@/definitions";
+import { Pipeline, UserQuery } from "@/definitions";
 import {
   CreateUserQueryDto,
   UpdateUserQueryDto,
@@ -31,6 +31,14 @@ export class UserQueriesController {
     @Param("databaseId") databaseId: string,
   ): Promise<UserQuery[]> {
     return this.userQueriesService.findAllForDatabase(databaseId);
+  }
+
+  @Post("/parse/:databaseId")
+  parsePipeline(
+    @Param("databaseId") databaseId: string,
+    @Body() pipeline: Pipeline,
+  ): Promise<{ sql: string }> {
+    return this.userQueriesService.parsePipeline(databaseId, pipeline);
   }
 
   @Get("/:id")

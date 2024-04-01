@@ -32,7 +32,6 @@ interface SelectStepProps {
   setPipeline: (value: Pipeline) => void;
   edit: boolean;
   setEditStepIndex: (value: number | null) => void;
-  newStepType: NewStepSelection | null;
   setNewStepType: (value: NewStepSelection | null) => void;
   create?: boolean;
 }
@@ -44,7 +43,6 @@ export default function SelectStepComponent({
   setPipeline,
   edit,
   setEditStepIndex,
-  newStepType,
   setNewStepType,
   create,
 }: SelectStepProps) {
@@ -87,7 +85,17 @@ export default function SelectStepComponent({
   }
 
   function renderTitle() {
-    if (edit || create || !step) {
+    // If we are creating a new step, editing a step, or the step is not defined, show the default title
+    // Also show the default title if the schemas are loading or errored
+    if (
+      edit ||
+      create ||
+      !step ||
+      isLoadingSchema ||
+      isLoadingInputSchema ||
+      inputSchemaError ||
+      schemaError
+    ) {
       return <Text className="text-xl grow-0">Select:</Text>;
     } else if (inputSchema && !inputSchema.success) {
       return (
@@ -136,6 +144,7 @@ export default function SelectStepComponent({
             disabled={selected.length === 0}
             text="Add step"
             onClick={() => {
+              setNewStepType(null);
               const newStep = {
                 type: StepIdentifierEnum.Select,
                 select: selected,
@@ -170,7 +179,6 @@ export default function SelectStepComponent({
               const newSteps: Step[] = [...pipeline.steps];
               newSteps.splice(index, 1, updatedStep as Step);
               setPipeline({ ...pipeline, steps: newSteps });
-              setEditStepIndex(null);
             }}
           />
         );
@@ -210,10 +218,14 @@ export default function SelectStepComponent({
 
   function renderContent() {
     if (isLoadingSchema || isLoadingInputSchema) {
-      return <Loading />;
-    } else if (schemaError || inputSchemaError || !inputSchema || !schema) {
+      return (
+        <div className="flex flex-row justify-center my-1 h-fit">
+          <Loading />
+        </div>
+      );
+    } else if (schemaError || inputSchemaError) {
       return <ErrorDisplay description={schemaError || inputSchemaError} />;
-    } else if (!inputSchema.success) {
+    } else if (!inputSchema!.success) {
       return null;
     } else if (edit || create || !step) {
       const successInputSchema = inputSchema as InferSchemaOutputSuccess;

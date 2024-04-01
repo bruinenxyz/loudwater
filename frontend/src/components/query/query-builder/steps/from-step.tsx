@@ -85,9 +85,9 @@ export default function FromStepComponent({
   function renderContent() {
     if (isLoadingTables) {
       return <Loading />;
-    } else if (tablesError || !tables) {
+    } else if (tablesError) {
       return <ErrorDisplay description={tablesError?.message} />;
-    } else {
+    } else if (tables) {
       const fromTable = tables.find((table) => table.id === pipeline.from);
       if (editStepIndex === -1 || !fromTable) {
         return (

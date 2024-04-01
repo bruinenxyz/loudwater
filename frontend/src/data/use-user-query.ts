@@ -13,6 +13,7 @@ import { applyPipelineStep, validatePipelineStep } from "@/utils/pipeline";
 import { useSelectedDatabase } from "@/stores";
 import { useTables } from "./use-tables";
 import { useRelations } from "./use-relations";
+import { useState, useEffect } from "react";
 import * as _ from "lodash";
 
 export const useUserQuery = (queryId?: string) => {
@@ -87,6 +88,7 @@ export const useUpdateUserQuery = (queryId: string) => {
 
 export const usePipelineSchema = (pipeline: Pipeline) => {
   const [selectedDatabase] = useSelectedDatabase();
+  const [isDataReady, setIsDataReady] = useState(false);
   const {
     data: tables,
     isLoading: isLoadingTables,
@@ -98,11 +100,17 @@ export const usePipelineSchema = (pipeline: Pipeline) => {
     error: relationsError,
   } = useRelations(selectedDatabase.id);
 
+  useEffect(() => {
+    if (tables && relations) {
+      setIsDataReady(true);
+    }
+  }, [tables, relations]);
+
   if (isLoadingTables || isLoadingRelations) {
     return { data: null, isLoading: true, error: null };
   }
 
-  if (tablesError || relationsError || !tables) {
+  if (tablesError || relationsError) {
     return {
       data: null,
       isLoading: false,
@@ -110,79 +118,95 @@ export const usePipelineSchema = (pipeline: Pipeline) => {
     };
   }
 
-  const baseTable = _.find(tables, (table) => table.id === pipeline.from);
+  if (isDataReady) {
+    const baseTable = _.find(tables, (table) => table.id === pipeline.from);
 
-  if (!baseTable) {
-    return {
-      isLoading: false,
-      data: { success: false, error: "Base table not found" },
-      error: null,
-    };
-  }
-
-  // Create the base columns from the root table
-  let baseColumns: InferredSchemaColumn[] = _.map(
-    _.values(baseTable.external_columns),
-    (column) => {
-      return { ...column, table: baseTable.id };
-    },
-  );
-  if (!baseColumns.length) {
-    throw new Error("Root table has no columns");
-  }
-
-  // Create the base relations as an empty array
-  let baseRelations: InferredSchemaRelation[] = [];
-
-  // Create the base result schema
-  let resultSchema: InferredSchema = {
-    columns: baseColumns,
-    relations: baseRelations,
-  };
-
-  // Iterate through each step in the pipeline, validate it, and if it is valid, apply it to the schema
-  for (let i = 0; i < pipeline.steps.length; i++) {
-    const step = pipeline.steps[i];
-
-    // Validate the step
-    const validation = validatePipelineStep(
-      step,
-      i,
-      resultSchema,
-      baseTable,
-      tables,
-      relations || [],
-    );
-
-    // If the step is not valid, return the validation error
-    if (!validation.success) {
-      if (!validation.error) {
-        throw new Error("No validation error returned");
-      }
+    if (!baseTable) {
       return {
-        data: validation,
-        isLoading: !!(isLoadingTables || isLoadingRelations),
+        isLoading: false,
+        data: { success: false, error: "Base table not found" },
         error: null,
       };
     }
 
-    // Apply the step to the schema
-    resultSchema = applyPipelineStep(
-      step,
-      resultSchema,
-      baseTable,
-      tables,
-      relations || [],
+    // Create the base columns from the root table
+    let baseColumns: InferredSchemaColumn[] = _.map(
+      _.values(baseTable.external_columns),
+      (column) => {
+        return { ...column, table: baseTable.id };
+      },
     );
-  }
+    if (!baseColumns.length) {
+      throw new Error("Root table has no columns");
+    }
 
-  // Return the parsed result schema
-  return {
-    data: InferSchemaOutputSchema.parse({
-      success: true,
-      data: resultSchema,
-    }),
-    isLoading: false,
-    error: null,
-  };
+    // Create the base relations as an empty array
+    let baseRelations: InferredSchemaRelation[] = [];
+
+    // Create the base result schema
+    let resultSchema: InferredSchema = {
+      columns: baseColumns,
+      relations: baseRelations,
+    };
+
+    // Iterate through each step in the pipeline, validate it, and if it is valid, apply it to the schema
+    for (let i = 0; i < pipeline.steps.length; i++) {
+      const step = pipeline.steps[i];
+
+      // Validate the step
+      const validation = validatePipelineStep(
+        step,
+        i,
+        resultSchema,
+        baseTable,
+        tables!,
+        relations || [],
+      );
+
+      // If the step is not valid, return the validation error
+      if (!validation.success) {
+        if (!validation.error) {
+          throw new Error("No validation error returned");
+        }
+        return {
+          data: validation,
+          isLoading: !!(isLoadingTables || isLoadingRelations),
+          error: null,
+        };
+      }
+
+      // Apply the step to the schema
+      resultSchema = applyPipelineStep(
+        step,
+        resultSchema,
+        baseTable,
+        tables!,
+        relations || [],
+      );
+    }
+
+    // Return the parsed result schema
+    return {
+      data: InferSchemaOutputSchema.parse({
+        success: true,
+        data: resultSchema,
+      }),
+      isLoading: false,
+      error: null,
+    };
+  } else {
+    return { data: null, isLoading: true, error: null };
+  }
+};
+
+export const useParsePipeline = () => {
+  const [selectedDatabase] = useSelectedDatabase();
+  const { data, error, trigger, isMutating } = useSWRMutation(
+    `/user-queries/parse/${selectedDatabase.id}`,
+    async (url: string, { arg }: { arg: Pipeline }): Promise<any> => {
+      const createUserQueryResponse = await backendCreate(url, arg);
+      return createUserQueryResponse;
+    },
+  );
+  return { data, error, trigger, isMutating };
 };

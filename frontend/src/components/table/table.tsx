@@ -54,7 +54,7 @@ interface Props {
     take?: TakeStep;
   }) => void;
   // TODO update type
-  tableEnums: any;
+  tableEnums?: any;
 }
 
 const Table: React.FC<Props> = (props) => {
@@ -260,7 +260,9 @@ const Table: React.FC<Props> = (props) => {
           <Cell>
             <EditableInnerCell
               columnType={columnType}
-              columnEnumValues={tableEnums[key] || []}
+              columnEnumValues={
+                tableEnums && tableEnums[key] ? tableEnums[key] : []
+              }
               cellData={cellData}
               onConfirm={(value) => {
                 onEditConfirm ? onEditConfirm(value, rowIndex, key) : null;
