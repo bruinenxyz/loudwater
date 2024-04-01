@@ -158,14 +158,14 @@ const parseParametersFromSQL = (
   sql: string,
   parameters: Record<string, any>,
 ): { sql: string; params: any[] } => {
-  const matches = sql.match(/{{(.*?)}}/g);
+  const matches = sql.match(/{{(.*?)}}/g); // matches all instances of {{param}}
   let paramIndex = 1;
   const params: any[] = [];
-  console.log("Matches", matches);
   if (!matches) {
     return { sql, params: [] };
   }
   matches.forEach((match) => {
+    //  replace with prepared statement syntax and build params array
     const paramName = match.replace("{{", "").replace("}}", "");
     if (parameters[paramName] !== undefined) {
       sql = sql.replace(match, `$${paramIndex}`);

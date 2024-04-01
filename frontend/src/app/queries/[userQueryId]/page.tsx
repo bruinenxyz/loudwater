@@ -29,6 +29,7 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
     isLoading: isLoadingUserQuery,
     error: userQueryError,
   } = useUserQuery(userQueryId);
+  // TODO: likely want to refactor this to account for stages changes vs saved changes
   const [parameters, setParameters] = useState<Parameter[]>([]);
   const [savedParameters, setSavedParameters] = useState<Parameter[]>([]);
 
