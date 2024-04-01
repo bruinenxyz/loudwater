@@ -12,8 +12,9 @@ import AddDatabase from "./add-database";
 import Loading from "../loading";
 import { ErrorDisplay } from "@/components/error-display";
 import { useDatabases } from "@/data/use-database";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as _ from "lodash";
+import { CleanDatabase } from "@/definitions";
 
 export default function DatabasesList() {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -23,6 +24,16 @@ export default function DatabasesList() {
     error: databasesError,
     mutate: mutateDatabases,
   } = useDatabases();
+
+  const [filteredDatabases, setFilteredDatabases] = useState<CleanDatabase[]>(
+    [],
+  );
+
+  useEffect(() => {
+    setFilteredDatabases(
+      databases?.filter((database) => !database.deleted_at) || [],
+    );
+  }, [databases]);
 
   const renderDatabases = () => {
     if (isLoadingDatabases) {
@@ -38,7 +49,7 @@ export default function DatabasesList() {
       );
     }
 
-    if (databases && databases?.length < 1) {
+    if (filteredDatabases && filteredDatabases?.length < 1) {
       return (
         <NonIdealState
           title="No items"
@@ -49,7 +60,7 @@ export default function DatabasesList() {
           action={
             <AddDatabase
               mutateDatabases={mutateDatabases}
-              databases={databases}
+              databases={filteredDatabases}
               isOpen={isOpen}
               setIsOpen={setIsOpen}
               displayButton={true}
@@ -61,7 +72,7 @@ export default function DatabasesList() {
 
     return (
       <CardList bordered className="h-full max-h-full overflow-auto">
-        {_.map(databases, (database: any) => {
+        {_.map(filteredDatabases, (database: any) => {
           return (
             <Card
               key={database.id}
@@ -102,7 +113,7 @@ export default function DatabasesList() {
       rightElement={
         <AddDatabase
           mutateDatabases={mutateDatabases}
-          databases={databases || []}
+          databases={filteredDatabases || []}
           isOpen={isOpen}
           setIsOpen={setIsOpen}
           displayButton={true}

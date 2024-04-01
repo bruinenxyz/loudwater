@@ -20,6 +20,13 @@ export const useDatabases = () => {
   return { data, error, isLoading, isValidating, mutate };
 };
 
+export const useDatabase = (id?: string) => {
+  console.log("useDatabase", id);
+  const { data, error, isLoading, isValidating, mutate } =
+    useSWR<CleanDatabase>(id ? `/databases/${id}` : null, backendGet);
+  return { data, error, isLoading, isValidating, mutate };
+};
+
 export const useCreateDatabase = () => {
   const { data, error, trigger, isMutating } = useSWRMutation(
     "/databases",
@@ -48,5 +55,13 @@ export const useUpdateDatabase = (id: string) => {
     },
   );
 
+  return { data, error, trigger, isMutating };
+};
+
+export const useDeleteDatabase = (id?: string) => {
+  const { data, error, trigger, isMutating } = useSWRMutation<string[]>(
+    id ? `/databases/${id}` : null,
+    backendDelete,
+  );
   return { data, error, trigger, isMutating };
 };
