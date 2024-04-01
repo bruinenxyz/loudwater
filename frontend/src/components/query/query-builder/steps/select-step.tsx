@@ -85,6 +85,8 @@ export default function SelectStepComponent({
   }
 
   function renderTitle() {
+    // If we are creating a new step, editing a step, or the step is not defined, show the default title
+    // Also show the default title if the schemas are loading or errored
     if (
       edit ||
       create ||

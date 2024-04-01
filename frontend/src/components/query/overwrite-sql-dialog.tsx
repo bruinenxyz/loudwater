@@ -14,31 +14,31 @@ import Loading from "@/app/loading";
 interface OverwriteSQLDialogProps {
   userQueryId: string;
   pipeline: Pipeline;
-  divergence: boolean;
-  setDivergence: (value: boolean) => void;
+  isDivergent: boolean;
+  setIsDivergent: (value: boolean) => void;
 }
 
 export default function OverwriteSQLDialog({
   userQueryId,
   pipeline,
-  divergence,
-  setDivergence,
+  isDivergent,
+  setIsDivergent,
 }: OverwriteSQLDialogProps) {
   const { trigger: updateUserQueryTrigger, isMutating: isUpdatingUserQuery } =
     useUpdateUserQuery(userQueryId);
 
   async function handleConfirm() {
     await updateUserQueryTrigger({ pipeline: pipeline });
-    setDivergence(false);
+    setIsDivergent(false);
   }
 
   return (
     <Dialog
-      isOpen={divergence}
+      isOpen={isDivergent}
       isCloseButtonShown
       title={"Saving this pipeline will overwrite SQL"}
       onClose={() => {
-        setDivergence(false);
+        setIsDivergent(false);
       }}
     >
       {isUpdatingUserQuery ? (

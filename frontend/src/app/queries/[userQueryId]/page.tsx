@@ -173,8 +173,8 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
         <OverwriteSQLDialog
           userQueryId={userQueryId}
           pipeline={pipeline}
-          divergence={pipelineSQLDivergence}
-          setDivergence={setPipelineSQLDivergence}
+          isDivergent={pipelineSQLDivergence}
+          setIsDivergent={setPipelineSQLDivergence}
         />
       </div>
       <Callout

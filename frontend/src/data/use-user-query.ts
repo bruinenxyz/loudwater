@@ -88,7 +88,7 @@ export const useUpdateUserQuery = (queryId: string) => {
 
 export const usePipelineSchema = (pipeline: Pipeline) => {
   const [selectedDatabase] = useSelectedDatabase();
-  const [isReady, setIsReady] = useState(false);
+  const [isDataReady, setIsDataReady] = useState(false);
   const {
     data: tables,
     isLoading: isLoadingTables,
@@ -102,7 +102,7 @@ export const usePipelineSchema = (pipeline: Pipeline) => {
 
   useEffect(() => {
     if (tables && relations) {
-      setIsReady(true);
+      setIsDataReady(true);
     }
   }, [tables, relations]);
 
@@ -118,7 +118,7 @@ export const usePipelineSchema = (pipeline: Pipeline) => {
     };
   }
 
-  if (isReady) {
+  if (isDataReady) {
     const baseTable = _.find(tables, (table) => table.id === pipeline.from);
 
     if (!baseTable) {

@@ -66,6 +66,7 @@ export class UserQueriesService {
         createUserQueryDto.database_id,
       );
 
+      // Generate SQL from pipeline and remove trailing generation comment
       const cleanedSQL = writeSQL(
         createUserQueryDto.pipeline,
         tables,
