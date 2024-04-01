@@ -4,6 +4,7 @@ import {
   StepIdentifierEnum,
   Table,
 } from "@/definitions";
+import { parseAggregate } from "./parse-aggregate";
 import { parseFrom } from "./parse-from";
 import { parseSelect } from "./parse-select";
 import { compile } from "prql-js";
@@ -19,6 +20,9 @@ function objectToPrql(
 
   _.forEach(pipeline.steps, (step, index) => {
     switch (step.type) {
+      case StepIdentifierEnum.Aggregate:
+        prql += parseAggregate(step, index + 1, tables);
+        break;
       case StepIdentifierEnum.Select:
         prql += parseSelect(step, index + 1, tables);
         break;
