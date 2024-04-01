@@ -66,6 +66,7 @@ model query {
     name            String
     description     String?
     sql             String?
+    parameters      Json?
     pipeline        Json?
     scope           ScopeType @default(private)
     permissions     Json      @default("{}")

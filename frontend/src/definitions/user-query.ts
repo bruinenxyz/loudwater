@@ -12,6 +12,7 @@ export const UserQuerySchema = z.object({
   description: z.string().optional(),
   sql: z.string().optional(),
   pipeline: z.any().optional(), // TODO replace with actual pipeline schema
+  parameters: z.any().optional(), // TODO replace with actual parameter schema
   scope: z.enum(["private", "organization"]), // TODO turn this into an enum
   permissions: z.record(z.any()), // TODO update
   favorited_by: z.array(z.string()),
