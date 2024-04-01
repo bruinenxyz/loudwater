@@ -81,7 +81,7 @@ function QueryEditor({ value, onChange }: QueryEditorProps) {
   }, [monacoInstance]);
 
   return (
-    <div className="rounded-md overflow-hidden">
+    <div className="overflow-hidden rounded-md">
       <Editor
         value={value}
         onChange={onChange}
