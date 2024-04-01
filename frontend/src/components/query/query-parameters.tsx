@@ -54,7 +54,6 @@ const QueryParameters: React.FC<QueryParametersProps> = (props) => {
     ]);
   };
 
-  console.log(parameters);
   return (
     <div className="my-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
       {_.map(parameters, (p, index) => {
