@@ -13,10 +13,10 @@ import { ErrorDisplay } from "@/components/error-display";
 import StepTypeSelector from "./step-type-selector";
 import FromStepComponent from "./steps/from-step";
 import SelectStepComponent from "./steps/select-step";
+import AggregateStepComponent from "./steps/aggregate-step";
 import { usePipelineSchema } from "@/data/use-user-query";
 import { useState, useEffect } from "react";
 import * as _ from "lodash";
-import AggregateStepComponent from "./steps/aggregate-step";
 
 interface QueryBuilderProps {
   pipeline: Pipeline;

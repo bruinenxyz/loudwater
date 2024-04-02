@@ -69,12 +69,16 @@ export default function SelectStepComponent({
   });
 
   useEffect(() => {
+    resetFields();
+  }, [step]);
+
+  function resetFields() {
     if (step) {
       setSelected(step.select);
     } else {
       setSelected([]);
     }
-  }, [step]);
+  }
 
   function getAdditionalClasses() {
     if (inputSchema && !inputSchema.success) {
@@ -167,20 +171,31 @@ export default function SelectStepComponent({
     } else {
       if (edit) {
         return (
-          <Button
-            alignText="left"
-            disabled={selected.length === 0}
-            text="Confirm step"
-            onClick={() => {
-              const updatedStep = {
-                type: StepIdentifierEnum.Select,
-                select: selected,
-              } as SelectStep;
-              const newSteps: Step[] = [...pipeline.steps];
-              newSteps.splice(index, 1, updatedStep as Step);
-              setPipeline({ ...pipeline, steps: newSteps });
-            }}
-          />
+          <>
+            <Button
+              alignText="left"
+              disabled={selected.length === 0}
+              text="Confirm step"
+              onClick={() => {
+                const updatedStep = {
+                  type: StepIdentifierEnum.Select,
+                  select: selected,
+                } as SelectStep;
+                const newSteps: Step[] = [...pipeline.steps];
+                newSteps.splice(index, 1, updatedStep as Step);
+                setPipeline({ ...pipeline, steps: newSteps });
+              }}
+            />
+            <Button
+              className="ml-2"
+              alignText="left"
+              text="Cancel"
+              onClick={() => {
+                resetFields();
+                setEditStepIndex(null);
+              }}
+            />
+          </>
         );
       } else {
         return (

@@ -35,7 +35,6 @@ import { usePipelineSchema } from "@/data/use-user-query";
 import { useState, useEffect } from "react";
 import { useField } from "@/utils/use-field";
 import * as _ from "lodash";
-import { test } from "node:test";
 
 interface AggregateStepProps {
   index: number;
@@ -91,6 +90,16 @@ export default function AggregateStepComponent({
   });
 
   useEffect(() => {
+    resetFields();
+  }, [step]);
+
+  useEffect(() => {
+    if (inputSchema && asField.value) {
+      testAsValueInUse(asField.value);
+    }
+  }, [inputSchema]);
+
+  function resetFields() {
     if (step) {
       setSelectedOperation(step.operation);
       setSelectedColumn(step.column);
@@ -102,13 +111,7 @@ export default function AggregateStepComponent({
       asField.onValueChange("");
       setGroup([]);
     }
-  }, [step]);
-
-  useEffect(() => {
-    if (inputSchema && asField.value) {
-      testAsValueInUse(asField.value);
-    }
-  }, [inputSchema]);
+  }
 
   function canSubmit() {
     return (
@@ -166,30 +169,26 @@ export default function AggregateStepComponent({
       return (
         <div className="flex flex-row items-center">
           <Text className="text-xl grow-0">Aggregate:</Text>
-          <div className="flex flex-row items-center ml-3 overflow-hidden grow h-fit">
+          <div className="flex flex-row flex-wrap items-center ml-3 grow h-fit">
             <Text className="mr-2 flex-nowrap ">{step.operation}</Text>
-            <div className="flex flex-row items-center mr-2 w-fit">
-              <InferredSchemaColumnTag column={step.column} />
-            </div>
+            <InferredSchemaColumnTag column={step.column} />
             <Text className="mr-2 flex-nowrap">as</Text>
-            <div className="flex flex-row items-center h-full mr-2 w-fit">
-              <Tag
-                minimal={true}
-                intent={"none"}
-                className={`w-fit  cursor-default `}
-              >
-                <div className="flex flex-row items-center w-fit">
-                  <SquareIcon
-                    icon="function"
-                    color="gray"
-                    size={SquareIconSize.SMALL}
-                  />
-                  <Text className="py-1 ml-1 font-bold flex-nowrap">
-                    {step.as}
-                  </Text>
-                </div>
-              </Tag>
-            </div>
+            <Tag
+              minimal={true}
+              intent={"none"}
+              className={`w-fit cursor-default`}
+            >
+              <div className="flex flex-row items-center w-fit">
+                <SquareIcon
+                  icon="function"
+                  color="gray"
+                  size={SquareIconSize.SMALL}
+                />
+                <Text className="py-1 ml-1 font-bold flex-nowrap">
+                  {step.as}
+                </Text>
+              </div>
+            </Tag>
           </div>
         </div>
       );
@@ -204,30 +203,26 @@ export default function AggregateStepComponent({
       return (
         <div className="flex flex-row items-center">
           <Text className="text-xl grow-0">Aggregate:</Text>
-          <div className="flex flex-row items-center ml-3 overflow-hidden grow h-fit">
+          <div className="flex flex-row flex-wrap items-center ml-3 gap-y-1 grow h-fit">
             <Text className="mr-2 flex-nowrap ">{step.operation}</Text>
-            <div className="flex flex-row items-center mr-2 w-fit">
-              <InferredSchemaColumnTag column={step.column} />
-            </div>
-            <Text className="mr-2 flex-nowrap">as</Text>
-            <div className="flex flex-row items-center h-full mr-2 w-fit">
-              <Tag
-                minimal={true}
-                intent={"none"}
-                className={`w-fit  cursor-default `}
-              >
-                <div className="flex flex-row items-center w-fit">
-                  <SquareIcon
-                    icon="function"
-                    color="gray"
-                    size={SquareIconSize.SMALL}
-                  />
-                  <Text className="py-1 ml-1 font-bold flex-nowrap">
-                    {step.as}
-                  </Text>
-                </div>
-              </Tag>
-            </div>
+            <InferredSchemaColumnTag column={step.column} />
+            <Text className="mx-2 flex-nowrap">as</Text>
+            <Tag
+              minimal={true}
+              intent={"none"}
+              className={`w-fit  cursor-default `}
+            >
+              <div className="flex flex-row items-center w-fit">
+                <SquareIcon
+                  icon="function"
+                  color="gray"
+                  size={SquareIconSize.SMALL}
+                />
+                <Text className="py-1 ml-1 font-bold flex-nowrap">
+                  {step.as}
+                </Text>
+              </div>
+            </Tag>
           </div>
         </div>
       );
@@ -269,23 +264,34 @@ export default function AggregateStepComponent({
     } else {
       if (edit) {
         return (
-          <Button
-            alignText="left"
-            disabled={!canSubmit()}
-            text="Confirm step"
-            onClick={() => {
-              const updatedStep = {
-                type: StepIdentifierEnum.Aggregate,
-                column: selectedColumn,
-                operation: selectedOperation,
-                as: asField.value,
-                group: group,
-              } as AggregateStep;
-              const newSteps: Step[] = [...pipeline.steps];
-              newSteps.splice(index, 1, updatedStep as Step);
-              setPipeline({ ...pipeline, steps: newSteps });
-            }}
-          />
+          <>
+            <Button
+              alignText="left"
+              disabled={!canSubmit()}
+              text="Confirm step"
+              onClick={() => {
+                const updatedStep = {
+                  type: StepIdentifierEnum.Aggregate,
+                  column: selectedColumn,
+                  operation: selectedOperation,
+                  as: asField.value,
+                  group: group,
+                } as AggregateStep;
+                const newSteps: Step[] = [...pipeline.steps];
+                newSteps.splice(index, 1, updatedStep as Step);
+                setPipeline({ ...pipeline, steps: newSteps });
+              }}
+            />{" "}
+            <Button
+              className="ml-2"
+              alignText="left"
+              text="Cancel"
+              onClick={() => {
+                resetFields();
+                setEditStepIndex(null);
+              }}
+            />
+          </>
         );
       } else {
         return (

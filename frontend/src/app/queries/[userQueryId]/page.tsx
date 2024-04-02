@@ -1,11 +1,11 @@
 "use client";
 import { Pipeline } from "@/definitions/pipeline";
-import { Button, Callout, Drawer, Tab, Tabs } from "@blueprintjs/core";
+import { Button, Callout, Divider, Drawer, Tab, Tabs } from "@blueprintjs/core";
 import Loading from "@/app/loading";
 import { ErrorDisplay } from "@/components/error-display";
+import QueryHeader from "@/components/query/query-header";
 import QueryBuilder from "@/components/query/query-builder/query-builder";
 import QueryEditor from "@/components/query/query-editor";
-import { QueryHeader } from "@/components/query/query-header";
 import Table from "@/components/table/table";
 import OverwriteSQLDialog from "@/components/query/overwrite-sql-dialog";
 import {
@@ -31,7 +31,6 @@ enum QueryTabEnum {
 
 const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
   const [tab, setTab] = useState<QueryTabEnum>(QueryTabEnum.SQL);
-  const [drawerToggle, setDrawerToggle] = useState<boolean>(false);
   const [sqlQuery, setSqlQuery] = useState<string>("");
   const [pipeline, setPipeline] = useState<Pipeline>({ from: "", steps: [] });
   const [pipelineSQLDivergence, setPipelineSQLDivergence] =
@@ -109,94 +108,82 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
   return (
     <div className="flex flex-col h-full">
       <QueryHeader query={userQuery} />
-      <div className="flex flex-row items-center justify-between mb-2">
-        <Tabs
-          animate
-          selectedTabId={tab}
-          id="section-tabs"
-          key="horizontal"
-          renderActiveTabPanelOnly={true}
-          onChange={(tabId: QueryTabEnum) => {
-            if (tabId === QueryTabEnum.SQL) {
-              setDrawerToggle(false);
-            }
-            setTab(tabId);
-          }}
-        >
-          <Tab
-            id={QueryTabEnum.SQL}
-            title={<Button className="bp5-minimal" icon="code" text="SQL" />}
-          />
-          <Tab
-            id={QueryTabEnum.PIPELINE}
-            title={
-              <Button
-                className="bp5-minimal"
-                icon="form"
-                text="Query Builder"
+      <div className="flex flex-row flex-1 overflow-auto ">
+        <div className="flex flex-col w-1/2 h-full px-1 pb-[1px]">
+          <Divider className="mt-2 mb-0" />
+          <div className="flex flex-row items-center justify-between mt-1 mb-2">
+            <Tabs
+              animate
+              selectedTabId={tab}
+              id="section-tabs"
+              key="horizontal"
+              renderActiveTabPanelOnly={true}
+              onChange={(tabId: QueryTabEnum) => setTab(tabId)}
+            >
+              <Tab
+                id={QueryTabEnum.SQL}
+                title={
+                  <Button className="bp5-minimal" icon="code" text="SQL" />
+                }
               />
-            }
-          />
-        </Tabs>
-        {tab === QueryTabEnum.PIPELINE && (
-          <Button
-            className="mt-1"
-            icon="drawer-left"
-            onClick={() => setDrawerToggle(true)}
+              <Tab
+                id={QueryTabEnum.PIPELINE}
+                title={
+                  <Button
+                    className="bp5-minimal"
+                    icon="form"
+                    text="Query Builder"
+                  />
+                }
+              />
+            </Tabs>
+            <div className="flex flex-row items-center">
+              <Button
+                className="mt-1 mr-1 w-fit"
+                loading={isUpdatingUserQuery}
+                disabled={
+                  isLoadingResults ||
+                  isUpdatingUserQuery ||
+                  (tab === QueryTabEnum.PIPELINE && !pipelineSchema!.success)
+                }
+                onClick={handleSaveQuery}
+              >
+                Save and run
+              </Button>
+              <OverwriteSQLDialog
+                userQueryId={userQueryId}
+                pipeline={pipeline}
+                isDivergent={pipelineSQLDivergence}
+                setIsDivergent={setPipelineSQLDivergence}
+              />
+            </div>
+          </div>
+          {tab === QueryTabEnum.SQL ? (
+            <QueryEditor value={sqlQuery} onChange={setSqlQuery} />
+          ) : (
+            <QueryBuilder
+              className="flex flex-col h-full p-2 overflow-y-auto gap-y-2"
+              pipeline={pipeline}
+              setPipeline={setPipeline}
+            />
+          )}
+        </div>
+        <div className="flex flex-col w-1/2 pr-1 pt-2 pb-[1px]">
+          <Callout
+            className="mb-2"
+            intent="danger"
+            title="Error running query"
+            hidden={resultsError === undefined}
           >
-            Open in drawer
-          </Button>
-        )}
+            {resultsErrorMessage || resultsError?.message}
+          </Callout>
+          <Table
+            results={results}
+            isLoadingResults={isLoadingResults}
+            resultsError={undefined}
+          />
+        </div>
       </div>
-      {tab === QueryTabEnum.SQL ? (
-        <QueryEditor value={sqlQuery} onChange={setSqlQuery} />
-      ) : (
-        <QueryBuilder
-          className="overflow-y-auto h-[300px] flex flex-col p-3 gap-y-2"
-          pipeline={pipeline}
-          setPipeline={setPipeline}
-        />
-      )}
-      <div className="flex flex-row items-center">
-        <Button
-          className="my-2 mr-2 w-fit "
-          loading={isUpdatingUserQuery}
-          disabled={
-            isLoadingResults ||
-            isUpdatingUserQuery ||
-            (tab === QueryTabEnum.PIPELINE && !pipelineSchema!.success)
-          }
-          onClick={handleSaveQuery}
-        >
-          Save and run
-        </Button>
-        <OverwriteSQLDialog
-          userQueryId={userQueryId}
-          pipeline={pipeline}
-          isDivergent={pipelineSQLDivergence}
-          setIsDivergent={setPipelineSQLDivergence}
-        />
-      </div>
-      <Callout
-        className="my-2"
-        intent="danger"
-        title="Error running query"
-        hidden={resultsError === undefined}
-      >
-        {resultsErrorMessage || resultsError?.message}
-      </Callout>
-      <Table
-        results={results}
-        isLoadingResults={isLoadingResults}
-        resultsError={undefined}
-      />
-      <Drawer isOpen={drawerToggle} onClose={() => setDrawerToggle(false)}>
-        <QueryBuilder
-          className="flex flex-col h-full p-3 overflow-y-auto gap-y-2"
-          pipeline={pipeline}
-          setPipeline={setPipeline}
-        />
-      </Drawer>
     </div>
   );
 };
