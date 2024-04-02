@@ -243,7 +243,6 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
         </Button>
         <Button
           className="my-2 w-fit"
-          loading={isUpdatingUserQuery}
           disabled={isLoadingResults || isUpdatingUserQuery}
           onClick={handleDownloadCSV}
         >
