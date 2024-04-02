@@ -18,6 +18,8 @@ import {
   useUserQuery,
   useUserQueryResults,
 } from "@/data/use-user-query";
+import { convertToCSV } from "@/utils/csv-converter";
+import { toSnakeCase } from "@/utils/strings";
 import React, { useEffect, useState } from "react";
 import * as _ from "lodash";
 
@@ -63,6 +65,21 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
     isLoading: isLoadingPipelineSchema,
     error: pipelineSchemaError,
   } = usePipelineSchema(pipeline);
+
+  const handleDownloadCSV = () => {
+    const csvData = convertToCSV(results.rows);
+    const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = toSnakeCase(userQuery?.name) + ".csv";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
 
   const { trigger: updateUserQueryTrigger, isMutating: isUpdatingUserQuery } =
     useUpdateUserQuery(userQueryId);
@@ -201,6 +218,43 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
             resultsError={undefined}
           />
         </div>
+      </div>
+      {tab === QueryTabEnum.SQL ? (
+        <QueryEditor value={sqlQuery} onChange={setSqlQuery} />
+      ) : (
+        <QueryBuilder
+          className="overflow-y-auto h-[400px] flex flex-col p-3 gap-y-2"
+          pipeline={pipeline}
+          setPipeline={setPipeline}
+        />
+      )}
+      <div className="flex flex-row justify-between items-center">
+        <Button
+          className="my-2 mr-2 w-fit "
+          loading={isUpdatingUserQuery}
+          disabled={
+            isLoadingResults ||
+            isUpdatingUserQuery ||
+            (tab === QueryTabEnum.PIPELINE && !pipelineSchema!.success)
+          }
+          onClick={handleSaveQuery}
+        >
+          Save and run
+        </Button>
+        <Button
+          className="my-2 w-fit"
+          loading={isUpdatingUserQuery}
+          disabled={isLoadingResults || isUpdatingUserQuery}
+          onClick={handleDownloadCSV}
+        >
+          Download as CSV
+        </Button>
+        <OverwriteSQLDialog
+          userQueryId={userQueryId}
+          pipeline={pipeline}
+          isDivergent={pipelineSQLDivergence}
+          setIsDivergent={setPipelineSQLDivergence}
+        />
       </div>
     </div>
   );
