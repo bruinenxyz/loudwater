@@ -21,7 +21,6 @@ export const useDatabases = () => {
 };
 
 export const useDatabase = (id?: string) => {
-  console.log("useDatabase", id);
   const { data, error, isLoading, isValidating, mutate } =
     useSWR<CleanDatabase>(id ? `/databases/${id}` : null, backendGet);
   return { data, error, isLoading, isValidating, mutate };
