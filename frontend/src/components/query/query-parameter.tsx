@@ -139,31 +139,30 @@ const QueryParameter: React.FC<QueryParameterProps> = (props) => {
     );
   };
   return (
-    <div className="">
-      <FormGroup
-        label={
-          <div className="flex items-center">
-            <span className="mr-2">{parameter.name}</span>
-            <Button
-              icon="cross"
-              minimal={true}
-              small={true}
-              className="ml-auto"
-              onClick={() => removeParameter(index)}
-            />
-          </div>
-        }
-        helperText={parameter.description ? parameter.description : undefined}
-      >
-        <InputGroup
-          small
-          value={parameter.value || parameter.defaultValue}
-          type={parameter.type}
-          onValueChange={(value) => onValueChange(index, value)}
-          rightElement={getRightElement()}
-        />
-      </FormGroup>
-    </div>
+    <FormGroup
+      className="mb-0"
+      label={
+        <div className="flex items-center">
+          <span className="mr-2">{parameter.name}</span>
+          <Button
+            icon="cross"
+            minimal={true}
+            small={true}
+            className="ml-auto"
+            onClick={() => removeParameter(index)}
+          />
+        </div>
+      }
+      helperText={parameter.description ? parameter.description : undefined}
+    >
+      <InputGroup
+        small
+        value={parameter.value || parameter.defaultValue}
+        type={parameter.type}
+        onValueChange={(value) => onValueChange(index, value)}
+        rightElement={getRightElement()}
+      />
+    </FormGroup>
   );
 };
 

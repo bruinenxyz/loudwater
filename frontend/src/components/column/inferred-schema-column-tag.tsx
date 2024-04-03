@@ -17,9 +17,7 @@ export default function InferredSchemaColumnTag({
     error: tableError,
   } = useTable(column.table);
 
-  if (isLoadingTable) {
-  }
-  if (tableError) {
+  if (tableError && column.table !== "aggregate") {
     return null;
   }
 
@@ -29,7 +27,7 @@ export default function InferredSchemaColumnTag({
       intent={"none"}
       className={`h-fit w-fit ${
         !!action ? "cursor-pointer" : "cursor-default "
-      }`}
+      } ${isLoadingTable ? "bp5-skeleton" : ""}`}
       onClick={action}
     >
       <div className="flex flex-row items-center w-fit">
