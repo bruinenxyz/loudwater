@@ -30,6 +30,9 @@ export default function MultiColumnSelectorTag({
         <div className="flex flex-row items-center py-1 ml-1 w-fit">
           {table ? <Text className="mr-1">{table.name}</Text> : null}
           <Text className="font-bold">{column.name}</Text>
+          {column.relation && (
+            <Text className="ml-1">{`(${column.relation.as})`}</Text>
+          )}
         </div>
       </div>
     </Tag>

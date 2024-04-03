@@ -470,7 +470,7 @@ export default function RelateStepComponent({
                 <Text className="font-bold text-md">
                   {item.originTable.name}
                 </Text>
-                <Text className="text-md">{originKey}</Text>
+                <Text className="font-normal text-md">{originKey}</Text>
               </div>
             </Tag>
             <Icon icon={getRelationIcon(item) as IconName} color="gray" />
@@ -489,7 +489,7 @@ export default function RelateStepComponent({
                 <Text className="font-bold text-md">
                   {item.relatedTable.name}
                 </Text>
-                <Text className="text-md">{relatedKey}</Text>
+                <Text className="font-normal text-md">{relatedKey}</Text>
               </div>
             </Tag>
           </div>

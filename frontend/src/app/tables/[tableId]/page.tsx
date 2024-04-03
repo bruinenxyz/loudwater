@@ -3,6 +3,8 @@ import { FilterStep, OrderStep, TakeStep } from "@/definitions/pipeline";
 import Loading from "@/app/loading";
 import { ErrorDisplay } from "@/components/error-display";
 import Table from "@/components/table/table";
+import { TableHeader } from "@/components/table/table-header";
+import { AppToaster } from "@/components/toaster/toaster";
 import { useClipboard } from "use-clipboard-copy";
 import {
   useTable,
@@ -13,8 +15,6 @@ import {
 } from "@/data/use-tables";
 import { useState } from "react";
 import * as _ from "lodash";
-import { TableHeader } from "@/components/table/table-header";
-import { AppToaster } from "@/components/toaster/toaster";
 
 interface ObjectViewPageProps {
   params: {

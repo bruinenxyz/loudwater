@@ -50,7 +50,7 @@ export default function MultiColumnSelector({
     );
     return (
       <MultiColumnSelectorListItem
-        key={`${column.table}.${column.name}`}
+        key={`${column.table}.${column.name}${column.relation ? `.${column.relation.as}` : ""}`}
         column={column}
         table={table}
         handleClick={handleClick}
