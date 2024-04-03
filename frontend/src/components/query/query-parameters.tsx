@@ -1,8 +1,7 @@
 import React from "react";
-import { Button, EditableText, FormGroup } from "@blueprintjs/core";
-import { Select } from "@blueprintjs/select";
-import * as _ from "lodash";
+import { Button } from "@blueprintjs/core";
 import QueryParameter from "./query-parameter";
+import * as _ from "lodash";
 
 export interface Parameter {
   name: string;
@@ -55,22 +54,24 @@ const QueryParameters: React.FC<QueryParametersProps> = (props) => {
   };
 
   return (
-    <div className="my-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+    <div className="flex flex-row flex-wrap items-center w-full gap-2 mb-2">
       {_.map(parameters, (p, index) => {
         return (
-          <div key={index} className="col-span-1 items-center">
-            <QueryParameter
-              parameter={p}
-              index={index}
-              saveParameter={(param) => saveParameter(index, param)}
-              removeParameter={(index) => removeParameter(index)}
-              onValueChange={setValue}
-            />
-          </div>
+          <QueryParameter
+            key={index}
+            parameter={p}
+            index={index}
+            saveParameter={(param) => saveParameter(index, param)}
+            removeParameter={(index) => removeParameter(index)}
+            onValueChange={setValue}
+          />
         );
       })}
-      <div className="col-span-1 flex justify-center items-center">
-        <Button icon="plus" onClick={addParameter} fill></Button>
+
+      <div className="w-fit">
+        <Button icon="plus" onClick={addParameter} fill>
+          Add parameter
+        </Button>
       </div>
     </div>
   );

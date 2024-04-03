@@ -6,7 +6,6 @@ import { ErrorDisplay } from "@/components/error-display";
 import QueryHeader from "@/components/query/query-header";
 import QueryBuilder from "@/components/query/query-builder/query-builder";
 import QueryEditor from "@/components/query/query-editor";
-import { QueryHeader } from "@/components/query/query-header";
 import QueryParameters, {
   Parameter,
 } from "@/components/query/query-parameters";
@@ -173,7 +172,10 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
           </div>
           {tab === QueryTabEnum.SQL ? (
             <>
-              <QueryParameters parameters={parameters} setParameters={setParameters} />
+              <QueryParameters
+                parameters={parameters}
+                setParameters={setParameters}
+              />
               <QueryEditor value={sqlQuery} onChange={setSqlQuery} />
             </>
           ) : (
