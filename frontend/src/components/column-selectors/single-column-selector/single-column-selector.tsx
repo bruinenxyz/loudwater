@@ -24,7 +24,7 @@ export default function SingleColumnSelector({
   ) => (
     <MenuItem
       key={`${column.table}.${column.name}`}
-      text={column.name}
+      text={`${column.name}${column.relation ? ` (${column.relation.as})` : ""}`}
       onClick={handleClick}
       selected={
         selected?.name === column.name && selected?.table === column.table

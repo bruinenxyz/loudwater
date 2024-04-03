@@ -2,6 +2,7 @@ import {
   AggregateStep,
   HydratedTable,
   InferredSchema,
+  RelateStep,
   Relation,
   SelectStep,
   Step,
@@ -26,10 +27,13 @@ export function applyPipelineStep(
       const aggregateStep = step as AggregateStep;
       return applyAggregateStep(aggregateStep, inputSchema);
     case StepIdentifierEnum.Relate:
-    case StepIdentifierEnum.Derive:
+      // Add the new relation and the related table's columns to the schema
+      const relateStep = step as RelateStep;
+      return applyRelateStep(relateStep, inputSchema, tables);
     case StepIdentifierEnum.Filter:
     case StepIdentifierEnum.Order:
     case StepIdentifierEnum.Take:
+    case StepIdentifierEnum.Derive:
       // No schema changes
       return inputSchema;
     default:
@@ -98,4 +102,32 @@ function applyAggregateStep(step: AggregateStep, inputSchema: InferredSchema) {
     relations: inputSchema.relations,
     columns: aggregatedColumns,
   };
+}
+
+function applyRelateStep(
+  step: RelateStep,
+  inputSchema: InferredSchema,
+  tables: HydratedTable[],
+) {
+  // Add the new relation to the schema's relations array
+  const updatedRelations = [...inputSchema.relations, step.relation];
+
+  // Add the related table's columns to the schema's columns array
+  const targetTable = _.find(
+    tables,
+    (table: HydratedTable) => table.id === step.relation.table,
+  );
+  if (!targetTable) {
+    throw new Error(`Table '${step.relation.table}' does not exist`);
+  }
+  const updatedColumns = [...inputSchema.columns];
+  _.forEach(targetTable.external_columns, (column) => {
+    updatedColumns.push({
+      ...column,
+      table: targetTable.id,
+      relation: step.relation,
+    });
+  });
+
+  return { relations: updatedRelations, columns: updatedColumns };
 }
