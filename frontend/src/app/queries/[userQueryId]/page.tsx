@@ -6,6 +6,10 @@ import { ErrorDisplay } from "@/components/error-display";
 import QueryHeader from "@/components/query/query-header";
 import QueryBuilder from "@/components/query/query-builder/query-builder";
 import QueryEditor from "@/components/query/query-editor";
+import { QueryHeader } from "@/components/query/query-header";
+import QueryParameters, {
+  Parameter,
+} from "@/components/query/query-parameters";
 import Table from "@/components/table/table";
 import OverwriteSQLDialog from "@/components/query/overwrite-sql-dialog";
 import {
@@ -40,12 +44,20 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
     isLoading: isLoadingUserQuery,
     error: userQueryError,
   } = useUserQuery(userQueryId);
+  // TODO: likely want to refactor this to account for stages changes vs saved changes
+  const [parameters, setParameters] = useState<Parameter[]>([]);
+  const [savedParameters, setSavedParameters] = useState<Parameter[]>([]);
+
+  useEffect(() => {
+    setSqlQuery(userQuery?.sql || "");
+    setParameters(userQuery?.parameters || []);
+  }, [userQuery, setSqlQuery, setParameters]);
 
   const {
     data: results,
     isLoading: isLoadingResults,
     error: resultsError,
-  } = useUserQueryResults(userQueryId, userQuery?.sql);
+  } = useUserQueryResults(userQueryId, userQuery?.sql, savedParameters);
 
   const {
     data: pipelineSchema,
@@ -69,12 +81,13 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
   }, [userQuery, setSqlQuery, setPipeline]);
 
   async function handleSaveQuery() {
+    setSavedParameters(parameters);
     if (tab === QueryTabEnum.SQL) {
-      await updateUserQueryTrigger({ sql: sqlQuery });
+      await updateUserQueryTrigger({ sql: sqlQuery, parameters: parameters });
     } else {
       const pipelineSQL = await parsePipelineTrigger(pipeline);
       if (pipelineSQL.sql === sqlQuery) {
-        updateUserQueryTrigger({ pipeline: pipeline });
+        updateUserQueryTrigger({ pipeline: pipeline, parameters: parameters });
       } else {
         setPipelineSQLDivergence(true);
       }
@@ -159,7 +172,10 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
             </div>
           </div>
           {tab === QueryTabEnum.SQL ? (
-            <QueryEditor value={sqlQuery} onChange={setSqlQuery} />
+            <>
+              <QueryParameters parameters={parameters} setParameters={setParameters} />
+              <QueryEditor value={sqlQuery} onChange={setSqlQuery} />
+            </>
           ) : (
             <QueryBuilder
               className="flex flex-col h-full p-2 overflow-y-auto gap-y-2"
