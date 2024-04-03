@@ -2,6 +2,7 @@
 import {
   Pipeline,
   SelectStep,
+  AggregateStep,
   Step,
   StepIdentifier,
   StepIdentifierEnum,
@@ -12,6 +13,7 @@ import { ErrorDisplay } from "@/components/error-display";
 import StepTypeSelector from "./step-type-selector";
 import FromStepComponent from "./steps/from-step";
 import SelectStepComponent from "./steps/select-step";
+import AggregateStepComponent from "./steps/aggregate-step";
 import { usePipelineSchema } from "@/data/use-user-query";
 import { useState, useEffect } from "react";
 import * as _ from "lodash";
@@ -99,6 +101,19 @@ export default function QueryBuilder({
           />
         );
       case StepIdentifierEnum.Aggregate:
+        return (
+          <AggregateStepComponent
+            key={create ? "new step" : index}
+            index={index}
+            step={!!step ? (step as AggregateStep) : step}
+            pipeline={pipeline}
+            setPipeline={setPipeline}
+            edit={editStepIndex === index}
+            setEditStepIndex={setEditStepIndex}
+            setNewStepType={setNewStepType}
+            create={create}
+          />
+        );
       case StepIdentifierEnum.Relate:
       case StepIdentifierEnum.Derive:
       case StepIdentifierEnum.Filter:
