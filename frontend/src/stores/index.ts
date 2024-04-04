@@ -25,7 +25,7 @@ export const usePersistentState = (key: string, defaultValue: any) => {
   return [value, setValuePersistent];
 };
 
-export const useDarkMode = () => {
+export const useDarkMode = (): [boolean, (darkMode: boolean) => void] => {
   const [darkMode, setDarkMode] = usePersistentState(DARKMODE_KEY, false);
 
   return [darkMode, setDarkMode];
