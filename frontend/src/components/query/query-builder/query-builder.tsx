@@ -15,7 +15,7 @@ import StepTypeSelector from "./step-type-selector";
 import FromStepComponent from "./steps/from-step";
 import SelectStepComponent from "./steps/select-step";
 import AggregateStepComponent from "./steps/aggregate-step";
-import RelateStepComponent from "./steps/relate-step";
+import RelateStepComponent from "./steps/relate/relate-step";
 import { usePipelineSchema } from "@/data/use-user-query";
 import { useState, useEffect } from "react";
 import * as _ from "lodash";
