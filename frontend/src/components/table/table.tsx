@@ -165,33 +165,46 @@ const Table: React.FC<Props> = (props) => {
   async function hideColumn(key: string) {
     if (key == undefined) return;
 
+    const newHiddenColumns = [...hiddenColumns, key];
+    const newOrderedColumns = orderedColumns.filter(
+      (column) => !newHiddenColumns.includes(column),
+    );
+
     await updateTable({
       id: table!.id,
       update: {
         configuration: {
           ...table!.configuration,
-          hidden_columns: [...hiddenColumns, key],
+          hidden_columns: newHiddenColumns,
+          ordered_columns: newOrderedColumns,
         },
       },
     });
 
-    setHiddenColumns([...hiddenColumns, key]);
+    setHiddenColumns(newHiddenColumns);
+    setOrderedColumns(newOrderedColumns);
   }
 
-  async function unhideColumn(key: string) {
-    if (key == undefined) return;
+  async function unhideColumn(key: string, index?: number) {
+    if (key == undefined || index == undefined) return;
+
+    const newHiddenColumns = hiddenColumns.filter((column) => column != key);
+    const newOrderedColumns = orderedColumns.slice();
+    newOrderedColumns.splice(index + 1, 0, key);
 
     await updateTable({
       id: table!.id,
       update: {
         configuration: {
           ...table!.configuration,
-          hidden_columns: hiddenColumns.filter((column) => column != key),
+          hidden_columns: newHiddenColumns,
+          ordered_columns: newOrderedColumns,
         },
       },
     });
 
-    setHiddenColumns(hiddenColumns.filter((column) => column != key));
+    setHiddenColumns(newHiddenColumns);
+    setOrderedColumns(newOrderedColumns);
   }
 
   function renderMenu(key: string) {
@@ -208,7 +221,7 @@ const Table: React.FC<Props> = (props) => {
             onClick={() => orderTableData("desc", key)}
             text="Order Desc"
           />
-          {_.keys(tableData.columns).length - hiddenColumns.length > 1 && (
+          {orderedColumns.length > 1 && (
             <MenuItem
               icon="eye-off"
               onClick={() => hideColumn(key)}
@@ -222,7 +235,7 @@ const Table: React.FC<Props> = (props) => {
                   <MenuItem
                     key={column}
                     text={column}
-                    onClick={() => unhideColumn(column)}
+                    onClick={() => unhideColumn(column, index)}
                   />
                 ))}
               </Menu>
@@ -353,16 +366,14 @@ const Table: React.FC<Props> = (props) => {
         enableFocusedCell={true}
         // loadingOptions={[TableLoadingOption.CELLS]}
       >
-        {orderedColumns
-          .filter((key) => !_.includes(hiddenColumns, key))
-          .map((key) => (
-            <Column
-              key={key}
-              name={key}
-              cellRenderer={genericCellRenderer(key)}
-              columnHeaderCellRenderer={genericHeaderCellRenderer(key)}
-            />
-          ))}
+        {orderedColumns.map((key) => (
+          <Column
+            key={key}
+            name={key}
+            cellRenderer={genericCellRenderer(key)}
+            columnHeaderCellRenderer={genericHeaderCellRenderer(key)}
+          />
+        ))}
       </Table2>
     </>
   );
