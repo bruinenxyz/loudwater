@@ -8,18 +8,19 @@ export default function RelationItemContent({
 }: {
   item: RelationItem | null;
 }) {
-  function getRelationIcon(item: RelationItem) {
+  function getRelationIcon(item: RelationItem): IconName {
     switch (item.relation.type) {
-      case "one_to_one":
-        return "one-to-one";
       case "many_to_many":
-        return "many-to-many";
+        return "many-to-many" as IconName;
       case "one_to_many":
         if (item.relation.table_1 === item.originTable.id) {
-          return "one-to-many";
+          return "one-to-many" as IconName;
         } else {
-          return "many-to-one";
+          return "many-to-one" as IconName;
         }
+      case "one_to_one":
+      default:
+        return "one-to-one" as IconName;
     }
   }
 
@@ -65,7 +66,7 @@ export default function RelationItemContent({
               <Text className="font-normal text-md">{originKey}</Text>
             </div>
           </Tag>
-          <Icon icon={getRelationIcon(item) as IconName} color="gray" />
+          <Icon icon={getRelationIcon(item)} color="gray" />
           <Tag
             className="py-1 "
             minimal
