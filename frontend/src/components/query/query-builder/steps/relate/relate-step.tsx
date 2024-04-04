@@ -110,7 +110,7 @@ export default function RelateStepComponent({
   }, [step, tables, relations]);
 
   useEffect(() => {
-    if (inputSchema && asField.value) {
+    if (inputSchema && inputSchema.success && asField.value) {
       testAsValueInUse(asField.value);
     }
   }, [inputSchema]);
