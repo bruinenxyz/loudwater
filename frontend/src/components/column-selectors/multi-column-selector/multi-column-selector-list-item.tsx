@@ -2,9 +2,8 @@
 import { InferredSchemaColumn } from "@/definitions/pipeline";
 import { IconName, MenuItem, Text } from "@blueprintjs/core";
 import SquareIcon, { SquareIconSize } from "@/components/icon/square-icon";
-import { ErrorDisplay } from "@/components/error-display";
-import Loading from "@/app/loading";
 import { HydratedTable } from "@/definitions";
+import * as _ from "lodash";
 
 export default function MultiColumnSelectorListItem({
   column,
@@ -47,11 +46,8 @@ export default function MultiColumnSelectorListItem({
       key={`${column.table}.${column.name}`}
       roleStructure="listoption"
       selected={
-        !!selected.find(
-          (selectedCol: InferredSchemaColumn) =>
-            selectedCol.name === column.name &&
-            selectedCol.table === column.table &&
-            selectedCol.relation?.as === column.relation?.as,
+        !!selected.find((selectedCol: InferredSchemaColumn) =>
+          _.isEqual(selectedCol, column),
         )
       }
       shouldDismissPopover={false}
