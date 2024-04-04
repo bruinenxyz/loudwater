@@ -7,6 +7,7 @@ export const InferredSchemaRelationSchema = z.object({
   table: z.string(),
   relation: z.string(),
   as: z.string(),
+  on: z.lazy(() => InferredSchemaColumnSchema),
 });
 export type InferredSchemaRelation = z.infer<
   typeof InferredSchemaRelationSchema

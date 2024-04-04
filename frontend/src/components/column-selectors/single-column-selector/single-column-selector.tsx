@@ -35,7 +35,7 @@ export default function SingleColumnSelector({
     return <Loading />;
   }
 
-  if (tablesError || !tables) {
+  if (tablesError) {
     return <ErrorDisplay description={tablesError} />;
   }
 
@@ -69,7 +69,7 @@ export default function SingleColumnSelector({
       <SingleColumnSelectorButton
         selected={selected}
         disabled={!!disabled}
-        tables={tables}
+        tables={tables!}
       />
     </Select>
   );

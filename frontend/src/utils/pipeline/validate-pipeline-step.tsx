@@ -270,20 +270,14 @@ function createRelateStepValidator(
           });
         } else {
           // Check that the required join column exists in the input schema
-          const joinColumn =
-            targetRelation.table_1 === targetTable.id
-              ? targetRelation.column_2
-              : targetRelation.column_1;
           if (
-            !_.find(
-              inputSchema.columns,
-              (column) =>
-                column.table === originTable.id && column.name === joinColumn,
+            !_.find(inputSchema.columns, (column) =>
+              _.isEqual(column, step.relation.on),
             )
           ) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: `Column '${joinColumn}' from table '${originTable.name}' does not exist in the input schema and is required to join in table '${targetTable.name}'`,
+              message: `The join column '${step.relation.on.name}' from table '${originTable.name}'${step.relation.on.relation ? ` via relation '${step.relation.on.relation.as}'` : ""} does not exist in the input schema. Either add it to the input schema in a prior step or select a different column to join on.`,
               path: [
                 stepIndex.toString(),
                 `step ${stepIndex + 1} - Relate`,

@@ -64,14 +64,16 @@ export default function MultiColumnSelector({
       selected.find(
         (selectedCol: InferredSchemaColumn) =>
           selectedCol.name === column.name &&
-          selectedCol.table === column.table,
+          selectedCol.table === column.table &&
+          _.isEqual(selectedCol.relation, column.relation),
       )
     ) {
       setSelected([
         ...selected.filter(
           (selectedCol: InferredSchemaColumn) =>
             selectedCol.name !== column.name &&
-            selectedCol.table !== column.table,
+            selectedCol.table !== column.table &&
+            !_.isEqual(selectedCol.relation, column.relation),
         ),
       ]);
     } else {

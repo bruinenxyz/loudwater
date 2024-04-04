@@ -2,6 +2,7 @@
 import { HydratedTable, InferredSchemaColumn } from "@/definitions";
 import { IconName, MenuItem, Text } from "@blueprintjs/core";
 import SquareIcon, { SquareIconSize } from "@/components/icon/square-icon";
+import _ from "lodash";
 
 export default function SingleColumnSelectorListItem({
   column,
@@ -42,11 +43,7 @@ export default function SingleColumnSelectorListItem({
   return (
     <MenuItem
       onClick={handleClick}
-      selected={
-        selected?.name === column.name &&
-        selected?.table === column.table &&
-        selected?.relation?.as === column.relation?.as
-      }
+      selected={_.isEqual(selected, column)}
       text={renderContent()}
     />
   );

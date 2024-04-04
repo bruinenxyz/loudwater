@@ -30,6 +30,8 @@ import { ErrorDisplay } from "@/components/error-display";
 import { NewStepSelection } from "../query-builder";
 import SquareIcon, { SquareIconSize } from "@/components/icon/square-icon";
 import InvalidStepPopover from "../invalid-step-popover";
+import InferredSchemaColumnTag from "@/components/column/inferred-schema-column-tag";
+import SingleColumnSelector from "@/components/column-selectors/single-column-selector/single-column-selector";
 import { makeApiName } from "@/utils/make-friendly";
 import { useSelectedDatabase } from "@/stores";
 import { usePipelineSchema } from "@/data/use-user-query";
@@ -68,9 +70,10 @@ export default function RelateStepComponent({
 }: RelateStepProps) {
   const [selectedDatabase] = useSelectedDatabase();
   const [selected, setSelected] = useState<RelationItem | null>(null);
-  const asField = useField<string>("", {
-    valueTransformer: makeApiName,
-  });
+  const asField = useField<string>("");
+  const [joinColumn, setJoinColumn] = useState<InferredSchemaColumn | null>(
+    null,
+  );
   const [asInUse, setAsInUse] = useState<boolean>(false);
   const [isAsWarningOpen, setIsAsWarningOpen] = useState<boolean>(false);
 
@@ -106,7 +109,7 @@ export default function RelateStepComponent({
 
   useEffect(() => {
     resetFields();
-  }, [step]);
+  }, [step, tables, relations]);
 
   useEffect(() => {
     if (inputSchema && asField.value) {
@@ -114,7 +117,7 @@ export default function RelateStepComponent({
     }
   }, [inputSchema]);
 
-  useEffect(() => {
+  function resetFields() {
     if (step && relations && tables) {
       const relation = _.find(
         relations,
@@ -130,12 +133,21 @@ export default function RelateStepComponent({
           table.id !== step.relation.table &&
           (relation?.table_1 === table.id || relation?.table_2 === table.id),
       );
-      if (relation && relatedTable && originTable) {
+      if (relation && originTable && relatedTable) {
         setSelected({ relation, originTable, relatedTable });
         asField.onValueChange(step.relation.as);
+        setJoinColumn(step.relation.on);
+      } else {
+        setSelected(null);
+        asField.onValueChange("");
+        setJoinColumn(null);
       }
+    } else {
+      setSelected(null);
+      asField.onValueChange("");
+      setJoinColumn(null);
     }
-  }, [tables, relations]);
+  }
 
   function testAsValueInUse(value: string) {
     const successInputSchema = inputSchema as InferSchemaOutputSuccess;
@@ -159,36 +171,18 @@ export default function RelateStepComponent({
     asField.onValueChange(cleanedAs);
   }
 
-  function resetFields() {
-    if (step && relations && tables) {
-      const relation = _.find(
-        relations,
-        (relation) => relation.id === step.relation.relation,
-      );
-      const relatedTable = _.find(
-        tables,
-        (table) => table.id === step.relation.table,
-      );
-      const originTable = _.find(
-        tables,
-        (table) =>
-          table.id !== step.relation.table &&
-          (relation?.table_1 === table.id || relation?.table_2 === table.id),
-      );
-      setSelected(
-        relation && originTable && relatedTable
-          ? { relation, originTable, relatedTable }
-          : null,
-      );
-      asField.onValueChange(step.relation.as);
-    } else {
-      setSelected(null);
-      asField.onValueChange("");
-    }
-  }
-
   function canSubmit() {
-    return selected !== null && !!asField.value && !asInUse;
+    const successInputSchema = inputSchema as InferSchemaOutputSuccess;
+    return (
+      selected !== null &&
+      !!asField.value &&
+      !asInUse &&
+      joinColumn !== null &&
+      !!_.find(
+        successInputSchema.data.columns,
+        (column: InferredSchemaColumn) => _.isEqual(column, joinColumn),
+      )
+    );
   }
 
   function getAdditionalClasses() {
@@ -240,6 +234,10 @@ export default function RelateStepComponent({
                 originTable,
               })}
               <div className="flex flex-row items-center gap-2 flex-nowrap">
+                <Text className="flex-nowrap">on</Text>
+                <InferredSchemaColumnTag column={step!.relation.on} />
+              </div>
+              <div className="flex flex-row items-center gap-2 flex-nowrap">
                 <Text className="flex-nowrap">as</Text>
                 <Text className="font-bold flex-nowrap">
                   {step!.relation.as}
@@ -282,6 +280,10 @@ export default function RelateStepComponent({
                 originTable,
               })}
               <div className="flex flex-row items-center gap-2 flex-nowrap">
+                <Text className="flex-nowrap">on</Text>
+                <InferredSchemaColumnTag column={step!.relation.on} />
+              </div>
+              <div className="flex flex-row items-center gap-2 flex-nowrap">
                 <Text className="font-normal flex-nowrap">as</Text>
                 <Text className="font-bold flex-nowrap">
                   {step!.relation.as}
@@ -310,6 +312,7 @@ export default function RelateStepComponent({
                   table: selected!.relatedTable.id,
                   relation: selected!.relation.id,
                   as: asField.value,
+                  on: joinColumn,
                 },
               } as RelateStep;
               const newSteps: Step[] = [...pipeline.steps];
@@ -342,6 +345,7 @@ export default function RelateStepComponent({
                     table: selected!.relatedTable.id,
                     relation: selected!.relation.id,
                     as: asField.value,
+                    on: joinColumn,
                   },
                 } as RelateStep;
                 const newSteps: Step[] = [...pipeline.steps];
@@ -408,8 +412,25 @@ export default function RelateStepComponent({
   function selectRelationItem(item: RelationItem) {
     if (_.isEqual(item, selected)) {
       setSelected(null);
+      setJoinColumn(null);
     } else {
       setSelected(item);
+      const successInputSchema = inputSchema as InferSchemaOutputSuccess;
+      const targetColumnName =
+        item.relation.table_1 === item.originTable.id
+          ? item.relation.column_1
+          : item.relation.column_2;
+      const availableColumns: InferredSchemaColumn[] = _.filter(
+        successInputSchema.data.columns,
+        (column: InferredSchemaColumn) =>
+          column.table === item.originTable.id &&
+          column.name === targetColumnName,
+      );
+      if (availableColumns.length === 1) {
+        setJoinColumn(availableColumns[0]);
+      } else {
+        setJoinColumn(null);
+      }
     }
   }
 
@@ -499,6 +520,14 @@ export default function RelateStepComponent({
     return "Select a table";
   }
 
+  function selectJoinColumn(column: InferredSchemaColumn) {
+    if (_.isEqual(column, joinColumn)) {
+      setJoinColumn(null);
+    } else {
+      setJoinColumn(column);
+    }
+  }
+
   function renderContent() {
     if (
       isLoadingSchema ||
@@ -554,9 +583,8 @@ export default function RelateStepComponent({
         }
       });
       return (
-        <div className="flex flex-row items-center">
+        <div className="flex flex-row flex-wrap items-center gap-2 px-3 py-2">
           <Select<RelationItem>
-            className="mx-3 my-2"
             items={items}
             itemRenderer={renderRelationItem}
             onItemSelect={selectRelationItem}
@@ -565,10 +593,28 @@ export default function RelateStepComponent({
               {renderRelationItemContent(selected)}
             </Button>
           </Select>
-          <div className="flex flex-row items-center">
+          {!!selected ? (
+            <div className="flex flex-row items-center gap-2 flex-nowrap">
+              <Text className="flex-nowrap">on</Text>
+              <SingleColumnSelector
+                disabled={false}
+                items={_.filter(
+                  successInputSchema.data.columns,
+                  (column: InferredSchemaColumn) =>
+                    column.table === selected.originTable.id &&
+                    column.name ===
+                      (selected.relation.table_1 === selected.originTable.id
+                        ? selected.relation.column_1
+                        : selected.relation.column_2),
+                )}
+                selected={joinColumn}
+                onColumnSelect={selectJoinColumn}
+              />
+            </div>
+          ) : null}
+          <div className="flex flex-row items-center flex-nowrap">
             <InputGroup
               id="as-input"
-              className="ml-3"
               value={asField.value}
               onChange={(e) => handleAsChange(e.target.value)}
               autoFocus={false}

@@ -7,17 +7,10 @@ import * as _ from "lodash";
 import { FilterStep, OrderStep, TakeStep } from "@/definitions/pipeline";
 
 export function useTables(databaseId?: string) {
-  const { mutate } = useSWRConfig();
-
   const { data, isLoading, isValidating, error } = useSWR<HydratedTable[]>(
     databaseId ? `/tables/db/${databaseId}` : null,
     backendGet,
   );
-
-  // Update the individual table caches with the data returned from the server
-  _.forEach(data, (table: HydratedTable) => {
-    mutate(`/tables/${table.id}`, table);
-  });
 
   return { data, isLoading, isValidating, error };
 }
