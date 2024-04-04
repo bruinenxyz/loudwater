@@ -1,7 +1,6 @@
 import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NextFunction } from "express";
-import _ from "lodash";
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {

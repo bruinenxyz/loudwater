@@ -1,12 +1,13 @@
-import { useUpdateUserQuery } from "@/data/use-user-query";
+"use client";
 import { UpdateUserQuerySchema, UserQuery } from "@/definitions";
-import { Divider, EditableText } from "@blueprintjs/core";
+import { EditableText } from "@blueprintjs/core";
+import { useUpdateUserQuery } from "@/data/use-user-query";
 
-export function QueryHeader({ query }: { query?: UserQuery }) {
+export default function QueryHeader({ query }: { query?: UserQuery }) {
   const { trigger: updateQuery } = useUpdateUserQuery(query!.id);
 
   return (
-    <>
+    <div className="flex-none">
       <div className="flex items-center justify-between">
         <div className="flex flex-row items-center justify-center">
           <div>
@@ -38,7 +39,6 @@ export function QueryHeader({ query }: { query?: UserQuery }) {
           </div>
         </div>
       </div>
-      <Divider className="my-2" />
-    </>
+    </div>
   );
 }

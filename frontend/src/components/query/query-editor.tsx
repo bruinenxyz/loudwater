@@ -81,11 +81,11 @@ function QueryEditor({ value, onChange }: QueryEditorProps) {
   }, [monacoInstance]);
 
   return (
-    <div className="rounded-md overflow-hidden">
+    <div className="h-full overflow-hidden rounded-md ">
       <Editor
         value={value}
         onChange={onChange}
-        height="300px"
+        height="100%"
         defaultLanguage="pgsql"
         defaultValue="// some comment"
         options={{ minimap: { enabled: false } }}
