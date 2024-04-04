@@ -179,6 +179,13 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
               >
                 Save and run
               </Button>
+              <Button
+                className="mt-1 mr-1 w-fit"
+                disabled={isLoadingResults || isUpdatingUserQuery}
+                onClick={handleDownloadCSV}
+              >
+                Download as CSV
+              </Button>
               <OverwriteSQLDialog
                 userQueryId={userQueryId}
                 pipeline={pipeline}
@@ -218,42 +225,6 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
             resultsError={undefined}
           />
         </div>
-      </div>
-      {tab === QueryTabEnum.SQL ? (
-        <QueryEditor value={sqlQuery} onChange={setSqlQuery} />
-      ) : (
-        <QueryBuilder
-          className="overflow-y-auto h-[400px] flex flex-col p-3 gap-y-2"
-          pipeline={pipeline}
-          setPipeline={setPipeline}
-        />
-      )}
-      <div className="flex flex-row justify-between items-center">
-        <Button
-          className="my-2 mr-2 w-fit "
-          loading={isUpdatingUserQuery}
-          disabled={
-            isLoadingResults ||
-            isUpdatingUserQuery ||
-            (tab === QueryTabEnum.PIPELINE && !pipelineSchema!.success)
-          }
-          onClick={handleSaveQuery}
-        >
-          Save and run
-        </Button>
-        <Button
-          className="my-2 w-fit"
-          disabled={isLoadingResults || isUpdatingUserQuery}
-          onClick={handleDownloadCSV}
-        >
-          Download as CSV
-        </Button>
-        <OverwriteSQLDialog
-          userQueryId={userQueryId}
-          pipeline={pipeline}
-          isDivergent={pipelineSQLDivergence}
-          setIsDivergent={setPipelineSQLDivergence}
-        />
       </div>
     </div>
   );
