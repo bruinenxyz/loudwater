@@ -50,7 +50,7 @@ export default function MultiColumnSelector({
     );
     return (
       <MultiColumnSelectorListItem
-        key={`${column.table}.${column.name}`}
+        key={`${column.table}.${column.name}${column.relation ? `.${column.relation.as}` : ""}`}
         column={column}
         table={table}
         handleClick={handleClick}
@@ -61,17 +61,14 @@ export default function MultiColumnSelector({
 
   const selectColumn = (column: InferredSchemaColumn) => {
     if (
-      selected.find(
-        (selectedCol: InferredSchemaColumn) =>
-          selectedCol.name === column.name &&
-          selectedCol.table === column.table,
+      selected.find((selectedCol: InferredSchemaColumn) =>
+        _.isEqual(selectedCol, column),
       )
     ) {
       setSelected([
         ...selected.filter(
           (selectedCol: InferredSchemaColumn) =>
-            selectedCol.name !== column.name &&
-            selectedCol.table !== column.table,
+            !_.isEqual(selectedCol, column),
         ),
       ]);
     } else {

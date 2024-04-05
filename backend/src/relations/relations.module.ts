@@ -8,5 +8,6 @@ import { TablesModule } from "@/tables/tables.module";
   controllers: [RelationsController],
   providers: [RelationsService],
   imports: [PostgresAdapterModule, TablesModule],
+  exports: [RelationsService],
 })
 export class RelationsModule {}

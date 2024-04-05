@@ -7,6 +7,7 @@ export const InferredSchemaRelationSchema = z.object({
   table: z.string(),
   relation: z.string(),
   as: z.string(),
+  on: z.lazy(() => InferredSchemaColumnSchema),
 });
 export type InferredSchemaRelation = z.infer<
   typeof InferredSchemaRelationSchema
@@ -267,6 +268,7 @@ export type TakeStep = z.infer<typeof TakeStepSchema>;
 export const RelateStepSchema = z.object({
   type: z.literal(StepIdentifierEnum.Relate),
   relation: InferredSchemaRelationSchema,
+  inputSchema: z.array(InferredSchemaColumnSchema),
 });
 export type RelateStep = z.infer<typeof RelateStepSchema>;
 

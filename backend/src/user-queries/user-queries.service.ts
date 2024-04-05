@@ -7,6 +7,7 @@ import {
   CreateUserQueryDto,
   UpdateUserQueryDto,
 } from "./dtos/user-queries.dto";
+import { RelationsService } from "@/relations/relations.service";
 import { TablesService } from "@/tables/tables.service";
 import { writeSQL } from "./query-parsing/parse-query";
 import { QueryResult } from "pg";
@@ -19,6 +20,7 @@ export class UserQueriesService {
     private prismaService: PrismaService,
     private readonly httpRequestContextService: HttpRequestContextService,
     private readonly postgresAdapterService: PostgresAdapterService,
+    private readonly relationsService: RelationsService,
     private readonly tablesService: TablesService,
   ) {}
 
@@ -59,21 +61,11 @@ export class UserQueriesService {
     const creatorId = this.httpRequestContextService.checkAndGetUserId();
 
     if (createUserQueryDto.pipeline) {
-      const tables = await this.tablesService.findAllForDatabase(
+      const parsedPipeline = await this.parsePipeline(
         createUserQueryDto.database_id,
-      );
-      const tableSchema = await this.postgresAdapterService.getAllTableSchema(
-        createUserQueryDto.database_id,
-      );
-
-      // Generate SQL from pipeline and remove trailing generation comment
-      const cleanedSQL = writeSQL(
         createUserQueryDto.pipeline,
-        tables,
-        tableSchema,
-      ).split("\n\n--")[0];
-
-      createUserQueryDto.sql = cleanedSQL;
+      );
+      createUserQueryDto.sql = parsedPipeline.sql;
     }
 
     // Create the query record in DB
@@ -108,18 +100,11 @@ export class UserQueriesService {
     assert(targetQuery, new NotFoundException(`Query not found with id ${id}`));
 
     if (updateUserQueryDto.pipeline) {
-      const tables = await this.tablesService.findAllForDatabase(
+      const parsedPipeline = await this.parsePipeline(
         targetQuery.database_id,
-      );
-      const tableSchema = await this.postgresAdapterService.getAllTableSchema(
-        targetQuery.database_id,
-      );
-      const cleanedSQL = writeSQL(
         updateUserQueryDto.pipeline,
-        tables,
-        tableSchema,
-      ).split("\n\n--")[0];
-      updateUserQueryDto.sql = cleanedSQL;
+      );
+      updateUserQueryDto.sql = parsedPipeline.sql;
     }
 
     // Update the query record in DB
@@ -185,9 +170,11 @@ export class UserQueriesService {
 
   async parsePipeline(databaseId: string, pipeline: Pipeline): Promise<any> {
     const tables = await this.tablesService.findAllForDatabase(databaseId);
+    const relations =
+      await this.relationsService.findAllForDatabase(databaseId);
     const tableSchema =
       await this.postgresAdapterService.getAllTableSchema(databaseId);
-    const pipelineSQL = writeSQL(pipeline, tables, tableSchema);
+    const pipelineSQL = writeSQL(pipeline, tables, relations, tableSchema);
     const cleanedSQL = pipelineSQL.split("\n\n--")[0];
     return { sql: cleanedSQL };
   }

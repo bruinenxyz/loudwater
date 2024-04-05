@@ -172,7 +172,7 @@ export default function AggregateStepComponent({
           <div className="flex flex-row flex-wrap items-center ml-3 grow h-fit">
             <Text className="mr-2 flex-nowrap ">{step.operation}</Text>
             <InferredSchemaColumnTag column={step.column} />
-            <Text className="mr-2 flex-nowrap">as</Text>
+            <Text className="mr-2 font-normal flex-nowrap">as</Text>
             <Tag
               minimal={true}
               intent={"none"}
@@ -184,7 +184,7 @@ export default function AggregateStepComponent({
                   color="gray"
                   size={SquareIconSize.SMALL}
                 />
-                <Text className="py-1 ml-1 font-bold flex-nowrap">
+                <Text className="py-1 ml-1 font-normal flex-nowrap">
                   {step.as}
                 </Text>
               </div>
@@ -206,7 +206,7 @@ export default function AggregateStepComponent({
           <div className="flex flex-row flex-wrap items-center ml-3 gap-y-1 grow h-fit">
             <Text className="mr-2 flex-nowrap ">{step.operation}</Text>
             <InferredSchemaColumnTag column={step.column} />
-            <Text className="mx-2 flex-nowrap">as</Text>
+            <Text className="mx-2 font-normal flex-nowrap">as</Text>
             <Tag
               minimal={true}
               intent={"none"}
@@ -218,7 +218,7 @@ export default function AggregateStepComponent({
                   color="gray"
                   size={SquareIconSize.SMALL}
                 />
-                <Text className="py-1 ml-1 font-bold flex-nowrap">
+                <Text className="py-1 ml-1 font-normal flex-nowrap">
                   {step.as}
                 </Text>
               </div>
@@ -378,6 +378,7 @@ export default function AggregateStepComponent({
             </Select>
             <SingleColumnSelector
               className="ml-3"
+              disabled={false}
               selected={selectedColumn}
               onColumnSelect={setSelectedColumn}
               items={successInputSchema.data.columns}

@@ -1,11 +1,10 @@
 "use client";
-import { InferredSchemaColumn } from "@/definitions/pipeline";
+import { HydratedTable, InferredSchemaColumn } from "@/definitions";
 import { IconName, MenuItem, Text } from "@blueprintjs/core";
 import SquareIcon, { SquareIconSize } from "@/components/icon/square-icon";
-import { HydratedTable } from "@/definitions";
-import * as _ from "lodash";
+import _ from "lodash";
 
-export default function MultiColumnSelectorListItem({
+export default function SingleColumnSelectorListItem({
   column,
   table,
   handleClick,
@@ -14,7 +13,7 @@ export default function MultiColumnSelectorListItem({
   column: InferredSchemaColumn;
   table?: HydratedTable;
   handleClick: any;
-  selected: InferredSchemaColumn[];
+  selected: InferredSchemaColumn | null;
 }) {
   function renderContent() {
     return (
@@ -43,16 +42,9 @@ export default function MultiColumnSelectorListItem({
 
   return (
     <MenuItem
-      key={`${column.table}.${column.name}`}
-      roleStructure="listoption"
-      selected={
-        !!selected.find((selectedCol: InferredSchemaColumn) =>
-          _.isEqual(selectedCol, column),
-        )
-      }
-      shouldDismissPopover={false}
-      text={renderContent()}
       onClick={handleClick}
+      selected={_.isEqual(selected, column)}
+      text={renderContent()}
     />
   );
 }

@@ -8,14 +8,14 @@ import {
   SelectStepSchema,
   AggregateStep,
   AggregateStepSchema,
-  OrderStep,
-  OrderStepSchema,
-  TakeStep,
-  TakeStepSchema,
   RelateStep,
   RelateStepSchema,
   FilterStep,
   FilterStepSchema,
+  OrderStep,
+  OrderStepSchema,
+  TakeStep,
+  TakeStepSchema,
   StepValidationOutput,
   InferredSchema,
   InferredSchemaColumn,
@@ -65,9 +65,16 @@ function getPipelineStepValidator(
       return createSelectStepValidator(inputSchema, stepIndex);
     case StepIdentifierEnum.Aggregate:
       return createAggregateStepValidator(inputSchema, stepIndex);
-    case StepIdentifierEnum.Order:
-    case StepIdentifierEnum.Take:
     case StepIdentifierEnum.Relate:
+      return createRelateStepValidator(
+        inputSchema,
+        stepIndex,
+        tables,
+        relations,
+      );
+    case StepIdentifierEnum.Take:
+      return createTakeStepValidator(stepIndex);
+    case StepIdentifierEnum.Order:
     case StepIdentifierEnum.Filter:
     case StepIdentifierEnum.Derive:
     default:
@@ -115,6 +122,10 @@ function createAggregateStepValidator(
         inputSchema.columns,
         (column) => column.name,
       );
+      const usedRelationNames = _.map(
+        inputSchema.relations,
+        (relation) => relation.as,
+      );
       // Ensure that the column being aggregated is present in the input schema
       const column: InferredSchemaColumn = step.column;
       if (
@@ -150,9 +161,11 @@ function createAggregateStepValidator(
           });
         }
       });
-      // Ensure that the new "as" column is not present in the input schema
-
-      if (_.includes(usedColumnNames, step.as)) {
+      // Ensure that the new "as" column is not present in the input schema for columns or relations
+      if (
+        _.includes(usedColumnNames, step.as) ||
+        _.includes(usedRelationNames, step.as)
+      ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: `Aggregation result name '${step.as}' already exists in input schema. Aggregation result names must be unique in the schema.`,
@@ -167,4 +180,158 @@ function createAggregateStepValidator(
   );
   // Ensure that all selected properties are present in the input schemaz
   return aggregateValidator;
+}
+
+function createRelateStepValidator(
+  inputSchema: InferredSchema,
+  stepIndex: number,
+  tables: HydratedTable[],
+  relations: Relation[],
+) {
+  const relateValidator = RelateStepSchema.superRefine(
+    (step: RelateStep, ctx: any) => {
+      const usedColumnNames = _.map(
+        inputSchema.columns,
+        (column) => column.name,
+      );
+      const usedRelationNames = _.map(
+        inputSchema.relations,
+        (relation) => relation.as,
+      );
+
+      // Get target table
+      const targetTable = _.find(
+        tables,
+        (table) => table.id === step.relation.table,
+      );
+      // Check that the table exists
+      if (!targetTable) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Table '${step.relation.table}' does not exist`,
+          path: [
+            stepIndex.toString(),
+            `step ${stepIndex + 1} - Relate`,
+            "relation",
+            "table",
+          ],
+        });
+      }
+
+      // Get the target relation
+      const targetRelation = _.find(
+        relations,
+        (relation) => relation.id === step.relation.relation,
+      );
+      // Check that the relation exists
+      if (!targetRelation) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Relation '${step.relation.relation}' does not exist`,
+          path: [
+            stepIndex.toString(),
+            `step ${stepIndex + 1} - Relate`,
+            "relation",
+            "relation",
+          ],
+        });
+      }
+
+      if (targetRelation && targetTable) {
+        // Check that the target table is part of the target relation
+        if (
+          targetRelation.table_1 !== targetTable.id &&
+          targetRelation.table_2 !== targetTable.id
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Table '${targetTable.name}' is not part of relation '${targetRelation.id}'`,
+            path: [
+              stepIndex.toString(),
+              `step ${stepIndex + 1} - Relate`,
+              "relation",
+            ],
+          });
+        }
+
+        // Check that the table we are tryting to join onto exists
+        const originTable =
+          targetRelation.table_1 === targetTable.id
+            ? _.find(tables, (table) => table.id === targetRelation.table_2)
+            : _.find(tables, (table) => table.id === targetRelation.table_1);
+        if (!originTable) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `The table you are attempting to join onto does not exist`,
+            path: [
+              stepIndex.toString(),
+              `step ${stepIndex + 1} - Relate`,
+              "relation",
+            ],
+          });
+        } else {
+          // Check that the required join column exists in the input schema
+          if (
+            !_.find(inputSchema.columns, (column) =>
+              _.isEqual(column, step.relation.on),
+            )
+          ) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `The join column '${step.relation.on.name}' from table '${originTable.name}'${step.relation.on.relation ? ` via relation '${step.relation.on.relation.as}'` : ""} does not exist in the input schema. Either add it to the input schema in a prior step or select a different column to join on.`,
+              path: [
+                stepIndex.toString(),
+                `step ${stepIndex + 1} - Relate`,
+                "relation",
+              ],
+            });
+          }
+
+          // Ensure that the new "as" relation is not present in the input schema for columns or relations
+          if (
+            _.includes(usedRelationNames, step.relation.as) ||
+            _.includes(usedColumnNames, step.relation.as)
+          ) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Relation name '${step.relation.as}' already exists in the input schema. Relation names must be unique in the schema.`,
+              path: [
+                stepIndex.toString(),
+                `step ${stepIndex + 1} - Relate`,
+                "relation",
+                "as",
+              ],
+            });
+          }
+        }
+      }
+    },
+  );
+  return relateValidator;
+}
+
+function createTakeStepValidator(stepIndex: number) {
+  const takeValidator = TakeStepSchema.superRefine(
+    (step: TakeStep, ctx: any) => {
+      if (typeof step.limit !== "number") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Limit must be type 'number', recieved type '${typeof step.limit}'`,
+          path: [stepIndex.toString(), `step ${stepIndex + 1} - Take`, "limit"],
+        });
+      }
+      if (typeof step.offset !== "number") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Offset must be type 'number', recieved type '${typeof step.offset}'`,
+          path: [
+            stepIndex.toString(),
+            `step ${stepIndex + 1} - Take`,
+            "offset",
+          ],
+        });
+      }
+    },
+  );
+  return takeValidator;
 }

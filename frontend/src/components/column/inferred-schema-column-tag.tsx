@@ -30,7 +30,7 @@ export default function InferredSchemaColumnTag({
       } ${isLoadingTable ? "bp5-skeleton" : ""}`}
       onClick={action}
     >
-      <div className="flex flex-row items-center w-fit">
+      <div className="flex flex-row items-center gap-1 py-1">
         {table ? (
           <SquareIcon
             icon={table.icon as IconName}
@@ -44,16 +44,11 @@ export default function InferredSchemaColumnTag({
             size={SquareIconSize.SMALL}
           />
         )}
-        <div className="flex flex-row items-center py-1 ml-1 w-fit">
-          {column.relation || !!table ? (
-            <Text className="mr-1">
-              {(column.relation && column.relation.as
-                ? column.relation.as
-                : table!.name) + " "}
-            </Text>
-          ) : null}
-          <Text className="font-bold">{column.name}</Text>
-        </div>
+        {table ? <Text className="font-bold text-md">{table.name}</Text> : null}
+        <Text className="font-normal text-md">{column.name}</Text>
+        {column.relation && (
+          <Text className="ml-1 font-normal">{`(${column.relation.as})`}</Text>
+        )}
       </div>
     </Tag>
   );
