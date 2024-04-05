@@ -192,7 +192,6 @@ export default function FilterConditionAdder({
     if (valueType === "column") {
       return (
         <SingleColumnSelector
-          className="ml-3"
           disabled={false}
           items={_.filter(
             inputSchema.data.columns,
@@ -208,7 +207,7 @@ export default function FilterConditionAdder({
       case "boolean":
         return (
           <RadioGroup
-            className="flex flex-row pt-1 ml-3"
+            className="flex flex-row pt-1"
             selectedValue={
               selectedValue !== null ? selectedValue.toString() : undefined
             }
@@ -223,7 +222,6 @@ export default function FilterConditionAdder({
       case "number":
         return (
           <NumericInput
-            className="ml-3"
             allowNumericCharactersOnly={true}
             value={selectedValue !== null ? (selectedValue as number) : ""}
             onValueChange={(newValue: number) => setSelectedValue(newValue)}
@@ -232,7 +230,6 @@ export default function FilterConditionAdder({
       case "float":
         return (
           <NumericInput
-            className="ml-3"
             value={selectedValue !== null ? (selectedValue as number) : ""}
             onValueChange={(newValue: number) => setSelectedValue(newValue)}
           />
@@ -240,7 +237,6 @@ export default function FilterConditionAdder({
       case "date":
         return (
           <DateInput3
-            className="ml-3"
             popoverProps={{ placement: "top" }}
             dateFnsFormat="yyyy-MM-dd"
             value={selectedValue !== null ? (selectedValue as string) : null}
@@ -254,7 +250,6 @@ export default function FilterConditionAdder({
       case "datetime":
         return (
           <DateInput3
-            className="ml-3"
             popoverProps={{ placement: "top" }}
             showTimezoneSelect={true}
             timePrecision="minute"
@@ -276,7 +271,6 @@ export default function FilterConditionAdder({
         return (
           <InputGroup
             id="value-input"
-            className="ml-3"
             value={selectedValue !== null ? (selectedValue as string) : ""}
             onValueChange={(newValue: string) => {
               setSelectedValue(newValue);
@@ -288,7 +282,7 @@ export default function FilterConditionAdder({
   }
 
   return (
-    <div className="flex flex-row flex-wrap items-center mt-2">
+    <div className="flex flex-row flex-wrap items-center mt-2 gap-x-2 gap-y-2">
       <SingleColumnSelector
         disabled={false}
         items={inputSchema.data.columns}
@@ -296,7 +290,6 @@ export default function FilterConditionAdder({
         onColumnSelect={selectColumn}
       />
       <Select<Operators>
-        className="ml-3"
         filterable={false}
         items={operators}
         itemRenderer={renderOperator}
@@ -312,7 +305,6 @@ export default function FilterConditionAdder({
         />
       </Select>
       <Select<"column" | "value">
-        className="ml-3"
         items={["column", "value"]}
         itemRenderer={renderValueType}
         filterable={false}
@@ -341,7 +333,6 @@ export default function FilterConditionAdder({
         : renderValueSelector()}
       <Button
         disabled={!canAddCondition()}
-        className="ml-3"
         text="Add"
         onClick={() => addCondition()}
       />

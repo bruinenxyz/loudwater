@@ -47,7 +47,7 @@ export default function InferredSchemaColumnTag({
         {table ? <Text className="font-bold text-md">{table.name}</Text> : null}
         <Text className="font-normal text-md">{column.name}</Text>
         {column.relation && (
-          <Text className="ml-1 font-normal">{`(${column.relation.as})`}</Text>
+          <Text className="font-normal ">{`(${column.relation.as})`}</Text>
         )}
       </div>
     </Tag>

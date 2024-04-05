@@ -53,7 +53,7 @@ export default function OrderCaseTag({
           {table && <Text className="font-bold text-md">{table.name}</Text>}
           <Text className="font-normal text-md">{orderCase.column.name}</Text>
           {orderCase.column.relation && (
-            <Text className="ml-1 font-normal">{`(${orderCase.column.relation.as})`}</Text>
+            <Text className="font-normal">{`(${orderCase.column.relation.as})`}</Text>
           )}
         </div>
         <Text className="font-bold flex-nowrap">{orderCase.direction}</Text>
