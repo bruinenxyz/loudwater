@@ -244,15 +244,15 @@ export const DeriveStepSchema = z.object({
 export type DeriveStep = z.infer<typeof DeriveStepSchema>;
 
 // Order Step
-export const OrderPropertySchema = z.object({
+export const OrderColumnSchema = z.object({
   column: InferredSchemaColumnSchema,
   direction: z.enum(["asc", "desc"]),
 });
-export type OrderProperty = z.infer<typeof OrderPropertySchema>;
+export type OrderColumn = z.infer<typeof OrderColumnSchema>;
 
 export const OrderStepSchema = z.object({
   type: z.literal(StepIdentifierEnum.Order),
-  order: z.array(OrderPropertySchema).nonempty(),
+  order: z.array(OrderColumnSchema).nonempty(),
 });
 export type OrderStep = z.infer<typeof OrderStepSchema>;
 
