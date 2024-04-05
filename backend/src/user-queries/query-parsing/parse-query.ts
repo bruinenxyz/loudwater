@@ -1,18 +1,23 @@
 import {
   ExternalColumn,
   Pipeline,
+  Relation,
   StepIdentifierEnum,
   Table,
 } from "@/definitions";
 import { parseAggregate } from "./parse-aggregate";
 import { parseFrom } from "./parse-from";
+import { parseOrder } from "./parse-order";
+import { parseRelate } from "./parse-relate";
 import { parseSelect } from "./parse-select";
+import { parseTake } from "./parse-take";
 import { compile } from "prql-js";
 import * as _ from "lodash";
 
 function objectToPrql(
   pipeline: Pipeline,
   tables: Table[],
+  relations: Relation[],
   tablesSchema: Record<string, Record<string, ExternalColumn>>,
 ): string {
   let prql = "prql target:sql.postgres\n";
@@ -23,9 +28,17 @@ function objectToPrql(
       case StepIdentifierEnum.Aggregate:
         prql += parseAggregate(step, index + 1, tables);
         break;
+      case StepIdentifierEnum.Order:
+        prql += parseOrder(step, index + 1, tables);
+        break;
+      case StepIdentifierEnum.Relate:
+        prql += parseRelate(step, index + 1, tables, relations, tablesSchema);
+        break;
       case StepIdentifierEnum.Select:
         prql += parseSelect(step, index + 1, tables);
         break;
+      case StepIdentifierEnum.Take:
+        prql += parseTake(step, index + 1);
       default:
         break;
     }
@@ -39,9 +52,10 @@ function objectToPrql(
 export function writeSQL(
   pipeline: Pipeline,
   tables: Table[],
+  relations: Relation[],
   tablesSchema: Record<string, Record<string, ExternalColumn>>,
 ) {
-  const prqlQuery = objectToPrql(pipeline, tables, tablesSchema);
+  const prqlQuery = objectToPrql(pipeline, tables, relations, tablesSchema);
 
   console.log("prqlQuery:");
   console.log(prqlQuery);

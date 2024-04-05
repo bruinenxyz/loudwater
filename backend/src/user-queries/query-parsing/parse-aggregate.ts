@@ -33,6 +33,14 @@ export function parseAggregate(
   );
   assert(aggregateTable, `Table not found: ${aggregateStep.column.table}`);
 
+  // Prefix the aggregate column with the relation name if it exists
+  let aggregatePrefix;
+  if (aggregateStep.column.relation) {
+    aggregatePrefix = aggregateStep.column.relation.as;
+  } else {
+    aggregatePrefix = aggregateTable.external_name;
+  }
+
   let aggregatePrql = "";
   if (aggregateStep.group.length === 0) {
     // Aggregate over the whole table
@@ -41,12 +49,22 @@ export function parseAggregate(
       from: `step_${index - 1}`,
       as: aggregateStep.as,
       operation: aggregateStep.operation,
-      // TODO this might need to include the relation path in the name to avoid collisions
-      column: `${aggregateTable.external_name}__${aggregateStep.column.name}`,
+      column: `${aggregatePrefix}__${aggregateStep.column.name}`,
     });
   } else {
     // Aggregate over a group
     const groupedColumnNames = _.map(aggregateStep.group, (column) => {
+      // If the column was created via aggregate, we don't need to prefix it
+      if (column.table === "aggregate") {
+        return column.name;
+      }
+
+      // If the column was added via relation, prefix it with the relation name
+      if (column.relation) {
+        return `${column.relation.as}__${column.name}`;
+      }
+
+      // Otherwise, prefix it with its base table name
       const table = _.find(tables, (table) => table.id === column.table);
       assert(table, `Table not found: ${column.table}`);
 
@@ -59,8 +77,7 @@ export function parseAggregate(
       group: groupedColumnNames.join(", "),
       as: aggregateStep.as,
       operation: aggregateStep.operation,
-      // TODO this might need to include the relation path in the name to avoid collisions
-      column: `${aggregateTable.external_name}__${aggregateStep.column.name}`,
+      column: `${aggregatePrefix}__${aggregateStep.column.name}`,
     });
   }
 
