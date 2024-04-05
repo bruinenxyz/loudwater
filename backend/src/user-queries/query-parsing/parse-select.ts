@@ -21,10 +21,17 @@ export function parseSelect(
     stepName: `step_${index}`,
     from: `step_${index - 1}`,
     columns: _.map(selectStep.select, (column) => {
+      // If the column was created via aggregate, we don't need to prefix it
       if (column.table === "aggregate") {
         return column.name;
       }
 
+      // If the column was added via relation, prefix it with the relation name
+      if (column.relation) {
+        return `${column.relation.as}__${column.name}`;
+      }
+
+      // Otherwise, prefix it with its base table name
       const table = _.find(tables, (table) => table.id === column.table);
       assert(table, `Table not found: ${column.table}`);
 

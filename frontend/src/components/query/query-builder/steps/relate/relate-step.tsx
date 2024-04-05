@@ -170,6 +170,9 @@ export default function RelateStepComponent({
   }
 
   function canSubmit() {
+    if (!inputSchema || !inputSchema.success) {
+      return false;
+    }
     const successInputSchema = inputSchema as InferSchemaOutputSuccess;
     return (
       selected !== null &&
@@ -307,6 +310,8 @@ export default function RelateStepComponent({
             disabled={!canSubmit()}
             text="Add step"
             onClick={() => {
+              const successInputSchema =
+                inputSchema as InferSchemaOutputSuccess;
               setNewStepType(null);
               const newStep = {
                 type: StepIdentifierEnum.Relate,
@@ -316,6 +321,7 @@ export default function RelateStepComponent({
                   as: asField.value,
                   on: joinColumn,
                 },
+                inputSchema: successInputSchema.data.columns,
               } as RelateStep;
               const newSteps: Step[] = [...pipeline.steps];
               newSteps.splice(index, 0, newStep as Step);
@@ -341,6 +347,8 @@ export default function RelateStepComponent({
               disabled={!canSubmit()}
               text="Confirm step"
               onClick={() => {
+                const successInputSchema =
+                  inputSchema as InferSchemaOutputSuccess;
                 const updatedStep = {
                   type: StepIdentifierEnum.Relate,
                   relation: {
@@ -349,6 +357,7 @@ export default function RelateStepComponent({
                     as: asField.value,
                     on: joinColumn,
                   },
+                  inputSchema: successInputSchema.data.columns,
                 } as RelateStep;
                 const newSteps: Step[] = [...pipeline.steps];
                 newSteps.splice(index, 1, updatedStep as Step);

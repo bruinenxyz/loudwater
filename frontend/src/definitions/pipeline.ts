@@ -268,6 +268,7 @@ export type TakeStep = z.infer<typeof TakeStepSchema>;
 export const RelateStepSchema = z.object({
   type: z.literal(StepIdentifierEnum.Relate),
   relation: InferredSchemaRelationSchema,
+  inputSchema: z.array(InferredSchemaColumnSchema),
 });
 export type RelateStep = z.infer<typeof RelateStepSchema>;
 
