@@ -23,6 +23,8 @@ export default function OrderCaseTag({
     error: tableError,
   } = useTable(orderCase.column.table);
 
+  // If orderCase.column.table is not a valid table, don't render the tag
+  // Aggregated columns don't have a table and use "aggregate" on their table field, so we allow those
   if (tableError && orderCase.column.table !== "aggregate") {
     return null;
   }
@@ -48,9 +50,7 @@ export default function OrderCaseTag({
               size={SquareIconSize.SMALL}
             />
           )}
-          {table ? (
-            <Text className="font-bold text-md">{table.name}</Text>
-          ) : null}
+          {table && <Text className="font-bold text-md">{table.name}</Text>}
           <Text className="font-normal text-md">{orderCase.column.name}</Text>
           {orderCase.column.relation && (
             <Text className="ml-1 font-normal">{`(${orderCase.column.relation.as})`}</Text>

@@ -38,6 +38,8 @@ interface OrderStepProps {
   create?: boolean;
 }
 
+type Direction = "asc" | "desc";
+
 export default function OrderStepComponent({
   index,
   step,
@@ -51,9 +53,7 @@ export default function OrderStepComponent({
   const [orderCases, setOrderCases] = useState<OrderColumn[]>([]);
   const [selectedColumn, setSelectedColumn] =
     useState<InferredSchemaColumn | null>(null);
-  const [selectedDirection, setSelectedDirection] = useState<
-    "asc" | "desc" | null
-  >(null);
+  const [selectedDirection, setSelectedDirection] = useState<Direction>("asc");
 
   const {
     data: inputSchema,
@@ -83,6 +83,7 @@ export default function OrderStepComponent({
     } else {
       setOrderCases([]);
     }
+    setSelectedDirection("asc");
   }
 
   function canSubmit() {
@@ -264,14 +265,6 @@ export default function OrderStepComponent({
     );
   };
 
-  function selectDirection(selection: "asc" | "desc") {
-    if (selection === selectedDirection) {
-      setSelectedDirection(null);
-    } else {
-      setSelectedDirection(selection);
-    }
-  }
-
   function renderContent() {
     if (isLoadingSchema || isLoadingInputSchema) {
       return (
@@ -310,12 +303,14 @@ export default function OrderStepComponent({
               selected={selectedColumn}
               onColumnSelect={selectColumn}
             />
-            <Select<"asc" | "desc">
+            <Select<Direction>
               className="ml-3"
               filterable={false}
               items={["asc", "desc"]}
               itemRenderer={renderDirection}
-              onItemSelect={selectDirection}
+              onItemSelect={(selection: Direction) =>
+                setSelectedDirection(selection)
+              }
             >
               <Button
                 rightIcon="double-caret-vertical"
@@ -339,7 +334,7 @@ export default function OrderStepComponent({
                 } as OrderColumn;
                 setOrderCases([...orderCases, newCase]);
                 setSelectedColumn(null);
-                setSelectedDirection(null);
+                setSelectedDirection("asc");
               }}
             />
           </div>
