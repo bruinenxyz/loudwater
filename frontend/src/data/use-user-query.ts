@@ -170,7 +170,6 @@ export const usePipelineSchema = (pipeline: Pipeline) => {
         step,
         i,
         resultSchema,
-        baseTable,
         tables!,
         relations || [],
       );
