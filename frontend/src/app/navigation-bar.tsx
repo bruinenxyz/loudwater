@@ -1,4 +1,5 @@
 "use client";
+import { Relation } from "@/definitions";
 import {
   Card,
   SwitchCard,
@@ -10,21 +11,22 @@ import {
   IconName,
   Text,
   Icon,
+  Collapse,
 } from "@blueprintjs/core";
-import React, { useEffect, useState } from "react";
 import logo from "@assets/logo.svg";
 import darkLogo from "@assets/logo-dark.svg";
 import Image from "next/image";
+import CreateRelation from "@/components/relation/create-relation";
+import DatabaseSelector from "./databases/database-selector";
 import { usePathname, useRouter } from "next/navigation";
 import { UserProfileButton } from "../components/account-management/user-profile-button";
 import { useTables } from "@/data/use-tables";
-import DatabaseSelector from "./databases/database-selector";
 import { useSelectedDatabase } from "@/stores";
 import { useCreateUserQuery, useUserQueries } from "@/data/use-user-query";
 import { useRelations } from "@/data/use-relations";
-import * as _ from "lodash";
-import CreateRelation from "@/components/relation/create-relation";
 import { useDarkModeContext } from "@/components/context/dark-mode-context";
+import React, { useEffect, useState } from "react";
+import * as _ from "lodash";
 
 export enum NavigationTabEnums {
   SOURCES = "sources",
@@ -48,6 +50,9 @@ export default function NavigationBar({}) {
   const [createRelationToggle, setCreateRelationToggle] =
     useState<boolean>(false);
   const { darkMode, setDarkMode } = useDarkModeContext();
+  const [tablesToggle, setTablesToggle] = useState<boolean>(true);
+  const [relationsToggle, setRelationsToggle] = useState<boolean>(true);
+  const [queriesToggle, setQueriesToggle] = useState<boolean>(true);
 
   const {
     data: tables,
@@ -98,8 +103,20 @@ export default function NavigationBar({}) {
     }
   }
 
+  function getRelationIcon(relation: Relation): IconName {
+    switch (relation.type) {
+      case "many_to_many":
+        return "many-to-many" as IconName;
+      case "one_to_many":
+        return "one-to-many" as IconName;
+      case "one_to_one":
+      default:
+        return "one-to-one" as IconName;
+    }
+  }
+
   return (
-    <Card className="flex flex-col h-full pl-1 z-1">
+    <Card className="flex flex-col h-full pl-1 pr-2 z-1">
       <Image
         src={darkMode ? darkLogo : logo}
         alt="Bruinen Logo"
@@ -108,92 +125,133 @@ export default function NavigationBar({}) {
         className="pb-2 pl-1 cursor-pointer"
         onClick={() => router.push("/")}
       />
-      <div className="flex-1">
+      <div className="flex-none">
         <Menu>
           <DatabaseSelector
             selectedDatabase={selectedDatabase}
             setSelectedDatabase={setSelectedDatabase}
           />
         </Menu>
+      </div>
+      <div className="flex-1 w-full my-1 overflow-x-hidden overflow-y-auto">
         {selectedDatabase && (
           <Menu>
-            <H5>Tables</H5>
-            {tables?.map((table) => (
-              <MenuItem
-                key={table.id}
-                text={table.name}
-                icon={
-                  <Icon icon={table.icon as IconName} color={table.color} />
-                }
-                onClick={() => handlePageChange(`tables/${table.id}`)}
+            <div
+              className="flex flex-row items-center gap-1 mb-1 cursor-default"
+              onClick={() => setTablesToggle(!tablesToggle)}
+            >
+              <H5 className="mb-0">Tables</H5>
+              <Icon
+                icon={tablesToggle ? "chevron-down" : "chevron-right"}
+                color="gray"
               />
-            ))}
-            <MenuDivider />
-            <H5>Relations</H5>
-            <MenuItem
-              icon="new-object"
-              text="New relation"
-              intent="success"
-              onClick={() => setCreateRelationToggle(true)}
-              popoverProps={{
-                usePortal: true,
-              }}
-            />
-            {relations?.map((relation) => {
-              const table1 = _.find(tables, { id: relation.table_1 });
-              const table2 = _.find(tables, { id: relation.table_2 });
-              return table1 && table2 ? (
+            </div>
+            <Collapse isOpen={tablesToggle} keepChildrenMounted={true}>
+              {tables?.map((table) => (
                 <MenuItem
-                  key={relation.id}
-                  text={
-                    <>
-                      <Text>{`${table1?.name} - ${table2?.name}`}</Text>
-                      <Text className="bp5-text-muted" ellipsize>
-                        {`${relation.column_1} - ${relation.column_2}`}
-                      </Text>
-                    </>
+                  key={table.id}
+                  text={table.name}
+                  icon={
+                    <Icon icon={table.icon as IconName} color={table.color} />
                   }
-                  // TODO: onClick={() => handlePageChange(`relations/${relation.id}`)}
+                  onClick={() => handlePageChange(`tables/${table.id}`)}
                 />
-              ) : null;
-            })}
-            <CreateRelation
-              isOpen={createRelationToggle}
-              setIsOpen={setCreateRelationToggle}
-            />
+              ))}
+            </Collapse>
             <MenuDivider />
-            <H5>Queries</H5>
-            <MenuItem
-              icon="new-object"
-              text="New query"
-              intent="success"
-              onClick={handleNewQuery}
-              popoverProps={{
-                usePortal: true,
-              }}
-            />
-            {userQueries?.map((query) => (
-              <MenuItem
-                key={query.id}
-                text={query.name}
-                onClick={() => handlePageChange(`queries/${query.id}`)}
+            <div
+              className="flex flex-row items-center gap-1 mt-2 mb-1 cursor-default"
+              onClick={() => setRelationsToggle(!relationsToggle)}
+            >
+              <H5 className="mb-0">Relations</H5>
+              <Icon
+                icon={relationsToggle ? "chevron-down" : "chevron-right"}
+                color="gray"
               />
-            ))}
+            </div>
+            <Collapse isOpen={relationsToggle} keepChildrenMounted={true}>
+              <>
+                <MenuItem
+                  icon="new-object"
+                  text="New relation"
+                  intent="success"
+                  onClick={() => setCreateRelationToggle(true)}
+                  popoverProps={{
+                    usePortal: true,
+                  }}
+                />
+                {relations?.map((relation) => {
+                  const table1 = _.find(tables, { id: relation.table_1 });
+                  const table2 = _.find(tables, { id: relation.table_2 });
+                  return table1 && table2 ? (
+                    <MenuItem
+                      key={relation.id}
+                      text={
+                        <>
+                          <Text>{`${table1?.name} - ${table2?.name}`}</Text>
+                          <Text className="bp5-text-muted" ellipsize>
+                            {`${relation.column_1} - ${relation.column_2}`}
+                          </Text>
+                        </>
+                      }
+                      // TODO: onClick={() => handlePageChange(`relations/${relation.id}`)}
+                    />
+                  ) : null;
+                })}
+                <CreateRelation
+                  isOpen={createRelationToggle}
+                  setIsOpen={setCreateRelationToggle}
+                />
+              </>
+            </Collapse>
+            <MenuDivider />
+            <div
+              className="flex flex-row items-center gap-1 mt-2 mb-1 cursor-default"
+              onClick={() => setQueriesToggle(!queriesToggle)}
+            >
+              <H5 className="mb-0">Queries</H5>
+              <Icon
+                icon={queriesToggle ? "chevron-down" : "chevron-right"}
+                color="gray"
+              />
+            </div>
+            <Collapse isOpen={queriesToggle} keepChildrenMounted={true}>
+              <>
+                <MenuItem
+                  icon="new-object"
+                  text="New query"
+                  intent="success"
+                  onClick={handleNewQuery}
+                  popoverProps={{
+                    usePortal: true,
+                  }}
+                />
+                {userQueries?.map((query) => (
+                  <MenuItem
+                    key={query.id}
+                    text={query.name}
+                    onClick={() => handlePageChange(`queries/${query.id}`)}
+                  />
+                ))}
+              </>
+            </Collapse>
           </Menu>
         )}
       </div>
-      {renderClerkProfile() ? <UserProfileButton /> : null}
-      <FormGroup className="p-2 mb-0">
-        <SwitchCard
-          onChange={() => setDarkMode(!darkMode)}
-          checked={darkMode}
-          compact
-          showAsSelectedWhenChecked={false}
-          className="border-none outline-none"
-        >
-          Dark mode
-        </SwitchCard>
-      </FormGroup>
+      <div className="flex flex-col flex-none">
+        {renderClerkProfile() ? <UserProfileButton /> : null}
+        <FormGroup className="p-2 mb-0">
+          <SwitchCard
+            onChange={() => setDarkMode(!darkMode)}
+            checked={darkMode}
+            compact
+            showAsSelectedWhenChecked={false}
+            className="border-none outline-none"
+          >
+            Dark mode
+          </SwitchCard>
+        </FormGroup>
+      </div>
     </Card>
   );
 }

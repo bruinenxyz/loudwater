@@ -28,7 +28,6 @@ export function validatePipelineStep(
   step: Step,
   stepIndex: number,
   inputSchema: InferredSchema,
-  baseTable: HydratedTable,
   tables: HydratedTable[],
   relations: Relation[],
 ): StepValidationOutput {
@@ -36,7 +35,6 @@ export function validatePipelineStep(
     step.type,
     stepIndex,
     inputSchema,
-    baseTable,
     tables,
     relations,
   );
@@ -57,7 +55,6 @@ function getPipelineStepValidator(
   stepType: StepIdentifier,
   stepIndex: number,
   inputSchema: InferredSchema,
-  baseTable: HydratedTable,
   tables: HydratedTable[],
   relations: Relation[],
 ) {
@@ -75,9 +72,10 @@ function getPipelineStepValidator(
       );
     case StepIdentifierEnum.Take:
       return createTakeStepValidator(stepIndex);
+    case StepIdentifierEnum.Order:
+      return createOrderStepValidator(inputSchema, stepIndex);
     case StepIdentifierEnum.Filter:
       return createFilterStepValidator(inputSchema, stepIndex);
-    case StepIdentifierEnum.Order:
     case StepIdentifierEnum.Derive:
     default:
       throw new Error("Invalid step type");
@@ -482,6 +480,36 @@ function createFilterStepValidator(
       });
     },
   );
-
   return filterValidator;
+}
+        
+function createOrderStepValidator(
+  inputSchema: InferredSchema,
+  stepIndex: number,
+) {
+  const orderValidator = OrderStepSchema.superRefine(
+    (step: OrderStep, ctx: any) => {
+      // Ensure that all order columns are present in the input schema
+      step.order.forEach((orderCase) => {
+        if (
+          !_.find(inputSchema.columns, (column) =>
+            _.isEqual(column, orderCase.column),
+          )
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Ordered column '${orderCase.column.name}' on table '${orderCase.column.table}' ${orderCase.column.relation ? `via relation '${orderCase.column.relation.as}' ` : ""}does not exist in input schema`,
+            path: [
+              stepIndex.toString(),
+              `step ${stepIndex + 1} - Order`,
+              "order",
+              stepIndex.toString(),
+              "column",
+            ],
+          });
+        }
+      });
+    },
+  );
+  return orderValidator;
 }

@@ -6,6 +6,7 @@ import {
   RelateStep,
   TakeStep,
   FilterStep,
+  OrderStep,
   Step,
   StepIdentifier,
   StepIdentifierEnum,
@@ -20,6 +21,7 @@ import AggregateStepComponent from "./steps/aggregate-step";
 import RelateStepComponent from "./steps/relate/relate-step";
 import TakeStepComponent from "./steps/take-step";
 import FilterStepComponent from "./steps/filter/filter-step";
+import OrderStepComponent from "./steps/order/order-step";
 import { usePipelineSchema } from "@/data/use-user-query";
 import { useState, useEffect } from "react";
 import * as _ from "lodash";
@@ -161,6 +163,18 @@ export default function QueryBuilder({
           />
         );
       case StepIdentifierEnum.Order:
+        return (
+          <OrderStepComponent
+            index={index}
+            step={step ? (step as OrderStep) : step}
+            pipeline={pipeline}
+            setPipeline={setPipeline}
+            edit={editStepIndex === index}
+            setEditStepIndex={setEditStepIndex}
+            setNewStepType={setNewStepType}
+            create={create}
+          />
+        );
       case StepIdentifierEnum.Derive:
         return (
           <Section className="flex-none w-full py-2 rounded-sm">
