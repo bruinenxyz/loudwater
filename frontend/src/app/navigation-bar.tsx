@@ -11,6 +11,7 @@ import {
   IconName,
   Text,
   Icon,
+  Collapse,
 } from "@blueprintjs/core";
 import logo from "@assets/logo.svg";
 import darkLogo from "@assets/logo-dark.svg";
@@ -132,11 +133,11 @@ export default function NavigationBar({}) {
           />
         </Menu>
       </div>
-      <div className="flex-1 my-1 overflow-y-auto">
+      <div className="flex-1 w-full my-1 overflow-x-hidden overflow-y-auto">
         {selectedDatabase && (
           <Menu>
             <div
-              className="flex flex-row items-center gap-1 mb-1"
+              className="flex flex-row items-center gap-1 mb-1 cursor-default"
               onClick={() => setTablesToggle(!tablesToggle)}
             >
               <H5 className="mb-0">Tables</H5>
@@ -145,8 +146,8 @@ export default function NavigationBar({}) {
                 color="gray"
               />
             </div>
-            {tablesToggle &&
-              tables?.map((table) => (
+            <Collapse isOpen={tablesToggle} keepChildrenMounted={true}>
+              {tables?.map((table) => (
                 <MenuItem
                   key={table.id}
                   text={table.name}
@@ -156,9 +157,10 @@ export default function NavigationBar({}) {
                   onClick={() => handlePageChange(`tables/${table.id}`)}
                 />
               ))}
+            </Collapse>
             <MenuDivider />
             <div
-              className="flex flex-row items-center gap-1 mb-1"
+              className="flex flex-row items-center gap-1 mt-2 mb-1 cursor-default"
               onClick={() => setRelationsToggle(!relationsToggle)}
             >
               <H5 className="mb-0">Relations</H5>
@@ -167,7 +169,7 @@ export default function NavigationBar({}) {
                 color="gray"
               />
             </div>
-            {relationsToggle && (
+            <Collapse isOpen={relationsToggle} keepChildrenMounted={true}>
               <>
                 <MenuItem
                   icon="new-object"
@@ -201,11 +203,10 @@ export default function NavigationBar({}) {
                   setIsOpen={setCreateRelationToggle}
                 />
               </>
-            )}
-
+            </Collapse>
             <MenuDivider />
             <div
-              className="flex flex-row items-center gap-1 mb-1"
+              className="flex flex-row items-center gap-1 mt-2 mb-1 cursor-default"
               onClick={() => setQueriesToggle(!queriesToggle)}
             >
               <H5 className="mb-0">Queries</H5>
@@ -214,7 +215,7 @@ export default function NavigationBar({}) {
                 color="gray"
               />
             </div>
-            {queriesToggle && (
+            <Collapse isOpen={queriesToggle} keepChildrenMounted={true}>
               <>
                 <MenuItem
                   icon="new-object"
@@ -233,7 +234,7 @@ export default function NavigationBar({}) {
                   />
                 ))}
               </>
-            )}
+            </Collapse>
           </Menu>
         )}
       </div>

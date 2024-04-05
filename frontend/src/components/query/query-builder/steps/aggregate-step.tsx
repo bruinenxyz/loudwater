@@ -11,6 +11,7 @@ import {
 } from "@/definitions";
 import {
   Button,
+  Collapse,
   Icon,
   IconSize,
   InputGroup,
@@ -433,7 +434,7 @@ export default function AggregateStepComponent({
       );
     } else if (step.group.length > 0) {
       return (
-        <div className="w-full border-b border-bluprint-border-gray">
+        <div className="w-full ">
           <div className="my-1 ml-3">
             <div
               className="flex flex-row items-center text-sm hover:cursor-pointer"
@@ -444,18 +445,26 @@ export default function AggregateStepComponent({
                   <Text className="mr-1">
                     Hide &quot;group by&quot; columns
                   </Text>
-                  <Icon icon="chevron-down" size={IconSize.LARGE} />
+                  <Icon
+                    icon="chevron-down"
+                    size={IconSize.STANDARD}
+                    color="gray"
+                  />
                 </>
               ) : (
                 <>
                   <Text className="mr-1">
                     View &quot;group by&quot; columns
                   </Text>
-                  <Icon icon="chevron-right" size={IconSize.LARGE} />
+                  <Icon
+                    icon="chevron-right"
+                    size={IconSize.STANDARD}
+                    color="gray"
+                  />
                 </>
               )}
             </div>
-            {viewGroupByToggle && (
+            <Collapse isOpen={viewGroupByToggle} keepChildrenMounted={true}>
               <div className="flex flex-row flex-wrap gap-1 my-2 grow">
                 {_.map(
                   step.group,
@@ -464,7 +473,7 @@ export default function AggregateStepComponent({
                   ),
                 )}
               </div>
-            )}
+            </Collapse>
           </div>
         </div>
       );
