@@ -10,25 +10,22 @@ import {
   IconName,
   Text,
   Icon,
-  IconSize,
-  Tag,
 } from "@blueprintjs/core";
-import React, { useEffect, useState } from "react";
 import logo from "@assets/logo.svg";
 import darkLogo from "@assets/logo-dark.svg";
 import Image from "next/image";
+import CreateRelation from "@/components/relation/create-relation";
+import DatabaseSelector from "./databases/database-selector";
 import { usePathname, useRouter } from "next/navigation";
 import { UserProfileButton } from "../components/account-management/user-profile-button";
 import { useTables } from "@/data/use-tables";
-import DatabaseSelector from "./databases/database-selector";
 import { useSelectedDatabase } from "@/stores";
 import { useCreateUserQuery, useUserQueries } from "@/data/use-user-query";
 import { useRelations } from "@/data/use-relations";
-import * as _ from "lodash";
-import CreateRelation from "@/components/relation/create-relation";
 import { useDarkModeContext } from "@/components/context/dark-mode-context";
-import RelationItemContent from "@/components/query/query-builder/steps/relate/relation-item-content";
-import SquareIcon, { SquareIconSize } from "@/components/icon/square-icon";
+import React, { useEffect, useState } from "react";
+import * as _ from "lodash";
+
 import { Relation } from "@/definitions";
 
 export enum NavigationTabEnums {
