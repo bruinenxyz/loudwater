@@ -93,6 +93,8 @@ export default function FilterConditionAdder({
         ) {
           // If the column type is number or float, check if the value is a number
           return "number" === typeof selectedValue;
+        } else if (selectedColumn.type === "enum") {
+          return "string" === typeof selectedValue;
         } else if (
           selectedColumn.type !== "date" &&
           selectedColumn.type !== "datetime"

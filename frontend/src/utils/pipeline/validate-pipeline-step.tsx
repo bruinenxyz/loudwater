@@ -431,7 +431,23 @@ function createFilterStepValidator(
               } else {
                 // If the value is not a column on the input schema, check that the filtered column is of the same type as the value
                 if (filteredColumn.type !== typeof condition.value) {
-                  if (
+                  if (filteredColumn.type === "enum") {
+                    if (typeof condition.value !== "string") {
+                      ctx.addIssue({
+                        code: z.ZodIssueCode.custom,
+                        message: `Value for column '${
+                          condition.column.name
+                        }' on table '${condition.column.table}' ${condition.column.relation ? `via relation '${condition.column.relation.as}' ` : ""}must be of type string`,
+                        path: [
+                          stepIndex.toString(),
+                          `step ${stepIndex + 1} - Filter`,
+                          "conditions",
+                          index.toString(),
+                          "value",
+                        ],
+                      });
+                    }
+                  } else if (
                     (filteredColumn.type !== "date" &&
                       filteredColumn.type !== "datetime") ||
                     ((filteredColumn.type === "date" ||
