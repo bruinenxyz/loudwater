@@ -72,9 +72,10 @@ function getPipelineStepValidator(
         tables,
         relations,
       );
-    case StepIdentifierEnum.Filter:
-    case StepIdentifierEnum.Order:
     case StepIdentifierEnum.Take:
+      return createTakeStepValidator(stepIndex);
+    case StepIdentifierEnum.Order:
+    case StepIdentifierEnum.Filter:
     case StepIdentifierEnum.Derive:
     default:
       throw new Error("Invalid step type");
@@ -307,4 +308,30 @@ function createRelateStepValidator(
     },
   );
   return relateValidator;
+}
+
+function createTakeStepValidator(stepIndex: number) {
+  const takeValidator = TakeStepSchema.superRefine(
+    (step: TakeStep, ctx: any) => {
+      if (typeof step.limit !== "number") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Limit must be type 'number', recieved type '${typeof step.limit}'`,
+          path: [stepIndex.toString(), `step ${stepIndex + 1} - Take`, "limit"],
+        });
+      }
+      if (typeof step.offset !== "number") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Offset must be type 'number', recieved type '${typeof step.offset}'`,
+          path: [
+            stepIndex.toString(),
+            `step ${stepIndex + 1} - Take`,
+            "offset",
+          ],
+        });
+      }
+    },
+  );
+  return takeValidator;
 }

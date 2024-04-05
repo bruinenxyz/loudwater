@@ -3,10 +3,11 @@ import {
   Pipeline,
   SelectStep,
   AggregateStep,
+  RelateStep,
+  TakeStep,
   Step,
   StepIdentifier,
   StepIdentifierEnum,
-  RelateStep,
 } from "@/definitions/pipeline";
 import { Button, NonIdealState, Section } from "@blueprintjs/core";
 import Loading from "@/app/loading";
@@ -16,6 +17,7 @@ import FromStepComponent from "./steps/from-step";
 import SelectStepComponent from "./steps/select-step";
 import AggregateStepComponent from "./steps/aggregate-step";
 import RelateStepComponent from "./steps/relate/relate-step";
+import TakeStepComponent from "./steps/take-step";
 import { usePipelineSchema } from "@/data/use-user-query";
 import { useState, useEffect } from "react";
 import * as _ from "lodash";
@@ -130,10 +132,22 @@ export default function QueryBuilder({
             create={create}
           />
         );
+      case StepIdentifierEnum.Take:
+        return (
+          <TakeStepComponent
+            index={index}
+            step={!!step ? (step as TakeStep) : step}
+            pipeline={pipeline}
+            setPipeline={setPipeline}
+            edit={editStepIndex === index}
+            setEditStepIndex={setEditStepIndex}
+            setNewStepType={setNewStepType}
+            create={create}
+          />
+        );
       case StepIdentifierEnum.Derive:
       case StepIdentifierEnum.Filter:
       case StepIdentifierEnum.Order:
-      case StepIdentifierEnum.Take:
         return (
           <Section className="flex-none w-full py-2 rounded-sm">
             <NonIdealState
