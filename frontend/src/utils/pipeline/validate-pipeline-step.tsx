@@ -482,7 +482,7 @@ function createFilterStepValidator(
   );
   return filterValidator;
 }
-        
+
 function createOrderStepValidator(
   inputSchema: InferredSchema,
   stepIndex: number,
