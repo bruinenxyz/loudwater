@@ -1,4 +1,5 @@
 "use client";
+import { Relation } from "@/definitions";
 import {
   Card,
   SwitchCard,
@@ -25,8 +26,6 @@ import { useRelations } from "@/data/use-relations";
 import { useDarkModeContext } from "@/components/context/dark-mode-context";
 import React, { useEffect, useState } from "react";
 import * as _ from "lodash";
-
-import { Relation } from "@/definitions";
 
 export enum NavigationTabEnums {
   SOURCES = "sources",
