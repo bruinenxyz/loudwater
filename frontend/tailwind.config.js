@@ -23,6 +23,8 @@ module.exports = {
       "bruinen-gray": "#757679",
       "bluprint-border-gray": "#ddddde",
       "bluprint-tag-gray": "#5f6b7c",
+      "bluprint-tag-light": "#eff0f2",
+      "bluprint-tag-dark": "#3e434c",
       "bluprint-tag-close": "#cfd3d7",
       "bluprint-text-light": "#fcfcfc",
       "bluprint-warning-orange": "#C87619",

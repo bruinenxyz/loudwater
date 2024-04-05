@@ -19,6 +19,7 @@ import {
   StepValidationOutput,
   InferredSchema,
   InferredSchemaColumn,
+  FilterCondition,
 } from "@/definitions";
 import { z } from "zod";
 import * as _ from "lodash";
@@ -74,8 +75,9 @@ function getPipelineStepValidator(
       );
     case StepIdentifierEnum.Take:
       return createTakeStepValidator(stepIndex);
-    case StepIdentifierEnum.Order:
     case StepIdentifierEnum.Filter:
+      return createFilterStepValidator(inputSchema, stepIndex);
+    case StepIdentifierEnum.Order:
     case StepIdentifierEnum.Derive:
     default:
       throw new Error("Invalid step type");
@@ -135,7 +137,7 @@ function createAggregateStepValidator(
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `Aggregated column '${column.name}' on table '${column.table}' ${column.relation && `via relation '${column.relation.as}' `}does not exist in input schema`,
+          message: `Aggregated column '${column.name}' on table '${column.table}' ${column.relation ? `via relation '${column.relation.as}' ` : ""}does not exist in input schema`,
           path: [
             stepIndex.toString(),
             `step ${stepIndex + 1} - Aggregate`,
@@ -334,4 +336,136 @@ function createTakeStepValidator(stepIndex: number) {
     },
   );
   return takeValidator;
+}
+
+function createFilterStepValidator(
+  inputSchema: InferredSchema,
+  stepIndex: number,
+) {
+  const filterValidator = FilterStepSchema.superRefine(
+    (step: FilterStep, ctx: any) => {
+      // Check that the logical operator is valid
+      if (!_.includes(["and", "or", "xor"], step.logicalOperator)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Invalid logical operator'`,
+          path: [
+            stepIndex.toString(),
+            `step ${stepIndex + 1} - Filter`,
+            "logicalOperator",
+          ],
+        });
+      }
+
+      // Iterate over each condition in the filter step and validate it
+      step.conditions.forEach((condition: FilterCondition, index: number) => {
+        const filteredColumn = _.find(
+          inputSchema.columns,
+          (column: InferredSchemaColumn) => _.isEqual(column, condition.column),
+        );
+        // Ensure that the column being filtered is present in the input schema
+        if (!filteredColumn) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Filtered column '${condition.column.name}' on table '${condition.column.table}' ${condition.column.relation ? `via relation '${condition.column.relation.as}' ` : ""}does not exist in input schema`,
+            path: [
+              stepIndex.toString(),
+              `step ${stepIndex + 1} - Filter`,
+              "conditions",
+              index.toString(),
+              "column",
+            ],
+          });
+        } else {
+          // Ensure that the value is valid
+          if (_.includes(["is_null", "is_not_null"], condition.operator)) {
+            if (condition.value !== undefined) {
+              // If the operator is is_null or is_not_null, the value must be undefined
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: `For 'is_null' and 'is_not_null' operators, value must be undefined`,
+                path: [
+                  stepIndex.toString(),
+                  `step ${stepIndex + 1} - Filter`,
+                  "conditions",
+                  index.toString(),
+                  "value",
+                ],
+              });
+            }
+          } else {
+            if (condition.value === undefined) {
+              // If the operator is not is_null or is_not_null, the value must be defined
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: `For operators other than 'is_null' and 'is_not_null', value must be defined`,
+                path: [
+                  stepIndex.toString(),
+                  `step ${stepIndex + 1} - Filter`,
+                  "conditions",
+                  index.toString(),
+                  "value",
+                ],
+              });
+            } else {
+              if (typeof condition.value === "object") {
+                // If the value is an object, check that it is a column on the input schema
+                const valueColumn = _.find(
+                  inputSchema.columns,
+                  (column: InferredSchemaColumn) =>
+                    _.isEqual(column, condition.value),
+                );
+                if (!valueColumn) {
+                  ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: `Value for column '${condition.column.name}' on table '${condition.column.table}' ${condition.column.relation ? `via relation '${condition.column.relation.as}' ` : ""}is a column that does not exist in input schema`,
+                    path: [
+                      stepIndex.toString(),
+                      `step ${stepIndex + 1} - Filter`,
+                      "conditions",
+                      index.toString(),
+                      "value",
+                    ],
+                  });
+                }
+              } else {
+                // If the value is not a column on the input schema, check that the filtered column is of the same type as the value
+                if (filteredColumn.type !== typeof condition.value) {
+                  if (
+                    (filteredColumn.type !== "date" &&
+                      filteredColumn.type !== "datetime") ||
+                    ((filteredColumn.type === "date" ||
+                      filteredColumn.type === "datetime") &&
+                      typeof condition.value !== "string")
+                  ) {
+                    // The filtered column on the input schema must be of the same type as the value
+                    ctx.addIssue({
+                      code: z.ZodIssueCode.custom,
+                      message: `Value for column '${
+                        condition.column.name
+                      }' on table '${condition.column.table}' ${condition.column.relation ? `via relation '${condition.column.relation.as}' ` : ""}must be of type ${
+                        filteredColumn.type === "date" ||
+                        filteredColumn.type === "datetime"
+                          ? "string"
+                          : filteredColumn.type
+                      }`,
+                      path: [
+                        stepIndex.toString(),
+                        `step ${stepIndex + 1} - Filter`,
+                        "conditions",
+                        index.toString(),
+                        "value",
+                      ],
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+    },
+  );
+
+  return filterValidator;
 }
