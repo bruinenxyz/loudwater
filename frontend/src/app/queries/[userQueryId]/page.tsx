@@ -56,7 +56,8 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
 
   const {
     data: results,
-    isLoading: isLoadingResults,
+    trigger: runQuery,
+    isMutating: isLoadingResults,
     error: resultsError,
   } = useUserQueryResults(userQueryId, userQuery?.sql, savedParameters);
 
@@ -100,6 +101,7 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
     setSavedParameters(parameters);
     if (tab === QueryTabEnum.SQL) {
       await updateUserQueryTrigger({ sql: sqlQuery, parameters: parameters });
+      await runQuery();
     } else {
       const pipelineSQL = await parsePipelineTrigger(pipeline);
       if (pipelineSQL.sql === sqlQuery) {
@@ -191,6 +193,7 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
                 pipeline={pipeline}
                 isDivergent={pipelineSQLDivergence}
                 setIsDivergent={setPipelineSQLDivergence}
+                runQuery={runQuery}
               />
             </div>
           </div>

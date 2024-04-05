@@ -16,6 +16,7 @@ interface OverwriteSQLDialogProps {
   pipeline: Pipeline;
   isDivergent: boolean;
   setIsDivergent: (value: boolean) => void;
+  runQuery: () => void;
 }
 
 export default function OverwriteSQLDialog({
@@ -23,12 +24,14 @@ export default function OverwriteSQLDialog({
   pipeline,
   isDivergent,
   setIsDivergent,
+  runQuery,
 }: OverwriteSQLDialogProps) {
   const { trigger: updateUserQueryTrigger, isMutating: isUpdatingUserQuery } =
     useUpdateUserQuery(userQueryId);
 
   async function handleConfirm() {
     await updateUserQueryTrigger({ pipeline: pipeline });
+    await runQuery();
     setIsDivergent(false);
   }
 

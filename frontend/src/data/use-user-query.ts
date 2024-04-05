@@ -76,11 +76,14 @@ export const useUserQueryResults = (
     }
   }
   const paramsString = new URLSearchParams(reducedParams).toString();
-  const { data, error, isLoading } = useSWR<any>(sql + paramsString, () => {
-    return backendGet(`/user-queries/${queryId}/run?${paramsString}`);
-  });
+  const { data, error, trigger, isMutating } = useSWRMutation<any>(
+    sql + paramsString,
+    () => {
+      return backendGet(`/user-queries/${queryId}/run?${paramsString}`);
+    },
+  );
 
-  return { data, error, isLoading };
+  return { data, error, trigger, isMutating };
 };
 
 export const useUpdateUserQuery = (queryId: string) => {
