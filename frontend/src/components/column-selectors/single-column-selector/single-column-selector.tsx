@@ -11,7 +11,7 @@ import SingleColumnSelectorButton from "./single-column-selector-button";
 
 interface SingleColumnSelectorProps {
   className?: string;
-  disabled?: boolean;
+  disabled: boolean;
   items: InferredSchemaColumn[];
   selected: InferredSchemaColumn | null;
   onColumnSelect: (column: InferredSchemaColumn) => void;
@@ -60,7 +60,7 @@ export default function SingleColumnSelector({
 
   return (
     <Select<InferredSchemaColumn>
-      disabled={disabled === true}
+      disabled={disabled}
       className={className}
       items={items}
       itemRenderer={renderColumnItem}

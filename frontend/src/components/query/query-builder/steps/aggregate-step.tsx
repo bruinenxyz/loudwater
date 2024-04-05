@@ -378,6 +378,7 @@ export default function AggregateStepComponent({
             </Select>
             <SingleColumnSelector
               className="ml-3"
+              disabled={false}
               selected={selectedColumn}
               onColumnSelect={setSelectedColumn}
               items={successInputSchema.data.columns}

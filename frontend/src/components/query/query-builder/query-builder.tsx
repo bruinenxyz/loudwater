@@ -95,7 +95,7 @@ export default function QueryBuilder({
           <SelectStepComponent
             key={create ? "new step" : index}
             index={index}
-            step={!!step ? (step as SelectStep) : step}
+            step={step ? (step as SelectStep) : step}
             pipeline={pipeline}
             setPipeline={setPipeline}
             edit={editStepIndex === index}
@@ -109,7 +109,7 @@ export default function QueryBuilder({
           <AggregateStepComponent
             key={create ? "new step" : index}
             index={index}
-            step={!!step ? (step as AggregateStep) : step}
+            step={step ? (step as AggregateStep) : step}
             pipeline={pipeline}
             setPipeline={setPipeline}
             edit={editStepIndex === index}
@@ -123,7 +123,7 @@ export default function QueryBuilder({
           <RelateStepComponent
             key={create ? "new step" : index}
             index={index}
-            step={!!step ? (step as RelateStep) : step}
+            step={step ? (step as RelateStep) : step}
             pipeline={pipeline}
             setPipeline={setPipeline}
             edit={editStepIndex === index}
@@ -136,7 +136,7 @@ export default function QueryBuilder({
         return (
           <TakeStepComponent
             index={index}
-            step={!!step ? (step as TakeStep) : step}
+            step={step ? (step as TakeStep) : step}
             pipeline={pipeline}
             setPipeline={setPipeline}
             edit={editStepIndex === index}
