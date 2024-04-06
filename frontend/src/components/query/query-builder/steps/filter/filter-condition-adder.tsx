@@ -166,7 +166,7 @@ export default function FilterConditionAdder({
         roleStructure="listoption"
         selected={valueType === type}
         shouldDismissPopover={true}
-        text={type.charAt(0).toUpperCase() + type.slice(1)}
+        text={_.capitalize(type)}
         onClick={handleClick}
       />
     );
