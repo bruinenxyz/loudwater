@@ -123,8 +123,6 @@ export class TablesService {
       ).join(", ")});`;
     }
 
-    console.log("sql", sql);
-
     const results = await this.postgresAdapterService.run({
       sql,
       databaseId: table.database_id,
@@ -347,7 +345,6 @@ export class TablesService {
   async getTableEnums(id: string): Promise<Record<string, string[]>> {
     const table = await this.findOne(id);
     assert(table, "Table not found");
-    console.log("table", table);
 
     const enums = await this.postgresAdapterService.run({
       databaseId: table.database_id,
