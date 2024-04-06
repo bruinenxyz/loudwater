@@ -5,6 +5,7 @@ import {
   AggregateStep,
   RelateStep,
   TakeStep,
+  FilterStep,
   OrderStep,
   Step,
   StepIdentifier,
@@ -19,6 +20,7 @@ import SelectStepComponent from "./steps/select-step";
 import AggregateStepComponent from "./steps/aggregate-step";
 import RelateStepComponent from "./steps/relate/relate-step";
 import TakeStepComponent from "./steps/take-step";
+import FilterStepComponent from "./steps/filter/filter-step";
 import OrderStepComponent from "./steps/order/order-step";
 import { usePipelineSchema } from "@/data/use-user-query";
 import { useState, useEffect } from "react";
@@ -147,6 +149,19 @@ export default function QueryBuilder({
             create={create}
           />
         );
+      case StepIdentifierEnum.Filter:
+        return (
+          <FilterStepComponent
+            index={index}
+            step={step ? (step as FilterStep) : step}
+            pipeline={pipeline}
+            setPipeline={setPipeline}
+            edit={editStepIndex === index}
+            setEditStepIndex={setEditStepIndex}
+            setNewStepType={setNewStepType}
+            create={create}
+          />
+        );
       case StepIdentifierEnum.Order:
         return (
           <OrderStepComponent
@@ -161,7 +176,6 @@ export default function QueryBuilder({
           />
         );
       case StepIdentifierEnum.Derive:
-      case StepIdentifierEnum.Filter:
         return (
           <Section className="flex-none w-full py-2 rounded-sm">
             <NonIdealState

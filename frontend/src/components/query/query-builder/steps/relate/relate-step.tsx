@@ -237,7 +237,7 @@ export default function RelateStepComponent({
                 }}
               />
               <div className="flex flex-row items-center gap-2 flex-nowrap">
-                <Text className="flex-nowrap">on</Text>
+                <Text className="font-normal flex-nowrap">on</Text>
                 <InferredSchemaColumnTag column={step!.relation.on} />
               </div>
               <div className="flex flex-row items-center gap-2 flex-nowrap">
@@ -285,7 +285,7 @@ export default function RelateStepComponent({
                 }}
               />
               <div className="flex flex-row items-center gap-2 flex-nowrap">
-                <Text className="flex-nowrap">on</Text>
+                <Text className="font-normal flex-nowrap">on</Text>
                 <InferredSchemaColumnTag column={step!.relation.on} />
               </div>
               <div className="flex flex-row items-center gap-2 flex-nowrap">

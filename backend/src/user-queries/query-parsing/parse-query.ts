@@ -13,6 +13,7 @@ import { parseSelect } from "./parse-select";
 import { parseTake } from "./parse-take";
 import { compile } from "prql-js";
 import * as _ from "lodash";
+import { parseFilter } from "./parse-filter";
 
 function objectToPrql(
   pipeline: Pipeline,
@@ -27,6 +28,9 @@ function objectToPrql(
     switch (step.type) {
       case StepIdentifierEnum.Aggregate:
         prql += parseAggregate(step, index + 1, tables);
+        break;
+      case StepIdentifierEnum.Filter:
+        prql += parseFilter(step, index + 1, tables);
         break;
       case StepIdentifierEnum.Order:
         prql += parseOrder(step, index + 1, tables);
