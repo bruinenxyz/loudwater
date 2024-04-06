@@ -48,7 +48,7 @@ export class TablesService {
     });
 
     // Begin building SQL statement
-    let sql = `SELECT * FROM ${database?.schema}.${table.external_name}`;
+    let sql = `SELECT * FROM "${database?.schema}"."${table.external_name}"`;
 
     const parameters: string[] = [];
 
@@ -353,7 +353,7 @@ export class TablesService {
       FROM pg_attribute a 
       JOIN pg_type t ON a.atttypid = t.oid 
       JOIN pg_enum e ON a.atttypid = e.enumtypid 
-      WHERE a.attrelid = '${table.schema}.${table.external_name}'::regclass
+      WHERE a.attrelid = '"${table.schema}"."${table.external_name}"'::regclass
       AND a.atttypid IN (
         SELECT oid 
         FROM pg_type 
