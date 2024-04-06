@@ -17,7 +17,6 @@ export default function RootLayout({
   const isUsingAuth: boolean = process.env.NEXT_PUBLIC_USE_AUTH === "true";
 
   const authRoute = () => {
-    console.log("isUsingAuth", isUsingAuth, clerkPubKey);
     if (isUsingAuth && clerkPubKey) {
       return (
         <ClerkProvider publishableKey={clerkPubKey}>
