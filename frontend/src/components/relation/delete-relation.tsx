@@ -177,7 +177,7 @@ export default function DeleteRelation({
               icon="warning-sign"
               title="Relation deletion is permanent"
             >
-              To confirm deletion, please click "Delete" below.
+              To confirm deletion, please click &quot;Delete&quot; below.
             </Callout>
           </DialogBody>
           <DialogFooter
