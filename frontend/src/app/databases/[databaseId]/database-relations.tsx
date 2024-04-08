@@ -5,7 +5,6 @@ import Loading from "@/app/loading";
 import { ErrorDisplay } from "@/components/error-display";
 import RelationCard from "@/components/relation/relation-card";
 import CreateRelation from "@/components/relation/create-relation";
-import EditRelation from "@/components/relation/edit-relation";
 import DeleteRelation from "@/components/relation/delete-relation";
 import { useRelations } from "@/data/use-relations";
 import { useState } from "react";
@@ -18,7 +17,6 @@ export default function DatabaseRelations({
 }) {
   const [createRelationToggle, setCreateRelationToggle] =
     useState<boolean>(false);
-  const [editRelation, setEditRelation] = useState<Relation | null>(null);
   const [deleteRelation, setDeleteRelation] = useState<Relation | null>(null);
   const {
     data: relations,
@@ -49,7 +47,6 @@ export default function DatabaseRelations({
         <RelationCard
           key={relation.id}
           relation={relation}
-          setEditRelation={setEditRelation}
           setDeleteRelation={setDeleteRelation}
         />
       ))}
@@ -58,7 +55,6 @@ export default function DatabaseRelations({
         isOpen={createRelationToggle}
         setIsOpen={setCreateRelationToggle}
       />
-      <EditRelation relation={editRelation} setRelation={setEditRelation} />
       <DeleteRelation
         relation={deleteRelation}
         setRelation={setDeleteRelation}

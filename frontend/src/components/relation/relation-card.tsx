@@ -17,11 +17,9 @@ import { useTable } from "@/data/use-tables";
 
 export default function RelationCard({
   relation,
-  setEditRelation,
   setDeleteRelation,
 }: {
   relation: Relation;
-  setEditRelation: (relation: Relation | null) => void;
   setDeleteRelation: (relation: Relation | null) => void;
 }) {
   const {
@@ -140,25 +138,13 @@ export default function RelationCard({
         {relation.generated ? (
           <Tag>Database</Tag>
         ) : (
-          <Popover
-            placement="bottom-start"
-            content={
-              <Menu className="flex flex-col">
-                <MenuItem
-                  icon="edit"
-                  text="Edit relation"
-                  onClick={() => setEditRelation(relation)}
-                />
-                <MenuItem
-                  icon="trash"
-                  text="Delete relation"
-                  onClick={() => setDeleteRelation(relation)}
-                />
-              </Menu>
-            }
+          <Button
+            icon="trash"
+            minimal
+            onClick={() => setDeleteRelation(relation)}
           >
-            <Button alignText="left" rightIcon="caret-down" text="Options" />
-          </Popover>
+            Delete
+          </Button>
         )}
       </div>
     </Card>
