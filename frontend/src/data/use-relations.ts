@@ -81,7 +81,7 @@ export const useUpdateRelation = () => {
 
 export const useDeleteRelation = (id?: string) => {
   const { data, error, trigger, isMutating } = useSWRMutation(
-    `/relations/${id}`,
+    id ? `/relations/${id}` : null,
     (url: string) => backendDelete(url),
   );
 

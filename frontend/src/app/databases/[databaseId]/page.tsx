@@ -19,9 +19,11 @@ import React, { useState } from "react";
 import * as _ from "lodash";
 import DeleteDatabase from "./delete-database";
 import { useDatabase } from "@/data/use-database";
+import DatabaseRelations from "./database-relations";
 
 enum DatabaseTabEnum {
   DETAILS = "DETAILS",
+  RELATIONS = "RELATIONS",
 }
 
 export default function Page({ params }: { params: { databaseId: string } }) {
@@ -42,7 +44,6 @@ export default function Page({ params }: { params: { databaseId: string } }) {
   }
 
   if (databaseError || !database) {
-    console.log("Database error", databaseError);
     return (
       <ErrorDisplay
         title="Cannot get database details"
@@ -72,6 +73,16 @@ export default function Page({ params }: { params: { databaseId: string } }) {
               />
             }
           />
+          <Tab
+            id={DatabaseTabEnum.RELATIONS}
+            title={
+              <Button
+                className="bp5-minimal"
+                icon="one-to-many"
+                text="Relations"
+              />
+            }
+          />
         </Tabs>
         <Popover
           placement="bottom-start"
@@ -98,6 +109,9 @@ export default function Page({ params }: { params: { databaseId: string } }) {
 
   function renderObjectContent() {
     switch (currentTab) {
+      case DatabaseTabEnum.RELATIONS:
+        return <DatabaseRelations database={database!} />;
+      case DatabaseTabEnum.DETAILS:
       default:
         return <DatabaseDetails database={database!} />;
     }
@@ -107,7 +121,11 @@ export default function Page({ params }: { params: { databaseId: string } }) {
     <Section
       className="flex flex-col max-h-full col-span-2"
       icon={
-        <SquareIcon icon={"cube"} color={"gray"} size={SquareIconSize.LARGE} />
+        <SquareIcon
+          icon={"database"}
+          color={"gray"}
+          size={SquareIconSize.LARGE}
+        />
       }
       title={<H4 className="m-0">{database!.name}</H4>}
       subtitle={database?.created_at.toString().split("T")[0]}

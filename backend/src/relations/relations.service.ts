@@ -23,7 +23,6 @@ export class RelationsService {
     const relation = await this.prismaService.relation.create({
       data: {
         ...createRelationDto,
-        generated: false,
         organization_id: orgId,
         deleted_at: null,
       },
@@ -97,6 +96,7 @@ export class RelationsService {
           const newRelation = {
             database_id: databaseId,
             type: relationType,
+            generated: true,
             table_1: table1.id,
             table_2: table2.id,
             column_1: constraint.foreign_column_name,

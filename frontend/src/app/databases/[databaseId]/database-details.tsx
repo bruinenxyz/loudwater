@@ -7,6 +7,7 @@ import {
   IconName,
   InputGroup,
   MenuItem,
+  Popover,
   Text,
   TextArea,
 } from "@blueprintjs/core";
@@ -19,7 +20,9 @@ import { useState } from "react";
 import { useField } from "@/utils/use-field";
 import * as _ from "lodash";
 import { CleanDatabase, UpdateDatabaseSchema } from "@/definitions";
-import { useUpdateDatabase } from "@/data/use-database";
+import { useDatabaseSchemas, useUpdateDatabase } from "@/data/use-database";
+import { useTables } from "@/data/use-tables";
+import { getFormattedDateStrings } from "@/utils/value-format";
 
 const DatabaseDetails = ({ database }: { database: CleanDatabase }) => {
   const [editDetails, setEditDetails] = useState<boolean>(false);
@@ -28,6 +31,18 @@ const DatabaseDetails = ({ database }: { database: CleanDatabase }) => {
   const { trigger: updateDatabase, isMutating } = useUpdateDatabase(
     database.id,
   );
+
+  const {
+    data: schemas,
+    isLoading: isLoadingSchemas,
+    error: schemasError,
+  } = useDatabaseSchemas(database.id);
+
+  const {
+    data: tables,
+    isLoading: isLoadingTables,
+    error: tablesError,
+  } = useTables(database.id);
 
   function resetFields() {
     nameField.onValueChange(database.name);
@@ -50,6 +65,9 @@ const DatabaseDetails = ({ database }: { database: CleanDatabase }) => {
   }
 
   function renderDatabaseDetails() {
+    const { localString, utcString } = getFormattedDateStrings(
+      database.created_at,
+    );
     return (
       <>
         <div className="flex flex-row items-center justify-between mb-2">
@@ -62,10 +80,42 @@ const DatabaseDetails = ({ database }: { database: CleanDatabase }) => {
             onClick={() => setEditDetails(true)}
           />
         </div>
-        <div className="flex flex-col gap-2 mt-1">
+        <Divider />
+        <div className="flex flex-col gap-2 mt-2">
           <div className="flex flex-row justify-between">
             <Text>Name</Text>
             <Text className="ml-2 bp5-text-muted">{database.name}</Text>
+          </div>
+          <div className="flex flex-row justify-between">
+            <Text>External name</Text>
+            <Text className="ml-2 bp5-text-muted">
+              {database.external_name}
+            </Text>
+          </div>
+          <div className="flex flex-row justify-between">
+            <Text>Added on</Text>
+            <Popover
+              content={
+                <div className="p-1">
+                  <Text className=" bp5-text-muted">{utcString}</Text>
+                </div>
+              }
+              interactionKind="hover"
+              placement="top"
+            >
+              <Text className="ml-2 bp5-text-muted cursor-help">
+                {localString}
+              </Text>
+            </Popover>
+          </div>
+          <Divider />
+          <div className="flex flex-row justify-between">
+            <Text>Schema count</Text>
+            <Text className="ml-2 bp5-text-muted">{schemas!.length}</Text>
+          </div>
+          <div className="flex flex-row justify-between">
+            <Text>Table count</Text>
+            <Text className="ml-2 bp5-text-muted">{tables!.length}</Text>
           </div>
         </div>
       </>
@@ -109,6 +159,14 @@ const DatabaseDetails = ({ database }: { database: CleanDatabase }) => {
         )}
       </>
     );
+  }
+
+  if (isLoadingSchemas || isLoadingTables) {
+    return <Loading />;
+  }
+
+  if (schemasError || tablesError) {
+    return <ErrorDisplay description={schemasError.message} />;
   }
 
   return (
