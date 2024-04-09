@@ -27,7 +27,7 @@ export default function DeleteRelation({
   setRelation: (relation: Relation | null) => void;
 }) {
   const { isMutating, trigger: deleteRelation } = useDeleteRelation(
-    relation ? relation.id : undefined,
+    relation?.id,
   );
   const {
     data: table1,

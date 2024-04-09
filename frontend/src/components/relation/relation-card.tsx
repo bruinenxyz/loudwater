@@ -36,7 +36,7 @@ export default function RelationCard({
     data: joinTable,
     isLoading: isLoadingJoinTable,
     error: joinTableError,
-  } = useTable(relation.join_table ?? undefined);
+  } = useTable(relation?.join_table);
 
   if (
     table1Error ||
