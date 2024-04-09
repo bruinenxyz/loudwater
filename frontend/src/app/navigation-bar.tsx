@@ -58,7 +58,7 @@ export default function NavigationBar({}) {
     router.push(`/${id}`);
   };
   const { trigger: triggerNewQuery, isMutating: isLoadingNewQuery } =
-    useCreateUserQuery();
+    useCreateUserQuery(selectedDatabase.id);
 
   const handleNewQuery = async () => {
     const newUserQuery = await triggerNewQuery();
