@@ -5,6 +5,7 @@ import {
   InferredSchemaColumn,
   HydratedTable,
   RelationType,
+  CleanDatabase,
 } from "@/definitions";
 import {
   Button,
@@ -22,20 +23,20 @@ import SingleTableSelector from "../table/selectors/single-table-selector/single
 import SingleColumnSelector from "../column-selectors/single-column-selector/single-column-selector";
 import { useState } from "react";
 import { useTables } from "@/data/use-tables";
-import { useSelectedDatabase } from "@/stores";
 import { useCreateRelation } from "@/data/use-relations";
 import * as _ from "lodash";
 
 interface CreateRelationProps {
+  selectedDatabase: CleanDatabase;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
 
 export default function CreateRelation({
+  selectedDatabase,
   isOpen,
   setIsOpen,
 }: CreateRelationProps) {
-  const [selectedDatabase] = useSelectedDatabase();
   const [relationType, setRelationType] = useState<RelationType | null>(null);
   const [table1, setTable1] = useState<HydratedTable | null>(null);
   const [table2, setTable2] = useState<HydratedTable | null>(null);
@@ -78,6 +79,7 @@ export default function CreateRelation({
       const newRelation = {
         database_id: selectedDatabase.id,
         type: relationType,
+        generated: false,
         table_1: table1?.id || undefined,
         column_1: column1?.name || undefined,
         table_2: table2?.id || undefined,
@@ -94,6 +96,7 @@ export default function CreateRelation({
     const parsedRelation = CreateRelationSchema.parse({
       database_id: selectedDatabase.id,
       type: relationType,
+      generated: false,
       table_1: table1?.id,
       column_1: column1?.name,
       table_2: table2?.id,
@@ -103,6 +106,9 @@ export default function CreateRelation({
       join_column_2: joinColumn2?.name || undefined,
     });
     await trigger(parsedRelation);
+    resetBaseFields();
+    resetJoinFields();
+    setRelationType(null);
     setIsOpen(false);
   }
 
@@ -337,7 +343,12 @@ export default function CreateRelation({
   return (
     <Dialog
       isOpen={isOpen}
-      onClose={() => setIsOpen(false)}
+      onClose={() => {
+        resetBaseFields();
+        resetJoinFields();
+        setRelationType(null);
+        setIsOpen(false);
+      }}
       isCloseButtonShown
       title="Create a new relation"
     >

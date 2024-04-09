@@ -15,7 +15,7 @@ export function useTables(databaseId?: string) {
   return { data, isLoading, isValidating, error };
 }
 
-export const useTable = (id?: string) => {
+export const useTable = (id?: string | null) => {
   const { data, error, isLoading, isValidating, mutate } =
     useSWR<HydratedTable>(id ? `/tables/${id}` : null, backendGet);
 

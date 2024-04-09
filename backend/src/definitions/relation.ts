@@ -30,7 +30,6 @@ export type Relation = z.infer<typeof RelationSchema>;
 export const CreateRelationSchema = RelationSchema.omit({
   id: true,
   organization_id: true,
-  generated: true,
   created_at: true,
   updated_at: true,
   deleted_at: true,
