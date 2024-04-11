@@ -32,16 +32,6 @@ const DatabaseSelector = ({
     setSelectedSchema(undefined);
   }, [selectedDatabase]);
 
-  const handleUpdateDatabaseSchema = async (schema: string) => {
-    await updateDatabase({
-      schema: schema,
-    });
-    setSelectedSchema(schema);
-    setSelectedDatabase({ ...selectedDatabase, schema: schema });
-
-    router.push("/");
-  };
-
   const router = useRouter();
   if (isLoadingDatabases || !databases) {
     return <MenuItem text="loading databases" className="bp5-skeleton" />;
@@ -103,7 +93,7 @@ const DatabaseSelector = ({
               key={schema}
               text={schema}
               roleStructure="listoption"
-              onClick={() => handleUpdateDatabaseSchema(schema)}
+              onClick={() => setSelectedSchema(schema)}
               selected={selectedSchema === schema}
             />
           ))}
