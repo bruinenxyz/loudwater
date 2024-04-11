@@ -41,14 +41,8 @@ export class TablesService {
     const table = await this.findOne(id);
     assert(table, "Table not found");
 
-    const database = await this.prismaService.database.findUnique({
-      where: {
-        id: table.database_id,
-      },
-    });
-
     // Begin building SQL statement
-    let sql = `SELECT * FROM "${database?.schema}"."${table.external_name}"`;
+    let sql = `SELECT * FROM "${table.schema}"."${table.external_name}"`;
 
     const parameters: string[] = [];
 
@@ -115,29 +109,23 @@ export class TablesService {
       sql += "\nLIMIT 100";
     }
 
-    // If there were prepared statements, turn the SQL into a prepared statement
     if (parameters.length > 0) {
-      sql = `PREPARE stmt AS\n${sql};\nEXECUTE stmt(${_.map(
-        parameters,
-        (param) => `'${param}'`,
-      ).join(", ")});`;
+      return await this.postgresAdapterService.run({
+        sql,
+        values: parameters,
+        databaseId: table.database_id,
+      });
+    } else {
+      return await this.postgresAdapterService.run({
+        sql,
+        databaseId: table.database_id,
+      });
     }
-
-    const results = await this.postgresAdapterService.run({
-      sql,
-      databaseId: table.database_id,
-    });
-
-    // Each statement returns a result, but we only care about the last one because the first is the result of the 'PREPARE' statement
-    if (parameters.length > 0) {
-      return results[1];
-    }
-
-    return results;
   }
 
   async findAllForDatabase(databaseId: string): Promise<HydratedTable[]> {
-    const schemas =
+    // Map of schemata to tables to columns
+    const schemata =
       await this.postgresAdapterService.getAllTableSchema(databaseId);
 
     const orgId = this.httpRequestContextService.checkAndGetOrgId();
@@ -150,12 +138,6 @@ export class TablesService {
       },
     });
 
-    const database = await this.prismaService.database.findUnique({
-      where: {
-        id: databaseId,
-      },
-    });
-
     const parsedTables: Table[] = _.map(tables, (table) =>
       TableSchema.parse(table),
     );
@@ -163,57 +145,57 @@ export class TablesService {
     const promises: Promise<HydratedTable>[] = [];
 
     _.forEach(
-      schemas,
-      (tableSchema: Record<string, ExternalColumn>, tableName: string) => {
-        const existingTable = _.find(
-          parsedTables,
-          (table) => table.external_name === tableName,
-        );
+      schemata,
+      (
+        tables: Record<string, Record<string, ExternalColumn>>,
+        schemaName: string,
+      ) => {
+        _.forEach(
+          tables,
+          (columns: Record<string, ExternalColumn>, tableName: string) => {
+            const existingTable = _.find(
+              parsedTables,
+              (table) =>
+                table.schema == schemaName && table.external_name === tableName,
+            );
 
-        // Create a new table record if it doesn't exist and push the createTable promise into the promises array
-        if (!existingTable) {
-          promises.push(
-            this.createTable(
-              {
-                name: tableName,
-                external_name: tableName,
-                icon: "cube",
-                color: "gray",
-                schema: database?.schema ?? "",
-                configuration: {},
-                visibility: "normal",
-                database_id: databaseId,
-                properties: {},
-                permissions: {},
-              },
-              tableSchema,
-            ),
-          );
-        } else {
-          // Otherwise, push a resolved promise into the array
-          promises.push(
-            Promise.resolve(
-              HydratedTableSchema.parse({
-                ...existingTable,
-                external_columns: tableSchema,
-              }),
-            ),
-          );
-        }
+            if (!existingTable) {
+              // Create a new table record if it doesn't exist and push the createTable promise into the promises array
+              promises.push(
+                this.createTable(
+                  {
+                    name: tableName,
+                    external_name: tableName,
+                    icon: "cube",
+                    color: "gray",
+                    schema: schemaName,
+                    configuration: {},
+                    visibility: "normal",
+                    database_id: databaseId,
+                    properties: {},
+                    permissions: {},
+                  },
+                  columns,
+                ),
+              );
+            } else {
+              // Otherwise, push a resolved promise into the array
+              promises.push(
+                Promise.resolve(
+                  HydratedTableSchema.parse({
+                    ...existingTable,
+                    external_columns: columns,
+                  }),
+                ),
+              );
+            }
+          },
+        );
       },
     );
 
     // Wait for all promises to resolve
     const resolvedTables = await Promise.all(promises);
-
-    // Update schema field for each table if it empty
-    resolvedTables.forEach(async (table) => {
-      if (table.schema == "") {
-        await this.updateTable(table.id, {
-          schema: database?.schema,
-        });
-      }
-    });
 
     // Filter out hidden tables
     const results = _.filter(
@@ -238,17 +220,17 @@ export class TablesService {
       return null;
     }
 
-    const schemas = await this.postgresAdapterService.getAllTableSchema(
+    const schemata = await this.postgresAdapterService.getAllTableSchema(
       table.database_id,
     );
 
-    if (!schemas[table.external_name]) {
+    if (!schemata[table.schema][table.external_name]) {
       throw new NotFoundException("Table not found in source");
     }
 
     return HydratedTableSchema.parse({
       ...table,
-      external_columns: schemas[table.external_name],
+      external_columns: schemata[table.schema][table.external_name],
     });
   }
 
@@ -270,6 +252,7 @@ export class TablesService {
         visibility: createTableObj.visibility,
         properties: createTableObj.properties,
         permissions: createTableObj.permissions,
+        schema: createTableObj.schema,
         organization_id: orgId,
         database: {
           connect: {
@@ -415,7 +398,7 @@ export class TablesService {
     const table = await this.findOne(tableId);
     assert(table, "Table not found");
 
-    const sql = `UPDATE ${table.schema}.${table.external_name} SET ${column_name} = $1 WHERE ${pk_column} = $2`;
+    const sql = `UPDATE "${table.schema}"."${table.external_name}" SET "${column_name}" = $1 WHERE "${pk_column}" = $2`;
     const parameters = [value, row_id];
 
     const result = await this.postgresAdapterService.run({

@@ -57,53 +57,62 @@ export class RelationsService {
     _.forEach(externalConstraints, (constraint) => {
       if (constraint.constraint_type === "FOREIGN KEY") {
         const table1 = _.find(tables, (table) => {
-          return table.external_name === constraint.foreign_table_name;
+          return (
+            table.schema === constraint.foreign_schema_name &&
+            table.external_name === constraint.foreign_table_name
+          );
         });
-        assert(table1, `Table not found: ${constraint.foreign_table_name}`);
 
         const table2 = _.find(tables, (table) => {
-          return table.external_name === constraint.table_name;
-        });
-        assert(table2, `Table not found: ${constraint.table_name}`);
-
-        // To determine the relation type, check for uniqueness of the current column
-        // If the column is unique, then the relation is one-to-one (otherwise it’s one-to-many)
-        const isUnique = _.some(externalConstraints, (c) => {
           return (
-            c.table_name === constraint.table_name &&
-            c.column_name === constraint.column_name &&
-            (c.constraint_type === "UNIQUE" ||
-              c.constraint_type === "PRIMARY KEY")
+            table.schema === constraint.table_schema &&
+            table.external_name === constraint.table_name
           );
         });
 
-        const relationType = (
-          isUnique ? "one_to_one" : "one_to_many"
-        ) as RelationType;
+        if (table1 && table2) {
+          // To determine the relation type, check for uniqueness of the current column
+          // If the column is unique, then the relation is one-to-one (otherwise it’s one-to-many)
+          const isUnique = _.some(externalConstraints, (c) => {
+            return (
+              c.table_name === constraint.table_name &&
+              c.column_name === constraint.column_name &&
+              (c.constraint_type === "UNIQUE" ||
+                c.constraint_type === "PRIMARY KEY")
+            );
+          });
 
-        const foundConstraint = _.find(parsedExistingRelations, (relation) => {
-          return (
-            relation.table_1 === table1.id &&
-            relation.table_2 === table2.id &&
-            relation.column_1 === constraint.foreign_column_name &&
-            relation.column_2 === constraint.column_name &&
-            relation.type === relationType
+          const relationType = (
+            isUnique ? "one_to_one" : "one_to_many"
+          ) as RelationType;
+
+          const foundConstraint = _.find(
+            parsedExistingRelations,
+            (relation) => {
+              return (
+                relation.table_1 === table1.id &&
+                relation.table_2 === table2.id &&
+                relation.column_1 === constraint.foreign_column_name &&
+                relation.column_2 === constraint.column_name &&
+                relation.type === relationType
+              );
+            },
           );
-        });
 
-        // If the relation isn't found, add it in the db
-        if (!foundConstraint) {
-          const newRelation = {
-            database_id: databaseId,
-            type: relationType,
-            generated: true,
-            table_1: table1.id,
-            table_2: table2.id,
-            column_1: constraint.foreign_column_name,
-            column_2: constraint.column_name,
-          };
+          // If the relation isn't found, add it in the db
+          if (!foundConstraint) {
+            const newRelation = {
+              database_id: databaseId,
+              type: relationType,
+              generated: true,
+              table_1: table1.id,
+              table_2: table2.id,
+              column_1: constraint.foreign_column_name,
+              column_2: constraint.column_name,
+            };
 
-          promises.push(this.create(newRelation));
+            promises.push(this.create(newRelation));
+          }
         }
       }
     });

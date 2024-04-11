@@ -20,6 +20,7 @@ import { NewStepSelection } from "../query-builder";
 import { useTables } from "@/data/use-tables";
 import { useSelectedDatabase } from "@/stores";
 import { useEffect, useState } from "react";
+import * as _ from "lodash";
 
 interface FromStepProps {
   pipeline: Pipeline;
@@ -82,6 +83,10 @@ export default function FromStepComponent({
     }
   }
 
+  function filterTable(query: string, table: HydratedTable) {
+    return _.includes(table.name.toLowerCase(), query.toLowerCase());
+  }
+
   function renderContent() {
     if (isLoadingTables) {
       return <Loading />;
@@ -97,6 +102,7 @@ export default function FromStepComponent({
               items={tables!}
               itemRenderer={renderTable}
               onItemSelect={selectTable}
+              itemPredicate={filterTable}
             >
               <Button
                 rightIcon="double-caret-vertical"

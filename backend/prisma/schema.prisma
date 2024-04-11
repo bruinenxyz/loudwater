@@ -14,7 +14,6 @@ model database {
     external_name     String
     connection_url    String
     encryption_vector String
-    schema            String
     organization_id   String
     require_ssl       Boolean
     tables            table[]

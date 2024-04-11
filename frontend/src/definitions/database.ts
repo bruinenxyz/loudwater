@@ -7,7 +7,6 @@ export const DatabaseSchema = z.object({
   connection_url: z.string(),
   encryption_vector: z.string(),
   organization_id: z.string(),
-  schema: z.string(),
   require_ssl: z.boolean(),
   created_at: z.date(),
   updated_at: z.date(),

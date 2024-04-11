@@ -19,7 +19,7 @@ function objectToPrql(
   pipeline: Pipeline,
   tables: Table[],
   relations: Relation[],
-  tablesSchema: Record<string, Record<string, ExternalColumn>>,
+  tablesSchema: Record<string, Record<string, Record<string, ExternalColumn>>>,
 ): string {
   let prql = "prql target:sql.postgres\n";
   prql += parseFrom(pipeline.from, tables, tablesSchema);
@@ -57,7 +57,7 @@ export function writeSQL(
   pipeline: Pipeline,
   tables: Table[],
   relations: Relation[],
-  tablesSchema: Record<string, Record<string, ExternalColumn>>,
+  tablesSchema: Record<string, Record<string, Record<string, ExternalColumn>>>,
 ) {
   const prqlQuery = objectToPrql(pipeline, tables, relations, tablesSchema);
 
