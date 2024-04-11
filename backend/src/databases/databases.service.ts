@@ -111,23 +111,12 @@ export class DatabasesService {
       data: {
         name: createDatabaseObj.name,
         external_name: externalName,
-        schema: createDatabaseObj.schema ?? "public",
         require_ssl: createDatabaseObj.require_ssl,
         connection_url: cypherText,
         encryption_vector: encryptionVector,
         organization_id: orgId,
       },
     });
-
-    // Get current schemas and assign default schema for database
-    const schemas = await this.findAllSchemas(database.id);
-
-    if (schemas.length > 0) {
-      const defaultSchema = schemas.includes("public") ? "public" : schemas[0];
-      await this.updateDatabase(database.id, {
-        schema: defaultSchema,
-      });
-    }
 
     assert(database, "Database creation error");
 

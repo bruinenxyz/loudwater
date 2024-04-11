@@ -5,7 +5,11 @@ import {
   RelationTypeEnum,
   Table,
 } from "@/definitions";
-import { baseObjectTemplate, compileTemplate } from "./utils";
+import {
+  baseObjectTemplate,
+  compileTemplate,
+  generateColumnName,
+} from "./utils";
 import * as _ from "lodash";
 import * as assert from "assert";
 
@@ -28,7 +32,7 @@ export function parseRelate(
   index: number,
   tables: Table[],
   relations: Relation[],
-  tablesSchema: Record<string, Record<string, ExternalColumn>>,
+  tablesSchema: Record<string, Record<string, Record<string, ExternalColumn>>>,
 ): string {
   const relateStepPrql: string[] = [];
 
@@ -38,14 +42,15 @@ export function parseRelate(
   );
   assert(relatedTable, `Table not found: ${relateStep.relation.table}`);
 
-  const columns = _.keys(tablesSchema[relatedTable.external_name]);
+  const columns = _.keys(
+    tablesSchema[relatedTable.schema][relatedTable.external_name],
+  );
 
   // Add the base object variable to the PRQL, prefixing every column with the alias
-  // TODO we will need to add the schema to the names below
   relateStepPrql.push(
     compileTemplate(baseObjectTemplate, {
       varName: relateStep.relation.as,
-      tableName: relatedTable.external_name,
+      tableName: `${relatedTable.schema}.${relatedTable.external_name}`,
       deriveProperties: _.map(columns, (column) => {
         return `${relateStep.relation.as}__${column} = ${column}`;
       }).join(", "),
@@ -62,22 +67,16 @@ export function parseRelate(
   assert(relation, `Relation not found: ${relateStep.relation.relation}`);
 
   if (relation.type === RelationTypeEnum.ManyToMany) {
-    let baseTableId;
-    let baseColumnName;
     let relationColumnName;
     let joinTableBaseColumnName;
     let joinTableRelationColumnName;
 
     // Check which side of the relation is the base table and use the appropriate columns
     if (relateStep.relation.table === relation.table_1) {
-      baseTableId = relation.table_2;
-      baseColumnName = relation.column_2;
       relationColumnName = relation.column_1;
       joinTableBaseColumnName = relation.join_column_2;
       joinTableRelationColumnName = relation.join_column_1;
     } else {
-      baseTableId = relation.table_1;
-      baseColumnName = relation.column_1;
       relationColumnName = relation.column_2;
       joinTableBaseColumnName = relation.join_column_1;
       joinTableRelationColumnName = relation.join_column_2;
@@ -90,52 +89,34 @@ export function parseRelate(
     );
     assert(joinTable, `Table not found: ${relation.join_table}`);
 
-    const joinTableColumns = _.keys(tablesSchema[joinTable.external_name]);
+    const joinTableColumns = _.keys(
+      tablesSchema[joinTable.schema][joinTable.external_name],
+    );
 
+    // Add the base variable of the join table to the PRQL
     relateStepPrql.push(
       compileTemplate(baseObjectTemplate, {
-        // TODO add schema
         varName: `${relateStep.relation.as}_join_table`,
-        tableName: joinTable.external_name,
-        deriveProperties: _.map(joinTableColumns, (column) => {
-          return `${relateStep.relation.as}_join_table__${column} = ${column}`;
-        }).join(", "),
-        selectProperties: _.map(joinTableColumns, (column) => {
-          return `${relateStep.relation.as}_join_table__${column}`;
-        }).join(", "),
+        tableName: `${joinTable.schema}.${joinTable.external_name}`,
+        deriveProperties: _.map(
+          joinTableColumns,
+          (column) =>
+            `${relateStep.relation.as}_join_table__${column} = ${column}`,
+        ).join(", "),
+        selectProperties: _.map(
+          joinTableColumns,
+          (column) => `${relateStep.relation.as}_join_table__${column}`,
+        ).join(", "),
       }),
     );
 
-    // Check if the base join key is on a table that has been related in previously
-    let baseColumnPrefix;
-    if (relateStep.relation.on.relation) {
-      baseColumnPrefix = relateStep.relation.on.relation.as;
-    } else {
-      const baseTable = _.find(tables, (table) => table.id === baseTableId);
-      assert(baseTable, `Table not found: ${baseTableId}`);
-      baseColumnPrefix = baseTable.external_name;
-    }
+    const baseJoinKeyName = generateColumnName(relateStep.relation.on, tables);
 
-    // Select all of the properties on the base and related tables (excluding joiun table columns)
-    // TODO add schema
+    // Select all of the properties on the base and related tables (excluding join table columns)
     const selectProperties = _.concat(
-      _.map(relateStep.inputSchema, (column) => {
-        if (column.table === "aggregate") {
-          return column.name;
-        }
-
-        if (column.relation) {
-          return `${column.relation.as}__${column.name}`;
-        }
-
-        const table = _.find(tables, (table) => table.id === column.table);
-        assert(table, `Table not found: ${column.table}`);
-
-        return `${table.external_name}__${column.name}`;
-      }),
-      _.map(columns, (column) => {
-        return `${relateStep.relation.as}__${column}`;
-      }),
+      _.map(relateStep.inputSchema, (column) =>
+        generateColumnName(column, tables),
+      ),
     ).join(", ");
 
     // Add the relation to the step PRQL
@@ -144,49 +125,33 @@ export function parseRelate(
         stepName: `step_${index}`,
         from: `step_${index - 1}`,
         joinTable: `${relateStep.relation.as}_join_table`,
-        baseJoinColumn: `${baseColumnPrefix}__${baseColumnName}`,
+        baseJoinColumn: baseJoinKeyName,
         joinTableBaseColumn: `${relateStep.relation.as}_join_table__${joinTableBaseColumnName}`,
         joinTableRelationColumn: `${relateStep.relation.as}_join_table__${joinTableRelationColumnName}`,
         relation: relateStep.relation.as,
         relationJoinColumn: `${relateStep.relation.as}__${relationColumnName}`,
-        // TODO update
         selectProperties: selectProperties,
       }),
     );
   } else {
-    let baseTableId;
-    let baseColumnName;
     let relationColumnName;
 
     // Check which side of the relation is the base table and use the appropriate columns
     if (relateStep.relation.table === relation.table_1) {
-      baseTableId = relation.table_2;
-      baseColumnName = relation.column_2;
       relationColumnName = relation.column_1;
     } else {
-      baseTableId = relation.table_1;
-      baseColumnName = relation.column_1;
       relationColumnName = relation.column_2;
     }
 
-    // Check if the base join key is on a table that has been related in previously
-    let baseColumnPrefix;
-    if (relateStep.relation.on.relation) {
-      baseColumnPrefix = relateStep.relation.on.relation.as;
-    } else {
-      const baseTable = _.find(tables, (table) => table.id === baseTableId);
-      assert(baseTable, `Table not found: ${baseTableId}`);
-      baseColumnPrefix = baseTable.external_name;
-    }
+    const baseJoinKeyName = generateColumnName(relateStep.relation.on, tables);
 
     // Add the relation to the step PRQL
-    // TODO add in schema to the naming
     relateStepPrql.push(
       compileTemplate(relateTemplate, {
         stepName: `step_${index}`,
         from: `step_${index - 1}`,
         relation: relateStep.relation.as,
-        baseJoinColumn: `${baseColumnPrefix}__${baseColumnName}`,
+        baseJoinColumn: baseJoinKeyName,
         relationJoinColumn: `${relateStep.relation.as}__${relationColumnName}`,
       }),
     );

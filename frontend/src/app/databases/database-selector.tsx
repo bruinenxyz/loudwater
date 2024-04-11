@@ -1,14 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { H6, Menu, MenuDivider, MenuItem, Text } from "@blueprintjs/core";
-import { useSelectedDatabase } from "@/stores";
+import { MenuDivider, MenuItem, Text } from "@blueprintjs/core";
 import {
   useDatabaseSchemas,
   useDatabases,
   useUpdateDatabase,
 } from "@/data/use-database";
 import AddDatabase from "@/app/databases/add-database";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-const DatabaseSelector = ({ selectedDatabase, setSelectedDatabase }: any) => {
+
+const DatabaseSelector = ({
+  selectedDatabase,
+  setSelectedDatabase,
+  selectedSchema,
+  setSelectedSchema,
+}: any) => {
   const {
     data: databases,
     isLoading: isLoadingDatabases,
@@ -22,25 +27,10 @@ const DatabaseSelector = ({ selectedDatabase, setSelectedDatabase }: any) => {
     useUpdateDatabase(selectedDatabase?.id);
 
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedSchema, setSelectedSchema] = useState(
-    selectedDatabase?.schema,
-  );
 
   useEffect(() => {
-    if (selectedDatabase) {
-      setSelectedSchema(selectedDatabase.schema);
-    }
+    setSelectedSchema(undefined);
   }, [selectedDatabase]);
-
-  const handleUpdateDatabaseSchema = async (schema: string) => {
-    await updateDatabase({
-      schema: schema,
-    });
-    setSelectedSchema(schema);
-    setSelectedDatabase({ ...selectedDatabase, schema: schema });
-
-    router.push("/");
-  };
 
   const router = useRouter();
   if (isLoadingDatabases || !databases) {
@@ -103,7 +93,7 @@ const DatabaseSelector = ({ selectedDatabase, setSelectedDatabase }: any) => {
               key={schema}
               text={schema}
               roleStructure="listoption"
-              onClick={() => handleUpdateDatabaseSchema(schema)}
+              onClick={() => setSelectedSchema(schema)}
               selected={selectedSchema === schema}
             />
           ))}

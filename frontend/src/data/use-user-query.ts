@@ -77,9 +77,9 @@ export const useUserQueryResults = (
   }
   const paramsString = new URLSearchParams(reducedParams).toString();
   const { data, error, trigger, isMutating } = useSWRMutation<any>(
-    sql + paramsString,
-    () => {
-      return backendGet(`/user-queries/${queryId}/run?${paramsString}`);
+    `/user-queries/${queryId}/run`,
+    async (url: string) => {
+      return await backendGet(`${url}?${paramsString}`);
     },
   );
 

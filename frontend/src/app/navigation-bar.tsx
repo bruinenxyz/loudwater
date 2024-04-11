@@ -1,5 +1,4 @@
 "use client";
-import { Relation } from "@/definitions";
 import {
   Card,
   SwitchCard,
@@ -44,6 +43,9 @@ export default function NavigationBar({}) {
     NavigationTabEnums | undefined
   >();
   const [selectedDatabase, setSelectedDatabase] = useSelectedDatabase();
+  const [selectedSchema, setSelectedSchema] = useState<string | undefined>(
+    undefined,
+  );
   const { darkMode, setDarkMode } = useDarkModeContext();
   const [tablesToggle, setTablesToggle] = useState<boolean>(true);
   const [queriesToggle, setQueriesToggle] = useState<boolean>(true);
@@ -52,7 +54,7 @@ export default function NavigationBar({}) {
     data: tables,
     isLoading: isLoadingTables,
     error: tablesError,
-  } = useTables(selectedDatabase.id);
+  } = useTables(selectedDatabase.id, selectedSchema);
 
   const handlePageChange = (id: string) => {
     router.push(`/${id}`);
@@ -106,6 +108,8 @@ export default function NavigationBar({}) {
           <DatabaseSelector
             selectedDatabase={selectedDatabase}
             setSelectedDatabase={setSelectedDatabase}
+            selectedSchema={selectedSchema}
+            setSelectedSchema={setSelectedSchema}
           />
         </Menu>
       </div>

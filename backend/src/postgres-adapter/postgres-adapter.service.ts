@@ -69,6 +69,7 @@ export class PostgresAdapterService {
 
     return pool.connect();
   }
+
   async run(createDatabaseQueryDto: CreateDatabaseQueryDto) {
     const client = await this.getClientForDatabase(
       createDatabaseQueryDto.databaseId,
@@ -90,32 +91,33 @@ export class PostgresAdapterService {
 
   async getAllTableSchema(
     databaseId: string,
-  ): Promise<Record<string, Record<string, ExternalColumn>>> {
+  ): Promise<Record<string, Record<string, Record<string, ExternalColumn>>>> {
     const database = await this.databaseService.findOne(databaseId);
     const client = await this.getClientForDatabase(databaseId);
     assert(database, "Database not found");
 
     try {
       const result = await client.query(
-        `SELECT 
-        *
-        FROM 
-        information_schema.columns
-        WHERE 
-        table_schema = $1;`,
-        [database.schema || "public"],
+        `SELECT * FROM information_schema.columns`,
       );
 
-      // map returned columns into tables
+      // Build a map of schemata to tables to columns
       const columns = result.rows;
-      const tables = {};
+      const columnMap = {};
       for (const column of columns) {
-        if (!tables[column.table_name]) {
-          tables[column.table_name] = {};
+        if (!columnMap[column.table_schema]) {
+          columnMap[column.table_schema] = {};
         }
-        tables[column.table_name][column.column_name] = columnMapping(column);
+
+        if (!columnMap[column.table_schema][column.table_name]) {
+          columnMap[column.table_schema][column.table_name] = {};
+        }
+
+        columnMap[column.table_schema][column.table_name][column.column_name] =
+          columnMapping(column);
       }
-      return tables;
+
+      return columnMap;
     } catch (e) {
       console.log(e);
       throw e;
@@ -131,14 +133,12 @@ export class PostgresAdapterService {
 
     try {
       const result = await client.query(
-        `select schema_name
-        from information_schema.schemata`,
+        `SELECT schema_name FROM information_schema.schemata`,
       );
       const columns = result.rows;
+      const schemata = columns.map((column) => column.schema_name);
 
-      const schemas = columns.map((column) => column.schema_name);
-
-      return schemas;
+      return schemata;
     } catch (e) {
       console.log(e);
       throw e;
@@ -158,7 +158,9 @@ export class PostgresAdapterService {
           tc.constraint_name,
           tc.constraint_type,
           tc.table_name,
+          tc.table_schema,
           kcu.column_name,
+          ccu.table_schema AS foreign_schema_name,
           ccu.table_name AS foreign_table_name,
           ccu.column_name AS foreign_column_name
         FROM 
@@ -172,13 +174,7 @@ export class PostgresAdapterService {
           ON tc.constraint_name = ccu.constraint_name
           AND tc.table_schema = ccu.table_schema
         WHERE 
-          tc.constraint_type IN ('FOREIGN KEY', 'PRIMARY KEY', 'UNIQUE')
-          AND tc.table_schema = $1
-        ORDER BY 
-          tc.table_name,
-          tc.constraint_type,
-          kcu.column_name;`,
-        [database.schema || "public"],
+          tc.constraint_type IN ('FOREIGN KEY', 'PRIMARY KEY', 'UNIQUE');`,
       );
 
       return result.rows;

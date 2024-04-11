@@ -1,16 +1,24 @@
 import useSWR, { useSWRConfig } from "swr";
 import useSWRMutation from "swr/mutation";
-import { mergeByKey } from "@/utils/merge-by-key";
 import { backendDelete, backendGet, backendUpdate } from "./client";
 import { HydratedTable, UpdateTable } from "@/definitions";
 import * as _ from "lodash";
 import { FilterStep, OrderStep, TakeStep } from "@/definitions/pipeline";
 
-export function useTables(databaseId?: string) {
+export function useTables(databaseId?: string, schema?: string) {
   const { data, isLoading, isValidating, error } = useSWR<HydratedTable[]>(
     databaseId ? `/tables/db/${databaseId}` : null,
     backendGet,
   );
+
+  if (schema) {
+    return {
+      data: data?.filter((table) => table.schema === schema),
+      isLoading,
+      isValidating,
+      error,
+    };
+  }
 
   return { data, isLoading, isValidating, error };
 }
