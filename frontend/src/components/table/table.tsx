@@ -13,7 +13,6 @@ import {
   Column,
   ColumnHeaderCell,
   Table2,
-  TableLoadingOption,
   TruncatedFormat,
   TruncatedPopoverMode,
 } from "@blueprintjs/table";
@@ -27,6 +26,7 @@ import React, { useEffect, useState } from "react";
 import * as _ from "lodash";
 import { HeaderCellRenderer } from "@blueprintjs/table/lib/esm/headers/header";
 import { useUpdateTable } from "@/data/use-tables";
+import { AppToaster } from "../toaster/toaster";
 interface Props {
   table?: HydratedTable;
   results:
@@ -336,6 +336,19 @@ const Table: React.FC<Props> = (props) => {
     }
   }
 
+  function getCellData(rowIndex: number, columnIndex: number) {
+    const cellData = tableData?.columns[orderedColumns[columnIndex]][rowIndex];
+
+    AppToaster(document.body).then((toaster) => {
+      toaster.show({
+        message: `Copied ${cellData} to clipboard`,
+        icon: "clipboard",
+      });
+    });
+
+    return cellData;
+  }
+
   if (isLoadingResults && !tableData) {
     return <Loading />;
   }
@@ -364,6 +377,7 @@ const Table: React.FC<Props> = (props) => {
         enableColumnResizing
         onColumnsReordered={orderColumn}
         enableFocusedCell={true}
+        getCellClipboardData={getCellData}
         // loadingOptions={[TableLoadingOption.CELLS]}
       >
         {orderedColumns.map((key) => (
