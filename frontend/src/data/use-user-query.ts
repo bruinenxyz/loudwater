@@ -33,9 +33,8 @@ export const useUserQueries = (databaseId: string) => {
   return { data, error, isLoading };
 };
 
-export const useCreateUserQuery = () => {
+export const useCreateUserQuery = (databaseId: string) => {
   const { mutate } = useSWRConfig();
-  const [selectedDatabase] = useSelectedDatabase();
   const { data, error, trigger, isMutating } = useSWRMutation(
     "/user-queries",
     async (url: string): Promise<UserQuery> => {
@@ -45,11 +44,12 @@ export const useCreateUserQuery = () => {
         scope: "private",
         sql: "",
         type: "sql",
-        database_id: selectedDatabase.id,
+        database_id: databaseId,
         permissions: {},
         favorited_by: [],
       });
 
+      mutate(`/user-queries/db/${databaseId}`);
       mutate(`/user-queries`, createUserQueryResponse, {
         populateCache: (
           result: UserQuery,
