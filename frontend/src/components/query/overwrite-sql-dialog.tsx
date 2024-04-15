@@ -31,8 +31,8 @@ export default function OverwriteSQLDialog({
 
   async function handleConfirm() {
     await updateUserQueryTrigger({ pipeline: pipeline });
-    await runQuery();
     setIsDivergent(false);
+    await runQuery();
   }
 
   return (

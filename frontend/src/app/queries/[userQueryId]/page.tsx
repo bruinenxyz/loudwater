@@ -1,6 +1,14 @@
 "use client";
 import { Pipeline } from "@/definitions/pipeline";
-import { Button, Callout, Divider, Drawer, Tab, Tabs } from "@blueprintjs/core";
+import {
+  Button,
+  Callout,
+  Divider,
+  Drawer,
+  Tab,
+  Tabs,
+  Text,
+} from "@blueprintjs/core";
 import Loading from "@/app/loading";
 import { ErrorDisplay } from "@/components/error-display";
 import QueryHeader from "@/components/query/query-header";
@@ -20,7 +28,7 @@ import {
 } from "@/data/use-user-query";
 import { convertToCSV } from "@/utils/csv-converter";
 import { toSnakeCase } from "@/utils/strings";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as _ from "lodash";
 
 interface UserQueryPageProps {
@@ -48,6 +56,7 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
   // TODO: likely want to refactor this to account for stages changes vs saved changes
   const [parameters, setParameters] = useState<Parameter[]>([]);
   const [savedParameters, setSavedParameters] = useState<Parameter[]>([]);
+  const [queryTime, setQueryTime] = useState<number>(0);
 
   useEffect(() => {
     setSqlQuery(userQuery?.sql || "");
@@ -60,6 +69,18 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
     isMutating: isLoadingResults,
     error: resultsError,
   } = useUserQueryResults(userQueryId, userQuery?.sql, savedParameters);
+
+  useEffect(() => {
+    if (isLoadingResults) {
+      const timer = setInterval(() => {
+        setQueryTime((prevTime) => prevTime + 100);
+      }, 100);
+
+      return () => {
+        clearInterval(timer);
+      };
+    }
+  }, [isLoadingResults]);
 
   const {
     data: pipelineSchema,
@@ -99,6 +120,7 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
 
   async function handleSaveQuery() {
     setSavedParameters(parameters);
+    setQueryTime(0);
     if (tab === QueryTabEnum.SQL) {
       await updateUserQueryTrigger({ sql: sqlQuery, parameters: parameters });
       await runQuery();
@@ -110,6 +132,18 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
         setPipelineSQLDivergence(true);
       }
     }
+  }
+
+  function getQueryTimerMessage(): string {
+    const queryTimeInSeconds = queryTime / 1000;
+    if (isLoadingResults) {
+      return `Running in ${queryTimeInSeconds} seconds...`;
+    } else {
+      if (resultsError) return `Failed in ${queryTimeInSeconds} seconds.`;
+      if (results) return `Succeeded in ${queryTimeInSeconds} seconds.`;
+    }
+
+    return "";
   }
 
   if (isLoadingUserQuery || isLoadingPipelineSchema) {
@@ -171,7 +205,7 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
             <div className="flex flex-row items-center">
               <Button
                 className="mt-1 mr-1 w-fit"
-                loading={isUpdatingUserQuery}
+                loading={isUpdatingUserQuery || isLoadingResults}
                 disabled={
                   isLoadingResults ||
                   isUpdatingUserQuery ||
@@ -203,6 +237,7 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
                 parameters={parameters}
                 setParameters={setParameters}
               />
+              <Text className="mb-1"> {getQueryTimerMessage()} </Text>
               <QueryEditor value={sqlQuery} onChange={setSqlQuery} />
             </>
           ) : (
