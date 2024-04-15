@@ -341,7 +341,7 @@ const Table: React.FC<Props> = (props) => {
 
     AppToaster(document.body).then((toaster) => {
       toaster.show({
-        message: `Copied to clipboard`,
+        message: `Copied ${cellData} to clipboard`,
         icon: "clipboard",
       });
     });
