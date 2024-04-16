@@ -7,7 +7,12 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { HttpRequestContextService } from "@/shared/http-request-context/http-request-context.service";
-import { CreateDatabase, Database, UpdateDatabase } from "@/definitions";
+import {
+  CreateDatabase,
+  Database,
+  ExternalColumn,
+  UpdateDatabase,
+} from "@/definitions";
 import { AES } from "crypto-js";
 import * as CryptoJS from "crypto-js";
 import * as assert from "assert";
@@ -123,7 +128,9 @@ export class DatabasesService {
     return database;
   }
 
-  async findAllSchemas(databaseId: string): Promise<string[]> {
+  async findAllSchemas(
+    databaseId: string,
+  ): Promise<Record<string, Record<string, Record<string, ExternalColumn>>>> {
     const database = await this.findOne(databaseId);
 
     if (!database) {
@@ -131,11 +138,9 @@ export class DatabasesService {
     }
 
     const schemas =
-      await this.postgresAdapterService.getAllDatabaseSchema(databaseId);
+      await this.postgresAdapterService.getAllTableSchema(databaseId);
 
-    const systemSchemas = ["information_schema", "pg_catalog", "pg_toast"];
-
-    return schemas.filter((schema) => !systemSchemas.includes(schema));
+    return schemas;
   }
 
   async updateDatabase(

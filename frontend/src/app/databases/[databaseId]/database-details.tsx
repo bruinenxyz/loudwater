@@ -111,7 +111,9 @@ const DatabaseDetails = ({ database }: { database: CleanDatabase }) => {
           <Divider />
           <div className="flex flex-row justify-between">
             <Text>Schema count</Text>
-            <Text className="ml-2 bp5-text-muted">{schemas!.length}</Text>
+            <Text className="ml-2 bp5-text-muted">
+              {_.keys(schemas).length}
+            </Text>
           </div>
           <div className="flex flex-row justify-between">
             <Text>Table count</Text>

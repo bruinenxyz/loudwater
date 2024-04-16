@@ -7,22 +7,72 @@ import {
   MonacoThemeLight,
 } from "@blueprintjs/monaco-editor-theme";
 import { useDarkModeContext } from "../context/dark-mode-context";
+import { LanguageIdEnum, setupLanguageFeatures } from "monaco-sql-languages";
+import { useSelectedDatabase } from "@/stores";
+import { useDatabaseSchemas } from "@/data/use-database";
+import _ from "lodash";
+import { ExternalColumn } from "@/definitions";
+
+interface SuggestionProps {
+  label: string;
+  kind: monaco.languages.CompletionItemKind;
+  documentation?: string;
+  insertText: string;
+  range: monaco.IRange;
+}
 
 function createDependencyProposals(
   range: monaco.IRange,
   monacoInstance: typeof monaco,
+  schemas?: Record<string, Record<string, Record<string, ExternalColumn>>>,
 ) {
   // returning a static list of proposals, not even looking at the prefix (filtering is done by the Monaco editor),
   // here you could do a server side lookup
-  return [
-    {
-      label: "table_name",
-      kind: monacoInstance.languages.CompletionItemKind.Field,
-      documentation: "The Lodash library exported as Node.js modules.",
-      insertText: "table_name",
+  const suggestions: SuggestionProps[] = [];
+  const tables = new Set<string>();
+  const columns = new Set<string>();
+
+  _.keys(schemas).forEach((schema: string) => {
+    if (!schemas) return;
+
+    _.keys(schemas[schema]).forEach((table) => {
+      _.keys(schemas[schema][table]).forEach((column) => {
+        columns.add(column);
+      });
+
+      tables.add(table);
+    });
+
+    suggestions.push({
+      label: schema,
+      kind: monacoInstance.languages.CompletionItemKind.Module,
+      documentation: "Schema name",
+      insertText: schema,
       range: range,
-    },
-  ];
+    });
+  });
+
+  tables.forEach((table) => {
+    suggestions.push({
+      label: table,
+      kind: monacoInstance.languages.CompletionItemKind.Field,
+      documentation: "Table name",
+      insertText: table,
+      range: range,
+    });
+  });
+
+  columns.forEach((column) => {
+    suggestions.push({
+      label: column,
+      kind: monacoInstance.languages.CompletionItemKind.Variable,
+      documentation: "Column name",
+      insertText: column,
+      range: range,
+    });
+  });
+
+  return suggestions;
 }
 
 interface QueryEditorProps {
@@ -33,14 +83,16 @@ interface QueryEditorProps {
 function QueryEditor({ value, onChange }: QueryEditorProps) {
   const monacoInstance = useMonaco();
   const { darkMode, setDarkMode } = useDarkModeContext();
+  const [selectedDatabase, setSelectedDatabase] = useSelectedDatabase();
+  const {
+    data: schemas,
+    isLoading: isLoadingSchemas,
+    error: schemasError,
+  } = useDatabaseSchemas(selectedDatabase?.id);
 
   useEffect(() => {
     if (!monacoInstance || !window) return;
     // const monaco = require("monaco-editor");
-    const {
-      setupLanguageFeatures,
-      LanguageIdEnum,
-    } = require("monaco-sql-languages");
     // const require("monaco-sql-languages/out/esm/pgsql/pgsql.ts");
     // console.log(typeof setupLanguageFeatures);
     // monacoInstance.languages.setLanguageConfiguration("pgsql", conf);
@@ -59,7 +111,11 @@ function QueryEditor({ value, onChange }: QueryEditorProps) {
           endColumn: word.endColumn,
         };
         return {
-          suggestions: createDependencyProposals(range, monacoInstance),
+          suggestions: createDependencyProposals(
+            range,
+            monacoInstance,
+            schemas,
+          ),
         };
       },
     });
