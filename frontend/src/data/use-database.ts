@@ -27,9 +27,26 @@ export const useDatabase = (id?: string) => {
 };
 
 export const useCreateDatabase = () => {
+  const { mutate } = useSWRConfig();
+
   const { data, error, trigger, isMutating } = useSWRMutation(
     "/databases",
-    (url: string, { arg }: { arg: CreateDatabase }) => backendCreate(url, arg),
+    async (url: string, { arg }: { arg: CreateDatabase }) => {
+      const createdDatabase = await backendCreate(url, arg);
+
+      mutate("/databases", createdDatabase, {
+        populateCache: (
+          result: CleanDatabase,
+          currentData: CleanDatabase[] | undefined,
+        ) => {
+          return [...(currentData || []), result].sort((a, b) =>
+            a.name <= b.name ? -1 : 1,
+          );
+        },
+      });
+
+      return createdDatabase;
+    },
   );
 
   return { data, error, trigger, isMutating };

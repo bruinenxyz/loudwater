@@ -34,6 +34,7 @@ import * as _ from "lodash";
 import { PostgresAdapterModule } from "./postgres-adapter/postgres-adapter.module";
 import { AuthMiddleware } from "./shared/middlewares/auth.middleware";
 import { RelationsModule } from "./relations/relations.module";
+import { LlmsModule } from './llms/llms.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { RelationsModule } from "./relations/relations.module";
     UserQueriesModule,
     PostgresAdapterModule,
     RelationsModule,
+    LlmsModule,
   ],
   controllers: [AppController],
   providers: [

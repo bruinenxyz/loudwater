@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "@/prisma/prisma.service";
 import { PostgresAdapterService } from "@/postgres-adapter/postgres-adapter.service";
 import { HttpRequestContextService } from "@/shared/http-request-context/http-request-context.service";
+import { LlmsService } from "@/llms/llms.service";
 import {
   CreateTable,
   ExternalColumn,
@@ -13,8 +14,7 @@ import {
   UpdateTable,
   UpdateTableRow,
 } from "@/definitions";
-import * as assert from "assert";
-import * as _ from "lodash";
+
 import {
   FilterStep,
   OperatorsEnum,
@@ -22,6 +22,8 @@ import {
   TakeStep,
 } from "@/definitions/pipeline";
 import { QueryResult } from "pg";
+import * as assert from "assert";
+import * as _ from "lodash";
 
 @Injectable()
 export class TablesService {
@@ -29,6 +31,7 @@ export class TablesService {
     private prismaService: PrismaService,
     private readonly configService: ConfigService,
     private readonly httpRequestContextService: HttpRequestContextService,
+    private readonly llmsService: LlmsService,
     private readonly postgresAdapterService: PostgresAdapterService,
   ) {}
 
@@ -160,6 +163,38 @@ export class TablesService {
       TableSchema.parse(table),
     );
 
+    // Check the existing tables and generate a list of the new tables that will need to be created
+    const newTableNames = _.filter(_.keys(schemas), (tableName) => {
+      return !_.find(
+        parsedTables,
+        (table) => table.external_name === tableName,
+      );
+    });
+
+    // Use an LLM to generate table icons, colors and descriptions
+    const usedColors = _.map(parsedTables, (t) => t.color);
+    const usedIcons = _.map(parsedTables, (t) => t.icon);
+
+    const newTables = {};
+    _.forEach(newTableNames, (tableName) => {
+      newTables[tableName] = schemas[tableName];
+    });
+
+    let metadata;
+    if (!_.isEmpty(newTables)) {
+      console.log(
+        "Creating new tables",
+        _.keys(newTables),
+        "for database",
+        databaseId,
+      );
+      metadata = await this.llmsService.generateTablesMetadata(
+        newTables,
+        usedColors,
+        usedIcons,
+      );
+    }
+
     const promises: Promise<HydratedTable>[] = [];
 
     _.forEach(
@@ -172,13 +207,20 @@ export class TablesService {
 
         // Create a new table record if it doesn't exist and push the createTable promise into the promises array
         if (!existingTable) {
+          // Check to see if the LLM generated metadata for this table
+          const metadataForTable = _.find(
+            metadata,
+            (m) => m.name === tableName,
+          );
+
           promises.push(
             this.createTable(
               {
                 name: tableName,
                 external_name: tableName,
-                icon: "cube",
-                color: "gray",
+                icon: metadataForTable?.icon || "cube",
+                color: metadataForTable?.color || "gray",
+                description: metadataForTable?.description || "",
                 schema: database?.schema ?? "",
                 configuration: {},
                 visibility: "normal",

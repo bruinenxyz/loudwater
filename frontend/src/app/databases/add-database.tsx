@@ -21,14 +21,10 @@ import { useState } from "react";
 import { useField } from "@/utils/use-field";
 
 export default function AddDatabase({
-  mutateDatabases,
-  databases,
   isOpen,
   setIsOpen,
   displayButton,
 }: {
-  mutateDatabases: (databases: CleanDatabase[]) => void;
-  databases: CleanDatabase[];
   isOpen: boolean;
   setIsOpen: (toggle: boolean) => void;
   displayButton: boolean;
@@ -55,9 +51,6 @@ export default function AddDatabase({
     };
     const data = CreateDatabaseSchema.parse(databaseConfig);
     const newDatabase = await createDatabase(data);
-    mutateDatabases(
-      [...databases, newDatabase].sort((a, b) => (a.name <= b.name ? -1 : 1)),
-    );
     setSelectedDatabase(data);
     setIsOpen(false);
   }

@@ -21,7 +21,6 @@ export default function DatabasesList() {
     data: databases,
     isLoading: isLoadingDatabases,
     error: databasesError,
-    mutate: mutateDatabases,
   } = useDatabases();
 
   const renderDatabases = () => {
@@ -48,8 +47,6 @@ export default function DatabasesList() {
           icon="error"
           action={
             <AddDatabase
-              mutateDatabases={mutateDatabases}
-              databases={databases}
               isOpen={isOpen}
               setIsOpen={setIsOpen}
               displayButton={true}
@@ -101,8 +98,6 @@ export default function DatabasesList() {
       className="flex flex-col"
       rightElement={
         <AddDatabase
-          mutateDatabases={mutateDatabases}
-          databases={databases || []}
           isOpen={isOpen}
           setIsOpen={setIsOpen}
           displayButton={true}

@@ -16,5 +16,7 @@ export const configurationFactory = () => {
     clerkSecretKey: process.env.CLERK_SECRET_KEY,
 
     segmentWriteKey: process.env.SEGMENT_WRITE_KEY,
+
+    openaiApiKey: process.env.OPENAI_API_KEY,
   };
 };
