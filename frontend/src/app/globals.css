@@ -58,6 +58,9 @@ input:focus {
 .bp5-section-header-left,
 .bp5-section-header-right {
   white-space: nowrap;
-  overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.bp5-section-header-left {
+  overflow: hidden;
 }
