@@ -42,8 +42,14 @@ enum QueryTabEnum {
   PIPELINE = "pipeline",
 }
 
+enum QueryDisplayEnum {
+  TABLE = "table",
+  CHART = "chart",
+}
+
 const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
-  const [tab, setTab] = useState<QueryTabEnum>(QueryTabEnum.SQL);
+  const [queryTab, setQueryTab] = useState<QueryTabEnum>(QueryTabEnum.SQL);
+  const [queryDislayTab, setQueryDisplayTab] = useState<QueryDisplayEnum>(QueryDisplayEnum.TABLE);
   const [sqlQuery, setSqlQuery] = useState<string>("");
   const [pipeline, setPipeline] = useState<Pipeline>({ from: "", steps: [] });
   const [pipelineSQLDivergence, setPipelineSQLDivergence] =
@@ -121,7 +127,7 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
   async function handleSaveQuery() {
     setSavedParameters(parameters);
     setQueryTime(0);
-    if (tab === QueryTabEnum.SQL) {
+    if (queryTab === QueryTabEnum.SQL) {
       await updateUserQueryTrigger({ sql: sqlQuery, parameters: parameters });
       await runQuery();
     } else {
@@ -179,11 +185,11 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
           <div className="flex flex-row items-center justify-between mt-1 mb-2">
             <Tabs
               animate
-              selectedTabId={tab}
+              selectedTabId={queryTab}
               id="section-tabs"
               key="horizontal"
               renderActiveTabPanelOnly={true}
-              onChange={(tabId: QueryTabEnum) => setTab(tabId)}
+              onChange={(tabId: QueryTabEnum) => setQueryTab(tabId)}
             >
               <Tab
                 id={QueryTabEnum.SQL}
@@ -209,7 +215,7 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
                 disabled={
                   isLoadingResults ||
                   isUpdatingUserQuery ||
-                  (tab === QueryTabEnum.PIPELINE && !pipelineSchema!.success)
+                  (queryTab === QueryTabEnum.PIPELINE && !pipelineSchema!.success)
                 }
                 onClick={handleSaveQuery}
               >
@@ -231,7 +237,7 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
               />
             </div>
           </div>
-          {tab === QueryTabEnum.SQL ? (
+          {queryTab === QueryTabEnum.SQL ? (
             <>
               <QueryParameters
                 parameters={parameters}
@@ -248,20 +254,53 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
             />
           )}
         </div>
-        <div className="flex flex-col w-1/2 pr-1 pt-2 pb-[1px]">
-          <Callout
-            className="mb-2"
-            intent="danger"
-            title="Error running query"
-            hidden={resultsError === undefined}
+        <div className="flex flex-col w-1/2 h-full pr-1 pt-2 pb-[1px]">
+          <Tabs
+            className="mt-1 mb-2"
+            animate
+            selectedTabId={queryDislayTab}
+            id="section-tabs"
+            key="horizontal"
+            renderActiveTabPanelOnly={true}
+            onChange={(tabId: QueryDisplayEnum) => setQueryDisplayTab(tabId)}
           >
-            {resultsErrorMessage || resultsError?.message}
-          </Callout>
-          <Table
-            results={results}
-            isLoadingResults={isLoadingResults}
-            resultsError={undefined}
-          />
+            <Tab
+              id={QueryDisplayEnum.TABLE}
+              title={
+                <Button className="bp5-minimal" icon="panel-table" text="Table" />
+              }
+            />
+            <Tab
+              id={QueryDisplayEnum.CHART}
+              title={
+                <Button
+                  className="bp5-minimal"
+                  icon="chart"
+                  text="Chart"
+                />
+              }
+            />
+          </Tabs>
+          {queryDislayTab === QueryDisplayEnum.TABLE ? (
+            <>
+              <Callout
+                className="mb-2"
+                intent="danger"
+                title="Error running query"
+                hidden={resultsError === undefined}
+              >
+                {resultsErrorMessage || resultsError?.message}
+              </Callout>
+              <Table
+                results={results}
+                isLoadingResults={isLoadingResults}
+                resultsError={undefined}
+              />
+            </>
+          ) : (
+            <></>
+          )
+          }
         </div>
       </div>
     </div>
