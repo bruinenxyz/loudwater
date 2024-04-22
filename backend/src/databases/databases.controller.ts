@@ -14,7 +14,11 @@ import { OrgGuard } from "@/auth/organizations.guard";
 import { TrackingInterceptor } from "@/interceptors/tracking/tracking.interceptor";
 import { ZodSerializerDto } from "nestjs-zod";
 import { ApiOkResponse } from "@nestjs/swagger";
-import { CleanDatabase, CleanDatabaseSchema } from "@/definitions";
+import {
+  CleanDatabase,
+  CleanDatabaseSchema,
+  ExternalColumn,
+} from "@/definitions";
 import {
   GetDatabaseResponseDto,
   GetAllDatabasesResponseDto,
@@ -74,7 +78,9 @@ export class DatabasesController {
 
   @Get("/:id/schemas")
   @UseGuards(OrgGuard("database"))
-  findAllSchemas(@Param("id") id: string): Promise<string[]> {
+  findAllSchemas(
+    @Param("id") id: string,
+  ): Promise<Record<string, Record<string, Record<string, ExternalColumn>>>> {
     return this.databasesService.findAllSchemas(id);
   }
 }

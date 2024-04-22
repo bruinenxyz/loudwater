@@ -3,6 +3,7 @@ import { Inject, Injectable, forwardRef } from "@nestjs/common";
 import { Pool } from "pg";
 import { ExternalColumn } from "@/definitions/postgres-adapter";
 import * as assert from "assert";
+import { SYSTEM_SCHEMAS } from "@/shared/constant/database";
 
 interface CreateDatabaseQueryDto {
   databaseId: string;
@@ -105,6 +106,8 @@ export class PostgresAdapterService {
       const columns = result.rows;
       const columnMap = {};
       for (const column of columns) {
+        if (SYSTEM_SCHEMAS.includes(column.table_schema)) continue;
+
         if (!columnMap[column.table_schema]) {
           columnMap[column.table_schema] = {};
         }
@@ -136,7 +139,9 @@ export class PostgresAdapterService {
         `SELECT schema_name FROM information_schema.schemata`,
       );
       const columns = result.rows;
-      const schemata = columns.map((column) => column.schema_name);
+      const schemata = columns
+        .map((column) => column.schema_name)
+        .filter((schema) => !SYSTEM_SCHEMAS.includes(schema));
 
       return schemata;
     } catch (e) {

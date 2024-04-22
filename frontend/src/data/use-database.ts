@@ -1,5 +1,10 @@
 import useSWR, { useSWRConfig } from "swr";
-import { CleanDatabase, CreateDatabase, UpdateDatabase } from "@/definitions";
+import {
+  CleanDatabase,
+  CreateDatabase,
+  ExternalColumn,
+  UpdateDatabase,
+} from "@/definitions";
 import {
   backendCreate,
   backendGet,
@@ -36,10 +41,9 @@ export const useCreateDatabase = () => {
 };
 
 export const useDatabaseSchemas = (id?: string) => {
-  const { data, error, isLoading, isValidating, mutate } = useSWR<string[]>(
-    id ? `/databases/${id}/schemas` : null,
-    backendGet,
-  );
+  const { data, error, isLoading, isValidating, mutate } = useSWR<
+    Record<string, Record<string, Record<string, ExternalColumn>>>
+  >(id ? `/databases/${id}/schemas` : null, backendGet);
   return { data, error, isLoading, isValidating, mutate };
 };
 

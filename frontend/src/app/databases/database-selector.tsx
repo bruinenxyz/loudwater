@@ -7,6 +7,7 @@ import {
 import AddDatabase from "@/app/databases/add-database";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import _ from "lodash";
 
 const DatabaseSelector = ({
   selectedDatabase,
@@ -88,7 +89,7 @@ const DatabaseSelector = ({
           }
           popoverProps={{ usePortal: true }}
         >
-          {databaseSchemas?.map((schema) => (
+          {_.keys(databaseSchemas).map((schema) => (
             <MenuItem
               key={schema}
               text={schema}
