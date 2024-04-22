@@ -158,8 +158,9 @@ const EditableInnerCell: React.FC<Props> = (props) => {
         );
       case "number":
         return (
-          <div tabIndex={0}>
+          <div className="flex gap-1" tabIndex={0}>
             <NumericInput
+              autoFocus={true}
               allowNumericCharactersOnly={true}
               value={selectedValue !== null ? (selectedValue as number) : ""}
               onValueChange={(newValue: number) => setSelectedValue(newValue)}
@@ -171,15 +172,15 @@ const EditableInnerCell: React.FC<Props> = (props) => {
               onClick={() => {
                 setSelectedValue(null);
               }}
-              autoFocus={true}
               tabIndex={0}
             />
           </div>
         );
       case "float":
         return (
-          <div tabIndex={0}>
+          <div className="flex gap-1" tabIndex={0}>
             <NumericInput
+              autoFocus={true}
               value={selectedValue !== null ? (selectedValue as number) : ""}
               onValueChange={(newValue: number) => setSelectedValue(newValue)}
             />
@@ -188,14 +189,13 @@ const EditableInnerCell: React.FC<Props> = (props) => {
               onClick={() => {
                 setSelectedValue(null);
               }}
-              autoFocus={true}
               tabIndex={0}
             />
           </div>
         );
       case "date":
         return (
-          <div tabIndex={0}>
+          <div className="flex gap-1" tabIndex={0}>
             <InputGroup
               type="date"
               value={
@@ -224,7 +224,7 @@ const EditableInnerCell: React.FC<Props> = (props) => {
         // TODO we will likely need to deal with timezones here
         // TODO why does this not work
         return (
-          <div tabIndex={0}>
+          <div className="flex gap-1" tabIndex={0}>
             <InputGroup
               type="datetime-local"
               value={
@@ -254,20 +254,20 @@ const EditableInnerCell: React.FC<Props> = (props) => {
       case "string":
       default:
         return (
-          <div>
+          <div className="flex gap-1">
             <InputGroup
               id="value-input"
               value={selectedValue !== null ? (selectedValue as string) : ""}
               onValueChange={(newValue: string) => {
                 setSelectedValue(newValue);
               }}
+              autoFocus={true}
             />
             <Button
               text="NULL"
               onClick={() => {
                 setSelectedValue(null);
               }}
-              autoFocus={true}
               tabIndex={0}
             />
           </div>
