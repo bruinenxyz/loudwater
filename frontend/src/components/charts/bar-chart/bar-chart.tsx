@@ -4,9 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Label, XAxis, YAxis } from "recharts";
 
 import { ErrorDisplay } from "@/components/error-display";
-import { useQuery } from "@/data/use-query";
 import { BarChart as BarChartType } from "@/definitions/displays/charts/charts";
-import { Pipeline, PartialPipeline } from "@/definitions/pipeline";
+import { Pipeline } from "@/definitions/pipeline";
 import { Spinner, SpinnerSize } from "@blueprintjs/core";
 
 const X_LABEL_OFFSET = -10;
@@ -20,14 +19,13 @@ const CHART_MARGIN = {
 
 export default function BarChartComponent({
   configuration,
-  pipeline,
+  data,
 }: {
   configuration: BarChartType;
-  pipeline: Pipeline | PartialPipeline;
+  data: any[];
 }) {
   const chartRef = useRef<HTMLDivElement | null>(null);
   const [chartWidth, setChartWidth] = useState<number | null>(null);
-  const { data: data, isLoading: isLoading, error: error } = useQuery(pipeline);
 
   const handleResize = () => {
     if (chartRef.current) {
@@ -37,31 +35,14 @@ export default function BarChartComponent({
   };
 
   useEffect(() => {
-    if (!isLoading) {
+    if (data) {
       handleResize();
     }
-  }, [isLoading]);
-
-  useEffect(() => {
     window.addEventListener("resize", handleResize);
     return () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center mx-3 my-4">
-        <Spinner size={SpinnerSize.STANDARD} />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <ErrorDisplay title="Unexpected error" description={error.message} />
-    );
-  }
 
   return (
     <div ref={chartRef} className="w-full">

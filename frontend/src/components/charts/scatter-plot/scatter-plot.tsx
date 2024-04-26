@@ -1,4 +1,5 @@
 "use client";
+import { ScatterPlot } from "@/definitions/displays/charts/charts";
 import { useEffect, useRef, useState } from "react";
 
 import {
@@ -9,12 +10,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-import { ErrorDisplay } from "@/components/error-display";
-import { useQuery } from "@/data/use-query";
-import { ScatterPlot as ScatterPlotType } from "@/definitions/displays/charts/charts";
-import { Pipeline, PartialPipeline } from "@/definitions/pipeline";
-import { Spinner, SpinnerSize } from "@blueprintjs/core";
 
 const X_LABEL_OFFSET = -10;
 const CHART_HEIGHT = 450;
@@ -27,14 +22,13 @@ const CHART_MARGIN = {
 
 export default function ScatterPlotComponent({
   configuration,
-  pipeline,
+  data,
 }: {
-  configuration: ScatterPlotType;
-  pipeline: Pipeline | PartialPipeline;
+  configuration: ScatterPlot;
+  data: any[];
 }) {
   const chartRef = useRef<HTMLDivElement | null>(null);
   const [chartWidth, setChartWidth] = useState<number | null>(null);
-  const { data: data, isLoading: isLoading, error: error } = useQuery(pipeline);
 
   const handleResize = () => {
     if (chartRef.current) {
@@ -44,31 +38,14 @@ export default function ScatterPlotComponent({
   };
 
   useEffect(() => {
-    if (!isLoading) {
+    if (data) {
       handleResize();
     }
-  }, [isLoading]);
-
-  useEffect(() => {
     window.addEventListener("resize", handleResize);
     return () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center mx-3 my-4">
-        <Spinner size={SpinnerSize.STANDARD} />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <ErrorDisplay title="Unexpected error" description={error.message} />
-    );
-  }
 
   return (
     <div ref={chartRef} className="w-full">

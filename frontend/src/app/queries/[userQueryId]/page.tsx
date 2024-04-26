@@ -5,6 +5,7 @@ import {
   Callout,
   Divider,
   Drawer,
+  NonIdealState,
   Tab,
   Tabs,
   Text,
@@ -30,6 +31,8 @@ import { convertToCSV } from "@/utils/csv-converter";
 import { toSnakeCase } from "@/utils/strings";
 import React, { useEffect, useRef, useState } from "react";
 import * as _ from "lodash";
+import ChartDisplay from "@/components/charts/charts-display/chart-display";
+import { convertToColumns } from "@/utils/convert-to-columns";
 
 interface UserQueryPageProps {
   params: {
@@ -49,7 +52,9 @@ enum QueryDisplayEnum {
 
 const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
   const [queryTab, setQueryTab] = useState<QueryTabEnum>(QueryTabEnum.SQL);
-  const [queryDislayTab, setQueryDisplayTab] = useState<QueryDisplayEnum>(QueryDisplayEnum.TABLE);
+  const [queryDislayTab, setQueryDisplayTab] = useState<QueryDisplayEnum>(
+    QueryDisplayEnum.TABLE,
+  );
   const [sqlQuery, setSqlQuery] = useState<string>("");
   const [pipeline, setPipeline] = useState<Pipeline>({ from: "", steps: [] });
   const [pipelineSQLDivergence, setPipelineSQLDivergence] =
@@ -165,7 +170,7 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
     );
   }
 
-  let resultsErrorMessage;
+  let resultsErrorMessage = "";
   if (resultsError) {
     // If the backend sent back a specific error message, use that instead of the generic error
     if (resultsError && resultsError.response && resultsError.response.data) {
@@ -174,6 +179,32 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
         resultsErrorMessage = _.capitalize(errorData.message);
       }
     }
+  }
+
+  function renderTabContent() {
+    return (
+      <>
+        {queryDislayTab === QueryDisplayEnum.TABLE ? (
+          <>
+            <Callout
+              className="mb-2"
+              intent="danger"
+              title="Error running query"
+              hidden={resultsError === undefined}
+            >
+              {resultsErrorMessage || resultsError?.message}
+            </Callout>
+            <Table
+              results={results}
+              isLoadingResults={isLoadingResults}
+              resultsError={undefined}
+            />
+          </>
+        ) : (
+          <ChartDisplay data={results.rows} />
+        )}
+      </>
+    );
   }
 
   return (
@@ -215,7 +246,8 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
                 disabled={
                   isLoadingResults ||
                   isUpdatingUserQuery ||
-                  (queryTab === QueryTabEnum.PIPELINE && !pipelineSchema!.success)
+                  (queryTab === QueryTabEnum.PIPELINE &&
+                    !pipelineSchema!.success)
                 }
                 onClick={handleSaveQuery}
               >
@@ -267,40 +299,25 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
             <Tab
               id={QueryDisplayEnum.TABLE}
               title={
-                <Button className="bp5-minimal" icon="panel-table" text="Table" />
+                <Button
+                  className="bp5-minimal"
+                  icon="panel-table"
+                  text="Table"
+                />
               }
             />
             <Tab
               id={QueryDisplayEnum.CHART}
               title={
-                <Button
-                  className="bp5-minimal"
-                  icon="chart"
-                  text="Chart"
-                />
+                <Button className="bp5-minimal" icon="chart" text="Charts" />
               }
             />
           </Tabs>
-          {queryDislayTab === QueryDisplayEnum.TABLE ? (
-            <>
-              <Callout
-                className="mb-2"
-                intent="danger"
-                title="Error running query"
-                hidden={resultsError === undefined}
-              >
-                {resultsErrorMessage || resultsError?.message}
-              </Callout>
-              <Table
-                results={results}
-                isLoadingResults={isLoadingResults}
-                resultsError={undefined}
-              />
-            </>
+          {!results ? (
+            <NonIdealState icon="issue" title="No results" />
           ) : (
-            <></>
-          )
-          }
+            renderTabContent()
+          )}
         </div>
       </div>
     </div>

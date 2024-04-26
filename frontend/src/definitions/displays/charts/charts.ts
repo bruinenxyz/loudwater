@@ -13,8 +13,8 @@ export enum ChartIdentifierEnum {
   BarChart = "bar_chart",
   ScatterPlot = "scatter_plot",
   LineChart = "line_chart",
-  Table = "table",
-  Map = "map",
+  // Table = "table",
+  // Map = "map",
 }
 export const ChartIdentifierSchema = z.nativeEnum(ChartIdentifierEnum);
 export type ChartIdentifier = z.infer<typeof ChartIdentifierSchema>;
@@ -46,11 +46,6 @@ export const LineChartSchema = z.object({
 });
 export type LineChart = z.infer<typeof LineChartSchema>;
 
-export const TableSchema = z.object({
-  chartType: z.literal(ChartIdentifierEnum.Table),
-});
-export type Table = z.infer<typeof TableSchema>;
-
 export const MapMarkersSchema = z.object({
   latitudeKey: z.string(),
   longitudeKey: z.string(),
@@ -68,20 +63,10 @@ export const MapLinesSchema = z.object({
 });
 export type MapLines = z.infer<typeof MapLinesSchema>;
 
-export const MapSchema = z.object({
-  chartType: z.literal(ChartIdentifierEnum.Map),
-  markers: MapMarkersSchema.optional(),
-  lines: MapLinesSchema.optional(),
-});
-
-export type Map = z.infer<typeof MapSchema>;
-
 export const ChartConfigurationSchema = z.discriminatedUnion("chartType", [
   LineChartSchema,
   BarChartSchema,
   ScatterPlotSchema,
-  TableSchema,
-  MapSchema,
 ]);
 
 export type ChartConfiguration = z.infer<typeof ChartConfigurationSchema>;
