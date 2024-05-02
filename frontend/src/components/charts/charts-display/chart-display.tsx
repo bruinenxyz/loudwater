@@ -1,4 +1,4 @@
-import { Button} from "@blueprintjs/core";
+import { Button } from "@blueprintjs/core";
 import { useEffect, useState } from "react";
 import DisplayChartEditor from "./display-chart-editor";
 import {
