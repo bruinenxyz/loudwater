@@ -48,6 +48,8 @@ export default function BarChartComponent({
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const configuration = charts[chartIndex].configuration as BarChartType;
   const [chart, setChart] = useState<Chart | null>(null);
+  const [errorMessage, setErrorMessage] = useState<JSX.Element | null>(null);
+  const columns = Object.keys(data[0]);
 
   const handleResize = () => {
     if (chartRef.current) {
@@ -72,6 +74,13 @@ export default function BarChartComponent({
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  useEffect(() => {
+    if (data) {
+      handleResize();
+      setErrorMessage(renderErrorMessage());
+    }
+  }, [data]);
 
   function renderChart() {
     return (
@@ -107,21 +116,24 @@ export default function BarChartComponent({
     );
   }
 
-  const columns = Object.keys(data[0]);
-  if (!columns.includes(configuration.xAxisKey)) {
-    return (
-      <Callout className="m-2" intent="danger" title="Error loading chart">
-        {`xAxisKey: Could not find column "${configuration.xAxisKey}".`}
-      </Callout>
-    );
-  }
+  function renderErrorMessage() {
+    if (!columns.includes(configuration.xAxisKey)) {
+      return (
+        <Callout className="m-2" intent="danger" title="Error loading chart">
+          {`xAxisKey: Could not find column "${configuration.xAxisKey}".`}
+        </Callout>
+      );
+    }
 
-  if (!columns.includes(configuration.barKey)) {
-    return (
-      <Callout className="m-2" intent="danger" title="Error loading chart">
-        {`barKey: Could not find column "${configuration.barKey}".`}
-      </Callout>
-    );
+    if (!columns.includes(configuration.barKey)) {
+      return (
+        <Callout className="m-2" intent="danger" title="Error loading chart">
+          {`barKey: Could not find column "${configuration.barKey}".`}
+        </Callout>
+      );
+    }
+
+    return null;
   }
 
   return (
@@ -149,7 +161,7 @@ export default function BarChartComponent({
             />
           }
         >
-          {renderChart()}
+          {errorMessage ?? renderChart()}
         </Section>
       )}
     </>
