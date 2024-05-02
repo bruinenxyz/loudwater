@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ChartSchema } from "./displays/charts/charts";
 
 export enum UserQueryType {
   sql = "sql",
@@ -15,6 +16,7 @@ export const UserQuerySchema = z.object({
   parameters: z.any().optional(), // TODO replace with actual parameter schema
   scope: z.enum(["private", "organization"]), // TODO turn this into an enum
   permissions: z.record(z.any()), // TODO update
+  charts: z.array(ChartSchema),
   favorited_by: z.array(z.string()),
   organization_id: z.string(),
   creator_id: z.string(),

@@ -5,6 +5,7 @@ import {
   Callout,
   Divider,
   Drawer,
+  NonIdealState,
   Tab,
   Tabs,
   Text,
@@ -30,6 +31,8 @@ import { convertToCSV } from "@/utils/csv-converter";
 import { toSnakeCase } from "@/utils/strings";
 import React, { useEffect, useRef, useState } from "react";
 import * as _ from "lodash";
+import ChartDisplay from "@/components/charts/charts-display/chart-display";
+import { convertToColumns } from "@/utils/convert-to-columns";
 
 interface UserQueryPageProps {
   params: {
@@ -42,8 +45,16 @@ enum QueryTabEnum {
   PIPELINE = "pipeline",
 }
 
+enum QueryDisplayEnum {
+  TABLE = "table",
+  CHART = "chart",
+}
+
 const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
-  const [tab, setTab] = useState<QueryTabEnum>(QueryTabEnum.SQL);
+  const [queryTab, setQueryTab] = useState<QueryTabEnum>(QueryTabEnum.SQL);
+  const [queryDislayTab, setQueryDisplayTab] = useState<QueryDisplayEnum>(
+    QueryDisplayEnum.TABLE,
+  );
   const [sqlQuery, setSqlQuery] = useState<string>("");
   const [pipeline, setPipeline] = useState<Pipeline>({ from: "", steps: [] });
   const [pipelineSQLDivergence, setPipelineSQLDivergence] =
@@ -121,7 +132,7 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
   async function handleSaveQuery() {
     setSavedParameters(parameters);
     setQueryTime(0);
-    if (tab === QueryTabEnum.SQL) {
+    if (queryTab === QueryTabEnum.SQL) {
       await updateUserQueryTrigger({ sql: sqlQuery, parameters: parameters });
       await runQuery();
     } else {
@@ -159,7 +170,7 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
     );
   }
 
-  let resultsErrorMessage;
+  let resultsErrorMessage = "";
   if (resultsError) {
     // If the backend sent back a specific error message, use that instead of the generic error
     if (resultsError && resultsError.response && resultsError.response.data) {
@@ -168,6 +179,34 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
         resultsErrorMessage = _.capitalize(errorData.message);
       }
     }
+  }
+
+  function renderTabContent() {
+    return (
+      <>
+        {queryDislayTab === QueryDisplayEnum.TABLE ? (
+          <>
+            <Callout
+              className="mb-2"
+              intent="danger"
+              title="Error running query"
+              hidden={resultsError === undefined}
+            >
+              {resultsErrorMessage || resultsError?.message}
+            </Callout>
+            <Table
+              results={results}
+              isLoadingResults={isLoadingResults}
+              resultsError={undefined}
+            />
+          </>
+        ) : (
+          <div className="flex-grow h-full overflow-y-auto px-1">
+            <ChartDisplay data={results.rows} userQuery={userQuery} />
+          </div>
+        )}
+      </>
+    );
   }
 
   return (
@@ -179,11 +218,11 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
           <div className="flex flex-row items-center justify-between mt-1 mb-2">
             <Tabs
               animate
-              selectedTabId={tab}
+              selectedTabId={queryTab}
               id="section-tabs"
               key="horizontal"
               renderActiveTabPanelOnly={true}
-              onChange={(tabId: QueryTabEnum) => setTab(tabId)}
+              onChange={(tabId: QueryTabEnum) => setQueryTab(tabId)}
             >
               <Tab
                 id={QueryTabEnum.SQL}
@@ -209,7 +248,8 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
                 disabled={
                   isLoadingResults ||
                   isUpdatingUserQuery ||
-                  (tab === QueryTabEnum.PIPELINE && !pipelineSchema!.success)
+                  (queryTab === QueryTabEnum.PIPELINE &&
+                    !pipelineSchema!.success)
                 }
                 onClick={handleSaveQuery}
               >
@@ -231,7 +271,7 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
               />
             </div>
           </div>
-          {tab === QueryTabEnum.SQL ? (
+          {queryTab === QueryTabEnum.SQL ? (
             <>
               <QueryParameters
                 parameters={parameters}
@@ -248,20 +288,38 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
             />
           )}
         </div>
-        <div className="flex flex-col w-1/2 pr-1 pt-2 pb-[1px]">
-          <Callout
-            className="mb-2"
-            intent="danger"
-            title="Error running query"
-            hidden={resultsError === undefined}
+        <div className="flex flex-col w-1/2 h-full pr-1 pt-2 pb-[1px]">
+          <Tabs
+            className="mt-1 mb-2"
+            animate
+            selectedTabId={queryDislayTab}
+            id="section-tabs"
+            key="horizontal"
+            renderActiveTabPanelOnly={true}
+            onChange={(tabId: QueryDisplayEnum) => setQueryDisplayTab(tabId)}
           >
-            {resultsErrorMessage || resultsError?.message}
-          </Callout>
-          <Table
-            results={results}
-            isLoadingResults={isLoadingResults}
-            resultsError={undefined}
-          />
+            <Tab
+              id={QueryDisplayEnum.TABLE}
+              title={
+                <Button
+                  className="bp5-minimal"
+                  icon="panel-table"
+                  text="Table"
+                />
+              }
+            />
+            <Tab
+              id={QueryDisplayEnum.CHART}
+              title={
+                <Button className="bp5-minimal" icon="chart" text="Charts" />
+              }
+            />
+          </Tabs>
+          {!results ? (
+            <NonIdealState icon="issue" title="No results" />
+          ) : (
+            renderTabContent()
+          )}
         </div>
       </div>
     </div>
