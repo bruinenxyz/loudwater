@@ -5,6 +5,9 @@ import {
   ChartIdentifierSchema,
   ChartIdentifier,
   Chart,
+  BarChart,
+  ScatterPlot,
+  LineChart,
 } from "@/definitions/displays/charts/charts";
 import { InferSchemaOutputSuccess } from "@/definitions";
 import { DisplayIdentifierEnum } from "@/definitions/displays/enum";
@@ -16,31 +19,30 @@ import {
   TextArea,
 } from "@blueprintjs/core";
 import { ItemRenderer, Select } from "@blueprintjs/select";
-import BarChartCreator from "./bar-chart/bar-chart-creator";
-import LineChartCreator from "./line-chart/line-chart-creator";
-import ScatterPlotCreator from "./scatter-plot/scatter-plot-creator";
+import BarChartEditor from "./bar-chart/bar-chart-editor";
+import LineChartEditor from "./line-chart/line-chart-editor";
+import ScatterPlotEditor from "./scatter-plot/scatter-plot-editor";
 import { useEffect, useState } from "react";
 import { useField } from "@/utils/use-field";
 import * as _ from "lodash";
 
-export default function ChartCreator({
+export default function ChartEditor({
   columns,
+  chart,
   setChart,
 }: {
   columns: any[];
+  chart: Chart | null;
   setChart: (chartConfig: Chart | null) => void;
 }) {
-  const [chartType, setChartType] = useState<ChartIdentifier | null>(null);
-  const [chartConfig, setChartConfig] = useState<ChartConfiguration | null>(
-    null,
+  const [chartType, setChartType] = useState<ChartIdentifier | null>(
+    chart?.configuration.chartType ?? null,
   );
-  const titleField = useField<string>("");
-  const descriptionField = useField<string>("");
-
-  useEffect(() => {
-    setChartType(null);
-    setChart(null);
-  }, [columns]);
+  const [chartConfig, setChartConfig] = useState<ChartConfiguration | null>(
+    chart?.configuration ?? null,
+  );
+  const titleField = useField<string>(chart?.title ?? "");
+  const descriptionField = useField<string>(chart?.description ?? "");
 
   useEffect(() => {
     if (chartConfig && titleField.value) {
@@ -90,15 +92,27 @@ export default function ChartCreator({
     switch (chartType) {
       case ChartIdentifierEnum.BarChart:
         return (
-          <BarChartCreator columns={columns} setChartConfig={setChartConfig} />
+          <BarChartEditor
+            columns={columns}
+            setChartConfig={setChartConfig}
+            chartConfig={chartConfig as BarChart}
+          />
         );
       case ChartIdentifierEnum.ScatterPlot:
         return (
-          <ScatterPlotCreator columns={columns} setChartConfig={setChartConfig} />
+          <ScatterPlotEditor
+            columns={columns}
+            setChartConfig={setChartConfig}
+            chartConfig={chartConfig as ScatterPlot}
+          />
         );
       case ChartIdentifierEnum.LineChart:
         return (
-          <LineChartCreator columns={columns} setChartConfig={setChartConfig} />
+          <LineChartEditor
+            columns={columns}
+            setChartConfig={setChartConfig}
+            chartConfig={chartConfig as LineChart}
+          />
         );
       default:
         return <></>;

@@ -1,72 +1,78 @@
 "use client";
 import {
+  BarChart,
   ChartConfiguration,
   ChartIdentifierEnum,
 } from "@/definitions/displays/charts/charts";
-import { SinglePropertySelector } from "@/components/property-selectors";
+import { InferSchemaOutputSuccess } from "@/definitions/pipeline";
 import { useEffect, useState } from "react";
 import * as _ from "lodash";
-import { Switch, Text } from "@blueprintjs/core";
 import { useField } from "@/utils/use-field";
+import { Switch, Text } from "@blueprintjs/core";
 import ColorPicker from "@/components/color-picker";
+import { SinglePropertySelector } from "@/components/property-selectors";
 
-export default function ScatterPlotCreator({
+export default function BarChartEditor({
   columns,
   setChartConfig,
+  chartConfig,
 }: {
   columns: any[];
   setChartConfig: (chart: ChartConfiguration | null) => void;
+  chartConfig?: BarChart | null;
 }) {
-  const [xAxisKey, setXAxisKey] = useState<string | null>(null);
-  const [yAxisKey, setYAxisKey] = useState<string | null>(null);
-  const [showGraph, setShowGraph] = useState<boolean>(false);
-  const colorField = useField<string>("gray");
+  const [barKey, setBarKey] = useState<string | null>(
+    chartConfig?.barKey ?? null,
+  );
+  const [xAxisKey, setXAxisKey] = useState<string | null>(
+    chartConfig?.xAxisKey ?? null,
+  );
+  const [showGraph, setShowGraph] = useState<boolean>(
+    chartConfig?.showGraph ?? false,
+  );
+  const colorField = useField<string>(chartConfig?.color ?? "gray");
 
   useEffect(() => {
-    if (!xAxisKey || (yAxisKey && xAxisKey === yAxisKey)) {
+    if (!barKey || (xAxisKey && barKey === xAxisKey)) {
       setXAxisKey(null);
     }
-  }, [xAxisKey]);
+  }, [barKey]);
 
   useEffect(() => {
-    if (xAxisKey && yAxisKey) {
+    if (xAxisKey && barKey) {
       setChartConfig({
-        chartType: ChartIdentifierEnum.ScatterPlot,
+        chartType: ChartIdentifierEnum.BarChart,
+        barKey: barKey,
         xAxisKey: xAxisKey,
-        yAxisKey: yAxisKey,
         color: colorField.value ?? "gray",
         showGraph: showGraph,
       });
     } else {
       setChartConfig(null);
     }
-  }, [xAxisKey, yAxisKey, showGraph, colorField.value]);
+  }, [barKey, xAxisKey, colorField.value, showGraph]);
 
   return (
     <div className="pt-3">
       <div className="flex flex-row items-center gap-3 pt-3">
         <div className="flex flex-row items-center">
-          <Text className="text-lg">X Axis: </Text>
+          <Text className="text-lg">Data: </Text>
           <SinglePropertySelector
             className="ml-2"
-            selectedProperty={xAxisKey}
-            setSelectedProperty={setXAxisKey}
+            selectedProperty={barKey}
+            setSelectedProperty={setBarKey}
             items={columns}
             popoverTargetProps={{ className: "w-fit" }}
           />
         </div>
         <div className="flex flex-row items-center">
-          <Text className="text-lg">Y Axis: </Text>
+          <Text className="text-lg">X Axis: </Text>
           <SinglePropertySelector
             className="ml-2"
-            disabled={!xAxisKey}
-            selectedProperty={yAxisKey}
-            setSelectedProperty={setYAxisKey}
-            items={_.filter(
-              columns,
-              (property: string) =>
-                property !== xAxisKey,
-            )}
+            disabled={!barKey}
+            selectedProperty={xAxisKey}
+            setSelectedProperty={setXAxisKey}
+            items={_.filter(columns, (column: string) => column !== barKey)}
             popoverTargetProps={{ className: "w-fit" }}
           />
         </div>
@@ -81,6 +87,7 @@ export default function ScatterPlotCreator({
           onChange={() => setShowGraph(!showGraph)}
           large
           className="text-lg"
+          checked={showGraph}
         />
       </div>
     </div>

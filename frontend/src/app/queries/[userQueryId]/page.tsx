@@ -201,7 +201,9 @@ const Page: React.FC<UserQueryPageProps> = ({ params: { userQueryId } }) => {
             />
           </>
         ) : (
-          <ChartDisplay data={results.rows} />
+          <div className="flex-grow h-full overflow-y-auto px-1">
+            <ChartDisplay data={results.rows} userQuery={userQuery} />
+          </div>
         )}
       </>
     );

@@ -69,6 +69,7 @@ model query {
     pipeline        Json?
     scope           ScopeType @default(private)
     permissions     Json      @default("{}")
+    charts          Json      @default("[]")
     favorited_by    String[]
     organization_id String
     creator_id      String

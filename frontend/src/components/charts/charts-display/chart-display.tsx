@@ -1,45 +1,61 @@
-import { Button, Divider, Section } from "@blueprintjs/core";
-import { useState } from "react";
-import DisplayChartCreator from "./display-chart-creator";
+import { Button} from "@blueprintjs/core";
+import { useEffect, useState } from "react";
+import DisplayChartEditor from "./display-chart-editor";
 import {
   Chart,
   ChartIdentifierEnum,
-  ChartSchema,
 } from "@/definitions/displays/charts/charts";
 import { BarChartComponent, LineChartComponent } from "..";
 import ScatterPlotComponent from "../scatter-plot/scatter-plot";
+import { useUpdateUserQuery } from "@/data/use-user-query";
+import { UserQuery } from "@/definitions";
 
-export default function ChartDisplay({ data }: { data: any[] }) {
+export default function ChartDisplay({
+  data,
+  userQuery,
+}: {
+  data: any[];
+  userQuery?: UserQuery;
+}) {
   const [isAddingChart, setIsAddingChart] = useState<boolean>(false);
-  const [charts, setCharts] = useState<Chart[]>([]);
+  const [charts, setCharts] = useState<Chart[]>(userQuery!.charts);
+  const [createdChart, setCreatedChart] = useState<Chart | null>(null);
+  const { trigger: updateUserQueryTrigger, isMutating: isUpdatingUserQuery } =
+    useUpdateUserQuery(userQuery!.id);
   const columns = Object.keys(data[0]);
 
-  function addToCharts(chart: Chart | null) {
-    if (!chart) return;
+  useEffect(() => {
+    updateUserQueryTrigger({
+      charts: charts,
+    });
+  }, [charts]);
 
-    setCharts([...charts, chart]);
-  }
-
-  function renderChart(chart: Chart){
+  function renderChart(chart: Chart, index: number) {
     switch (chart.configuration.chartType) {
       case ChartIdentifierEnum.BarChart:
         return (
           <BarChartComponent
-            configuration={chart.configuration}
+            chartIndex={index}
+            charts={charts}
+            setCharts={setCharts}
             data={data}
           />
         );
       case ChartIdentifierEnum.LineChart:
         return (
           <LineChartComponent
-            configuration={chart.configuration}
+            chartIndex={index}
+            charts={charts}
+            setCharts={setCharts}
             data={data}
           />
         );
       case ChartIdentifierEnum.ScatterPlot:
         return (
           <ScatterPlotComponent
-            configuration={chart.configuration}
+            chartIndex={index}
+            charts={charts}
+            setCharts={setCharts}
             data={data}
           />
         );
@@ -49,40 +65,37 @@ export default function ChartDisplay({ data }: { data: any[] }) {
   }
 
   function renderCharts() {
-    const renderedCharts = [];
+    const renderedCharts: JSX.Element[] = [];
 
-    for (const chart of charts) {
-        const renderedChart = (
-          <Section
-            className={`flex-none w-full my-2 rounded-sm`}
-            title={chart.title}
-          >
-            {renderChart(chart)}
-          </Section>
-        );
+    charts.forEach((chart, index) => {
+      renderedCharts.push(renderChart(chart, index));
+    });
 
-        renderedCharts.push(
-          renderedChart
-        );
-    }
-    
     return renderedCharts;
   }
 
   return (
     <>
-      <div className="flex flex-col">
-        {renderCharts()}
-      </div>
+      <div>{renderCharts()}</div>
       {isAddingChart ? (
-        <DisplayChartCreator
+        <DisplayChartEditor
           columns={columns}
-          setIsAddingChart={setIsAddingChart}
-          addToCharts={addToCharts}
+          onSave={() => {
+            if (createdChart) {
+              setCharts([...charts, createdChart]);
+            }
+            setIsAddingChart(false);
+          }}
+          onCancel={() => {
+            setIsAddingChart(false);
+          }}
+          setChart={setCreatedChart}
+          isUpdatingUserQuery={isUpdatingUserQuery}
+          isSaveable={createdChart != null}
         />
       ) : (
         <Button
-          className="justify-center ml-2 text-md w-fit"
+          className="justify-center text-md w-fit"
           text="Add chart"
           icon="plus"
           onClick={() => {

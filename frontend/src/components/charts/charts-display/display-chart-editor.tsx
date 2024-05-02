@@ -1,39 +1,45 @@
 "use client";
 import { Chart } from "@/definitions/displays/charts/charts";
 import { Button, Divider, Section, Text } from "@blueprintjs/core";
-import ChartCreator from "./chart-creator/chart-creator";
+import ChartEditor from "./chart-editor/chart-editor";
 import Loading from "@/app/loading";
 import { ErrorDisplay } from "@/components/error-display";
 import { NewStepSelection } from "@/components/old-reference/workbook";
 import { useState } from "react";
 import * as _ from "lodash";
 
-export default function DisplayChartCreator({
+export default function DisplayChartEditor({
   index,
-  setIsAddingChart,
-  addToCharts,
+  charts,
+  setChart,
+  onSave,
+  onCancel,
   columns,
+  isUpdatingUserQuery = false,
+  isSaveable = false,
 }: {
   index?: number;
-  addToCharts: (charts: Chart | null) => void;
-  setIsAddingChart: (isAddingChart: boolean) => void;
+  charts?: Chart[];
+  setChart: (chart: Chart | null) => void;
+  onSave: () => void;
+  onCancel: () => void;
   columns: any[];
+  isUpdatingUserQuery?: boolean;
+  isSaveable?: boolean;
 }) {
-  const [chart, setChart] = useState<Chart | null>(null);
-
   return (
     <Section
-      className="flex-none w-full mt-2 rounded-sm"
+      className="flex-none w-full my-2 rounded-sm"
       title={<Text className="text-xl">Chart</Text>}
       rightElement={
         <div className="flex flex-row">
           <Button
             alignText="left"
-            disabled={!chart}
-            text="Add chart"
+            disabled={!isSaveable}
+            text="Save"
+            loading={isUpdatingUserQuery}
             onClick={() => {
-              addToCharts(chart);
-              setIsAddingChart(false);
+              if (!isUpdatingUserQuery) onSave();
             }}
           />
           <Button
@@ -41,7 +47,7 @@ export default function DisplayChartCreator({
             alignText="left"
             text="Cancel"
             onClick={() => {
-              setIsAddingChart(false);
+              onCancel();
             }}
           />
         </div>
@@ -49,7 +55,11 @@ export default function DisplayChartCreator({
     >
       <div className="p-3">
         <>
-          <ChartCreator columns={columns} setChart={setChart} />
+          <ChartEditor
+            columns={columns}
+            setChart={setChart}
+            chart={charts?.[index!] ?? null}
+          />
         </>
       </div>
     </Section>

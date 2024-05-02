@@ -2,6 +2,7 @@
 import {
   ChartConfiguration,
   ChartIdentifierEnum,
+  LineChart,
 } from "@/definitions/displays/charts/charts";
 import { SinglePropertySelector } from "@/components/property-selectors";
 import { useEffect, useState } from "react";
@@ -10,17 +11,25 @@ import { Switch, Text } from "@blueprintjs/core";
 import ColorPicker from "@/components/color-picker";
 import { useField } from "@/utils/use-field";
 
-export default function LineChartCreator({
+export default function LineChartEditor({
   columns,
   setChartConfig,
+  chartConfig,
 }: {
   columns: any[];
   setChartConfig: (chart: ChartConfiguration | null) => void;
+  chartConfig?: LineChart | null;
 }) {
-  const [lineKey, setLineKey] = useState<string | null>(null);
-  const [xAxisKey, setXAxisKey] = useState<string | null>(null);
-  const [showGraph, setShowGraph] = useState<boolean>(false);
-  const colorField = useField<string>("gray");
+  const [lineKey, setLineKey] = useState<string | null>(
+    chartConfig?.lineKey ?? null,
+  );
+  const [xAxisKey, setXAxisKey] = useState<string | null>(
+    chartConfig?.xAxisKey ?? null,
+  );
+  const [showGraph, setShowGraph] = useState<boolean>(
+    chartConfig?.showGraph ?? false,
+  );
+  const colorField = useField<string>(chartConfig?.color ?? "gray");
 
   useEffect(() => {
     if (!lineKey || (xAxisKey && lineKey === xAxisKey)) {
@@ -64,8 +73,7 @@ export default function LineChartCreator({
             setSelectedProperty={setXAxisKey}
             items={_.filter(
               columns,
-              (property: string) =>
-                property !== lineKey,
+              (property: string) => property !== lineKey,
             )}
             popoverTargetProps={{ className: "w-fit" }}
           />
@@ -81,6 +89,7 @@ export default function LineChartCreator({
           onChange={() => setShowGraph(!showGraph)}
           large
           className="text-lg"
+          checked={showGraph}
         />
       </div>
     </div>
