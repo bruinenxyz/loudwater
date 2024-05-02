@@ -37,6 +37,7 @@ export default function DisplayChartEditor({
             alignText="left"
             disabled={!isSaveable}
             text="Save"
+            intent="primary"
             loading={isUpdatingUserQuery}
             onClick={() => {
               if (!isUpdatingUserQuery) onSave();
